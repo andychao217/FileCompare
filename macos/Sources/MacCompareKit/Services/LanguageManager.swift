@@ -160,6 +160,19 @@ public enum L10nKey: String, Sendable {
 }
 
 @MainActor
+public final class LocalizedMenuDelegate: NSObject, NSMenuDelegate {
+    public static let shared = LocalizedMenuDelegate()
+
+    public func menuWillOpen(_ menu: NSMenu) {
+        LanguageManager.shared.localizeMenu(menu)
+    }
+
+    public func menuNeedsUpdate(_ menu: NSMenu) {
+        LanguageManager.shared.localizeMenu(menu)
+    }
+}
+
+@MainActor
 @Observable
 public final class LanguageManager {
     public static let shared = LanguageManager()
@@ -172,6 +185,7 @@ public final class LanguageManager {
     }
 
     public private(set) var effectiveLanguage: AppLanguage = .en
+    private var isUpdatingMenu = false
 
     private init() {
         let saved = UserDefaults.standard.string(forKey: "mc_app_language") ?? AppLanguage.system.rawValue
@@ -204,7 +218,26 @@ public final class LanguageManager {
             effectiveLanguage = currentLanguage
             UserDefaults.standard.set([currentLanguage.rawValue, "en"], forKey: "AppleLanguages")
         }
+
+        // Schedule multiple passes to persist over SwiftUI menu rebuilds
+        applyMenuLocalizationCycle()
+    }
+
+    public func applyMenuLocalizationCycle() {
         localizeSystemMenu()
+
+        DispatchQueue.main.async { [weak self] in
+            self?.localizeSystemMenu()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+            self?.localizeSystemMenu()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+            self?.localizeSystemMenu()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.localizeSystemMenu()
+        }
     }
 
     public func text(_ key: L10nKey) -> String {
@@ -221,16 +254,19 @@ public final class LanguageManager {
     // MARK: - Dynamic AppKit Main Menu Localization
 
     public func localizeSystemMenu() {
-        guard let mainMenu = NSApp.mainMenu else { return }
+        guard let mainMenu = NSApp.mainMenu, !isUpdatingMenu else { return }
+        isUpdatingMenu = true
+        defer { isUpdatingMenu = false }
 
         for menuIndex in 0..<mainMenu.items.count {
             let item = mainMenu.items[menuIndex]
             guard let submenu = item.submenu else { continue }
 
+            submenu.delegate = LocalizedMenuDelegate.shared
+
             // 1. Localize Top-Level Menu Titles
             switch menuIndex {
             case 0:
-                // App menu
                 item.title = "MacCompare"
                 submenu.title = "MacCompare"
             case 1:
@@ -256,13 +292,16 @@ public final class LanguageManager {
             }
 
             // 2. Localize Submenu Items
-            for subItem in submenu.items {
-                localizeMenuItem(subItem)
-                if let childSubmenu = subItem.submenu {
-                    for childItem in childSubmenu.items {
-                        localizeMenuItem(childItem)
-                    }
-                }
+            localizeMenu(submenu)
+        }
+    }
+
+    public func localizeMenu(_ menu: NSMenu) {
+        for item in menu.items {
+            localizeMenuItem(item)
+            if let sub = item.submenu {
+                sub.delegate = LocalizedMenuDelegate.shared
+                localizeMenu(sub)
             }
         }
     }
@@ -303,14 +342,12 @@ public final class LanguageManager {
                 item.title = text(.zoom)
             case "arrangeInFront:":
                 item.title = text(.bringAllToFront)
-            case "showHelp:":
-                item.title = text(.aboutApp)
             default:
                 break
             }
         }
 
-        // Catch Settings / Preferences
+        // Catch Settings / Preferences / Services / Tab bar strings
         let lower = item.title.lowercased()
         if lower.contains("settings") || lower.contains("preferences") || item.title.contains("设置") || item.title.contains("設定") {
             item.title = text(.settings)
@@ -434,7 +471,7 @@ public final class LanguageManager {
         .baseBranch: "Base (Common Ancestor)",
         .remoteBranch: "Remote (Incoming Branch)",
         .conflictCountFormat: "Conflict",
-        .autoResolveNonConflicts: "Auto-Resolve NonConflicts",
+        .autoResolveNonConflicts: "Auto-Resolve Non-Conflicts",
         .saveAndCompleteMerge: "Save & Complete Merge",
         .acceptLocal: "Accept Local",
         .takeBoth: "Take Both",
