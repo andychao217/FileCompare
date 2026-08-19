@@ -5,6 +5,8 @@ public struct MainWindowView: View {
     @State private var isSettingsSheetPresented: Bool = false
     @State private var languageManager = LanguageManager.shared
 
+    public var currentTabManager: TabManager { tabManager }
+
     public init(tabManager: TabManager? = nil) {
         _tabManager = State(initialValue: tabManager ?? TabManager())
     }

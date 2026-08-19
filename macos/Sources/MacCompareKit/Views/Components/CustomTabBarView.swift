@@ -6,8 +6,6 @@ public struct CustomTabBarView: View {
     @Bindable public var tabManager: TabManager
     @State private var isSettingsPresented: Bool = false
     @State private var languageManager = LanguageManager.shared
-    @State private var draggingTabId: UUID?
-    @State private var dragOffset: CGSize = .zero
     @State private var isDropTargeted: Bool = false
 
     public init(tabManager: TabManager) {
@@ -18,7 +16,6 @@ public struct CustomTabBarView: View {
         HStack(spacing: 4) {
             ForEach(Array(tabManager.tabs.enumerated()), id: \.element.id) { index, tab in
                 let isSelected = tab.id == tabManager.selectedTabId
-                let isCurrentDragging = draggingTabId == tab.id
 
                 Button {
                     tabManager.selectTab(id: tab.id)
@@ -56,40 +53,14 @@ public struct CustomTabBarView: View {
                 }
                 .buttonStyle(.plain)
                 .focusEffectDisabled()
-                .offset(x: isCurrentDragging ? dragOffset.width : 0, y: isCurrentDragging ? dragOffset.height : 0)
-                .opacity(isCurrentDragging && abs(dragOffset.height) > 30 ? 0.6 : 1.0)
-                // 1. Interactive Drag Gesture (Smooth Chrome-style Tear-Off & Reorder)
+                // 1. Chrome-style Tear-Off & Window Merging Drag Gesture
                 .simultaneousGesture(
-                    DragGesture(minimumDistance: 8, coordinateSpace: .global)
-                        .onChanged { value in
-                            self.draggingTabId = tab.id
-                            self.dragOffset = value.translation
-                        }
-                        .onEnded { value in
-                            let offset = value.translation
-                            let mousePos = NSEvent.mouseLocation
-
-                            // Check if dragged outside the tab bar (Tear-off into new window)
-                            if abs(offset.height) > 35 && tabManager.tabs.count > 1 {
-                                if let detachedManager = tabManager.detachTabToNewManager(id: tab.id) {
-                                    WindowManager.shared.openDetachedWindow(with: detachedManager, at: mousePos)
-                                }
-                            } else if abs(offset.width) > 60 {
-                                // Horizontal reorder
-                                let steps = Int(round(offset.width / 90.0))
-                                let targetIdx = min(max(index + steps, 0), tabManager.tabs.count - 1)
-                                if targetIdx != index {
-                                    withAnimation(.easeInOut(duration: 0.15)) {
-                                        tabManager.moveTab(from: index, to: targetIdx)
-                                    }
-                                }
-                            }
-
-                            self.draggingTabId = nil
-                            self.dragOffset = .zero
+                    DragGesture(minimumDistance: 4, coordinateSpace: .global)
+                        .onChanged { _ in
+                            TabDragManager.shared.startDragging(tab: tab, from: tabManager)
                         }
                 )
-                // 2. Native Pasteboard Drag for Inter-Window Merging
+                // 2. Native Pasteboard Drag
                 .onDrag {
                     let payload = "\(tabManager.id.uuidString):\(tab.id.uuidString)"
                     return NSItemProvider(object: payload as NSString)
