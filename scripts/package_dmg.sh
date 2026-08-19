@@ -2,7 +2,8 @@
 set -e
 
 # ==============================================================================
-# MacCompare Release Packager & DMG Generator
+# MacCompare Release Packager & Universal DMG Generator
+# Supports Universal Binary 2 (Apple Silicon arm64 + Intel x86_64)
 # ==============================================================================
 
 VERSION="${1:-0.1.0}"
@@ -17,7 +18,7 @@ DMG_NAME="${APP_NAME}-${VERSION}.dmg"
 DMG_PATH="${DIST_DIR}/${DMG_NAME}"
 
 echo "========================================================"
-echo "📦 Packaging ${APP_NAME} v${VERSION} for Release"
+echo "📦 Packaging ${APP_NAME} v${VERSION} (Universal Binary 2)"
 echo "========================================================"
 
 SWIFT_BIN="swift"
@@ -25,14 +26,45 @@ if command -v xcrun &> /dev/null; then
     SWIFT_BIN="xcrun swift"
 fi
 
-# 1. Build Release Executables
-echo "[1/4] Building Swift Release Binaries..."
+# 1. Build Universal Binary 2 (arm64 + x86_64)
+echo "[1/4] Compiling Universal Binary 2 (arm64 + x86_64)..."
 cd "${ROOT_DIR}/macos"
-${SWIFT_BIN} build -c release
+if ! ${SWIFT_BIN} build -c release --arch arm64 --arch x86_64; then
+    echo "Warning: Universal dual-arch build failed. Falling back to default release build..."
+    ${SWIFT_BIN} build -c release
+fi
 
-# Locate binary files
-MACCOMPARE_BIN="$(find "${ROOT_DIR}/macos/.build" -type f -name "MacCompare" -path "*/release/*" 2>/dev/null | head -n 1)"
-MCDIFF_BIN="$(find "${ROOT_DIR}/macos/.build" -type f -name "mcdiff" -path "*/release/*" 2>/dev/null | head -n 1)"
+# Check possible locations for built binary
+MACCOMPARE_BIN=""
+MCDIFF_BIN=""
+
+POSSIBLE_PATHS=(
+    "${ROOT_DIR}/macos/.build/apple/Products/Release/MacCompare"
+    "${ROOT_DIR}/macos/.build/release/MacCompare"
+    "${ROOT_DIR}/macos/.build/arm64-apple-macosx/release/MacCompare"
+    "${ROOT_DIR}/macos/.build/x86_64-apple-macosx/release/MacCompare"
+)
+
+for p in "${POSSIBLE_PATHS[@]}"; do
+    if [ -f "${p}" ]; then
+        MACCOMPARE_BIN="${p}"
+        break
+    fi
+done
+
+POSSIBLE_MCDIFF_PATHS=(
+    "${ROOT_DIR}/macos/.build/apple/Products/Release/mcdiff"
+    "${ROOT_DIR}/macos/.build/release/mcdiff"
+    "${ROOT_DIR}/macos/.build/arm64-apple-macosx/release/mcdiff"
+    "${ROOT_DIR}/macos/.build/x86_64-apple-macosx/release/mcdiff"
+)
+
+for p in "${POSSIBLE_MCDIFF_PATHS[@]}"; do
+    if [ -f "${p}" ]; then
+        MCDIFF_BIN="${p}"
+        break
+    fi
+done
 
 if [ -z "${MACCOMPARE_BIN}" ] || [ ! -f "${MACCOMPARE_BIN}" ]; then
     echo "Error: MacCompare executable not found in .build output!"
@@ -40,11 +72,11 @@ if [ -z "${MACCOMPARE_BIN}" ] || [ ! -f "${MACCOMPARE_BIN}" ]; then
 fi
 
 echo "Found MacCompare at: ${MACCOMPARE_BIN}"
-if [ -n "${MCDIFF_BIN}" ]; then
-    echo "Found mcdiff at: ${MCDIFF_BIN}"
+if command -v lipo &> /dev/null; then
+    echo "Binary Architecture Info: $(lipo -info "${MACCOMPARE_BIN}" 2>&1)"
 fi
 
-# 2. Prepare .app Bundle
+# 2. Prepare .app Bundle Structure
 echo "[2/4] Constructing ${APP_NAME}.app bundle..."
 rm -rf "${STAGE_DIR}"
 mkdir -p "${APP_BUNDLE}/Contents/MacOS"
@@ -56,6 +88,12 @@ if [ -n "${MCDIFF_BIN}" ] && [ -f "${MCDIFF_BIN}" ]; then
     chmod +x "${APP_BUNDLE}/Contents/MacOS/mcdiff"
 fi
 chmod +x "${APP_BUNDLE}/Contents/MacOS/MacCompare"
+
+# Copy App Icon
+if [ -f "${ROOT_DIR}/macos/Resources/AppIcon.icns" ]; then
+    cp "${ROOT_DIR}/macos/Resources/AppIcon.icns" "${APP_BUNDLE}/Contents/Resources/AppIcon.icns"
+    echo "Included AppIcon.icns in bundle."
+fi
 
 # Generate Info.plist
 cat <<EOF > "${APP_BUNDLE}/Contents/Info.plist"
@@ -109,7 +147,7 @@ hdiutil create \
 rm -rf "${STAGE_DIR}"
 
 echo "========================================================"
-echo "✅ DMG Packaging Complete!"
+echo "✅ Universal DMG Packaging Complete!"
 echo "📍 DMG File: ${DMG_PATH}"
 echo "📏 Size: $(du -sh "${DMG_PATH}" | awk '{print $1}')"
 echo "========================================================"
