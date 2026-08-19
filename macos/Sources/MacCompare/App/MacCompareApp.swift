@@ -15,5 +15,9 @@ struct MacCompareApp: App {
         .commands {
             AppCommands()
         }
+
+        Settings {
+            SettingsView()
+        }
     }
 }

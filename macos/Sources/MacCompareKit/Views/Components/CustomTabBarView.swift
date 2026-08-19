@@ -2,6 +2,8 @@ import SwiftUI
 
 public struct CustomTabBarView: View {
     @Bindable public var tabManager: TabManager
+    @State private var isSettingsPresented: Bool = false
+    @State private var languageManager = LanguageManager.shared
 
     public init(tabManager: TabManager) {
         self.tabManager = tabManager
@@ -49,15 +51,16 @@ public struct CustomTabBarView: View {
 
             Spacer()
 
+            // New Tab Menu
             Menu {
-                Button("New Text Compare") {
-                    tabManager.addTab(type: .textDiff)
+                Button(languageManager.text(.newTextCompare)) {
+                    tabManager.addTab(type: .textDiff, title: languageManager.text(.newTextCompare))
                 }
-                Button("New Folder Compare") {
-                    tabManager.addTab(type: .folderDiff)
+                Button(languageManager.text(.newFolderCompare)) {
+                    tabManager.addTab(type: .folderDiff, title: languageManager.text(.newFolderCompare))
                 }
-                Button("New 3-Way Merge") {
-                    tabManager.addTab(type: .threeWayMerge)
+                Button(languageManager.text(.newThreeWayMerge)) {
+                    tabManager.addTab(type: .threeWayMerge, title: languageManager.text(.newThreeWayMerge))
                 }
             } label: {
                 Image(systemName: "plus")
@@ -66,9 +69,36 @@ public struct CustomTabBarView: View {
                     .padding(6)
             }
             .menuStyle(.borderlessButton)
+
+            // Settings Button
+            Button {
+                isSettingsPresented = true
+            } label: {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.secondary)
+                    .padding(6)
+            }
+            .buttonStyle(.plain)
+            .help(languageManager.text(.settings))
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(Color(nsColor: .windowBackgroundColor).opacity(0.6))
+        .sheet(isPresented: $isSettingsPresented) {
+            VStack(spacing: 0) {
+                HStack {
+                    Spacer()
+                    Button("Done") {
+                        isSettingsPresented = false
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .padding(12)
+                }
+                SettingsView()
+            }
+            .frame(width: 520, height: 420)
+        }
     }
 }

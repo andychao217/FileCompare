@@ -5,6 +5,7 @@ public struct TwoWayDiffView: View {
     @Bindable public var viewModel: TextDiffViewModel
     @State private var isLeftDropTargeted: Bool = false
     @State private var isRightDropTargeted: Bool = false
+    @State private var languageManager = LanguageManager.shared
 
     public init(viewModel: TextDiffViewModel) {
         self.viewModel = viewModel
@@ -103,7 +104,7 @@ public struct TwoWayDiffView: View {
             // Status Bar
             StatusBarView(
                 cursorInfo: viewModel.cursorPosition,
-                diffStats: "\(viewModel.diffResult.totalModifications + viewModel.diffResult.totalAdditions + viewModel.diffResult.totalDeletions) changes, \(viewModel.diffResult.totalAdditions) addition, \(viewModel.diffResult.totalDeletions) deletions",
+                diffStats: "\(viewModel.diffResult.totalModifications + viewModel.diffResult.totalAdditions + viewModel.diffResult.totalDeletions) \(languageManager.text(.totalChanges)), \(viewModel.diffResult.totalAdditions) \(languageManager.text(.additions)), \(viewModel.diffResult.totalDeletions) \(languageManager.text(.deletions))",
                 encoding: viewModel.selectedEncoding.rawValue,
                 statusMessage: viewModel.statusMessage
             )
@@ -117,15 +118,15 @@ public struct TwoWayDiffView: View {
                 .font(.system(size: 38))
                 .foregroundColor(.secondary.opacity(0.7))
 
-            Text("No File Selected")
+            Text(languageManager.text(.noFileSelected))
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.primary)
 
-            Text("Drag & drop a file here or choose from disk")
+            Text(languageManager.text(.dropFilePrompt))
                 .font(.system(size: 12))
                 .foregroundColor(.secondary)
 
-            Button(isLeft ? "Choose Source File..." : "Choose Target File...") {
+            Button(isLeft ? languageManager.text(.chooseSourceFile) : languageManager.text(.chooseTargetFile)) {
                 if isLeft {
                     viewModel.openLeftFile()
                 } else {
@@ -171,18 +172,18 @@ public struct TwoWayDiffView: View {
                 Circle()
                     .fill(Color.orange)
                     .frame(width: 6, height: 6)
-                    .help("Unsaved changes")
+                    .help(languageManager.text(.unsavedChanges))
             }
 
             Spacer()
 
-            Button("Choose...") {
+            Button(languageManager.text(.chooseButton)) {
                 onOpen()
             }
             .buttonStyle(.bordered)
             .controlSize(.mini)
 
-            Button("Save") {
+            Button(languageManager.text(.saveButton)) {
                 onSave()
             }
             .buttonStyle(.bordered)

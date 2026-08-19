@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct DiffToolbarView: View {
     @Bindable public var viewModel: TextDiffViewModel
+    @State private var languageManager = LanguageManager.shared
 
     public init(viewModel: TextDiffViewModel) {
         self.viewModel = viewModel
@@ -14,7 +15,7 @@ public struct DiffToolbarView: View {
                 Button {
                     viewModel.previousDiff()
                 } label: {
-                    Label("Previous Diff", systemImage: "arrow.up")
+                    Label(languageManager.text(.prevDiff), systemImage: "arrow.up")
                         .font(.system(size: 11))
                 }
                 .buttonStyle(.bordered)
@@ -24,7 +25,7 @@ public struct DiffToolbarView: View {
                 Button {
                     viewModel.nextDiff()
                 } label: {
-                    Label("Next Diff", systemImage: "arrow.down")
+                    Label(languageManager.text(.nextDiff), systemImage: "arrow.down")
                         .font(.system(size: 11))
                 }
                 .buttonStyle(.bordered)
@@ -36,14 +37,14 @@ public struct DiffToolbarView: View {
 
             // Ignore options
             Toggle(isOn: $viewModel.ignoreWhitespace) {
-                Text("Ignore Whitespace")
+                Text(languageManager.text(.ignoreWhitespace))
                     .font(.system(size: 12))
             }
             .toggleStyle(.switch)
             .controlSize(.mini)
 
             Toggle(isOn: $viewModel.ignoreCase) {
-                Text("Ignore Case")
+                Text(languageManager.text(.ignoreCase))
                     .font(.system(size: 12))
             }
             .toggleStyle(.switch)
@@ -56,7 +57,7 @@ public struct DiffToolbarView: View {
                 Button {
                     viewModel.takeLeft()
                 } label: {
-                    Label("Take Left", systemImage: "arrow.right.to.line")
+                    Label(languageManager.text(.takeLeft), systemImage: "arrow.right.to.line")
                         .font(.system(size: 11))
                 }
                 .buttonStyle(.bordered)
@@ -66,7 +67,7 @@ public struct DiffToolbarView: View {
                 Button {
                     viewModel.takeRight()
                 } label: {
-                    Label("Take Right", systemImage: "arrow.left.to.line")
+                    Label(languageManager.text(.takeRight), systemImage: "arrow.left.to.line")
                         .font(.system(size: 11))
                 }
                 .buttonStyle(.bordered)

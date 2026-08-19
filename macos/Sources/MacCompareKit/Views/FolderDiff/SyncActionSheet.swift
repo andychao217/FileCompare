@@ -4,6 +4,7 @@ public struct SyncActionSheet: View {
     @Bindable public var viewModel: FolderDiffViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var isExecuting = false
+    @State private var languageManager = LanguageManager.shared
 
     public init(viewModel: FolderDiffViewModel) {
         self.viewModel = viewModel
@@ -16,9 +17,9 @@ public struct SyncActionSheet: View {
                     .font(.system(size: 24))
                     .foregroundColor(.accentColor)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Dry Run: Sync Actions Preview")
+                    Text(languageManager.text(.dryRunTitle))
                         .font(.headline)
-                    Text("Review pending disk operations before executing.")
+                    Text(languageManager.text(.dryRunSubtitle))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -32,14 +33,14 @@ public struct SyncActionSheet: View {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 32))
                         .foregroundColor(.green)
-                    Text("Directories are completely in sync.")
+                    Text(languageManager.text(.completelyInSync))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Pending Sync Operations (\(viewModel.pendingSyncPlan.count) items):")
+                    Text("\(languageManager.text(.pendingOperations)) (\(viewModel.pendingSyncPlan.count) \(languageManager.text(.itemsCount))):")
                         .font(.system(size: 12, weight: .semibold))
 
                     ScrollView {
@@ -70,14 +71,14 @@ public struct SyncActionSheet: View {
             Spacer()
 
             HStack {
-                Button("Cancel") {
+                Button(languageManager.text(.cancel)) {
                     dismiss()
                 }
                 .keyboardShortcut(.cancelAction)
 
                 Spacer()
 
-                Button(isExecuting ? "Executing..." : "Execute Sync") {
+                Button(isExecuting ? languageManager.text(.executing) : languageManager.text(.executeSync)) {
                     isExecuting = true
                     Task {
                         await viewModel.executePendingSync()

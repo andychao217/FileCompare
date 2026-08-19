@@ -5,6 +5,7 @@ public struct FolderDiffView: View {
     @Bindable public var viewModel: FolderDiffViewModel
     @State private var isLeftDropTargeted: Bool = false
     @State private var isRightDropTargeted: Bool = false
+    @State private var languageManager = LanguageManager.shared
 
     public init(viewModel: FolderDiffViewModel) {
         self.viewModel = viewModel
@@ -14,54 +15,54 @@ public struct FolderDiffView: View {
         NavigationSplitView {
             // Sidebar
             List(selection: $viewModel.selectedSidebarSection) {
-                Section("Quick Places") {
+                Section(languageManager.text(.quickPlaces)) {
                     Button {
                         viewModel.openDocumentsFolder()
                     } label: {
-                        Label("Documents", systemImage: "doc.on.doc")
+                        Label(languageManager.text(.documents), systemImage: "doc.on.doc")
                     }
                     .buttonStyle(.plain)
 
                     Button {
                         viewModel.openDownloadsFolder()
                     } label: {
-                        Label("Downloads", systemImage: "arrow.down.circle")
+                        Label(languageManager.text(.downloads), systemImage: "arrow.down.circle")
                     }
                     .buttonStyle(.plain)
 
                     Button {
                         viewModel.openDesktopFolder()
                     } label: {
-                        Label("Desktop", systemImage: "desktopcomputer")
+                        Label(languageManager.text(.desktop), systemImage: "desktopcomputer")
                     }
                     .buttonStyle(.plain)
 
                     Button {
                         viewModel.chooseLeftFolder()
                     } label: {
-                        Label("Browse Folder...", systemImage: "folder.badge.plus")
+                        Label(languageManager.text(.browseFolder), systemImage: "folder.badge.plus")
                     }
                     .buttonStyle(.plain)
                 }
 
-                Section("Tools") {
+                Section(languageManager.text(.tools)) {
                     Button {
                         viewModel.swapFolders()
                     } label: {
-                        Label("Swap Left & Right", systemImage: "arrow.left.arrow.right")
+                        Label(languageManager.text(.swapFolders), systemImage: "arrow.left.arrow.right")
                     }
                     .buttonStyle(.plain)
 
                     Button {
                         Task { await viewModel.scanDirectories() }
                     } label: {
-                        Label("Rescan Folders", systemImage: "arrow.clockwise")
+                        Label(languageManager.text(.rescanFolders), systemImage: "arrow.clockwise")
                     }
                     .buttonStyle(.plain)
                 }
 
                 if !viewModel.recentSessions.isEmpty {
-                    Section("Recent Compares") {
+                    Section(languageManager.text(.recentCompares)) {
                         ForEach(viewModel.recentSessions) { session in
                             Button {
                                 viewModel.loadRecentSession(session)
@@ -126,19 +127,19 @@ public struct FolderDiffView: View {
                     if viewModel.isScanning {
                         ProgressView()
                             .controlSize(.small)
-                        Text("Scanning directory tree...")
+                        Text(languageManager.text(.scanningTree))
                             .foregroundColor(.secondary)
                     } else if !viewModel.hasFoldersLoaded {
-                        Text("Select two folders to begin comparison.")
+                        Text(languageManager.text(.selectTwoFoldersPrompt))
                             .foregroundColor(.secondary)
                     } else {
-                        Text("\(viewModel.totalScanned) items,")
+                        Text("\(viewModel.totalScanned) \(languageManager.text(.itemsCount)),")
                             .foregroundColor(.secondary)
-                        Text("\(viewModel.modifiedCount) modified,")
+                        Text("\(viewModel.modifiedCount) \(languageManager.text(.modifiedCount)),")
                             .foregroundColor(.orange)
-                        Text("\(viewModel.addedCount) added,")
+                        Text("\(viewModel.addedCount) \(languageManager.text(.addedCount)),")
                             .foregroundColor(.green)
-                        Text("\(viewModel.deletedCount) deleted")
+                        Text("\(viewModel.deletedCount) \(languageManager.text(.deletedCount))")
                             .foregroundColor(.red)
                     }
 
@@ -178,9 +179,8 @@ public struct FolderDiffView: View {
     private func folderToolbar() -> some View {
         HStack(spacing: 12) {
             Picker("", selection: $viewModel.selectedMode) {
-                ForEach(FolderViewMode.allCases) { mode in
-                    Text(mode.rawValue).tag(mode)
-                }
+                Text(languageManager.text(.quickCompareMode)).tag(FolderViewMode.quick)
+                Text(languageManager.text(.deepHashCompareMode)).tag(FolderViewMode.deepHash)
             }
             .pickerStyle(.segmented)
             .frame(maxWidth: 420)
@@ -190,7 +190,7 @@ public struct FolderDiffView: View {
             Button {
                 viewModel.syncLeftToRight()
             } label: {
-                Label("Sync Left to Right", systemImage: "arrow.right")
+                Label(languageManager.text(.syncLeftToRight), systemImage: "arrow.right")
                     .font(.system(size: 11))
             }
             .buttonStyle(.bordered)
@@ -201,7 +201,7 @@ public struct FolderDiffView: View {
             Button {
                 viewModel.syncRightToLeft()
             } label: {
-                Label("Sync Right to Left", systemImage: "arrow.left")
+                Label(languageManager.text(.syncRightToLeft), systemImage: "arrow.left")
                     .font(.system(size: 11))
             }
             .buttonStyle(.bordered)
@@ -214,7 +214,7 @@ public struct FolderDiffView: View {
             Button {
                 Task { await viewModel.scanDirectories() }
             } label: {
-                Label("Refresh", systemImage: "arrow.clockwise")
+                Label(languageManager.text(.refresh), systemImage: "arrow.clockwise")
                     .font(.system(size: 11))
             }
             .buttonStyle(.bordered)
@@ -224,7 +224,7 @@ public struct FolderDiffView: View {
             Button {
                 viewModel.syncLeftToRight()
             } label: {
-                Label("Dry Run Preview", systemImage: "play.circle")
+                Label(languageManager.text(.dryRunPreview), systemImage: "play.circle")
                     .font(.system(size: 11))
             }
             .buttonStyle(.borderedProminent)
@@ -253,7 +253,7 @@ public struct FolderDiffView: View {
 
                 Spacer()
 
-                Button("Choose...") {
+                Button(languageManager.text(.chooseButton)) {
                     onChoose()
                 }
                 .buttonStyle(.bordered)
@@ -307,15 +307,15 @@ public struct FolderDiffView: View {
                 .font(.system(size: 38))
                 .foregroundColor(.secondary.opacity(0.7))
 
-            Text(isLeft ? "No Source Folder Selected" : "No Target Folder Selected")
+            Text(isLeft ? languageManager.text(.noSourceFolder) : languageManager.text(.noTargetFolder))
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.primary)
 
-            Text("Drag & drop a directory here or click below to choose")
+            Text(languageManager.text(.dropFolderPrompt))
                 .font(.system(size: 12))
                 .foregroundColor(.secondary)
 
-            Button(isLeft ? "Choose Source Directory..." : "Choose Target Directory...") {
+            Button(isLeft ? languageManager.text(.chooseSourceFolder) : languageManager.text(.chooseTargetFolder)) {
                 onChoose()
             }
             .buttonStyle(.borderedProminent)

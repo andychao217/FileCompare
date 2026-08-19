@@ -6,6 +6,7 @@ public struct ThreeWayMergeView: View {
     @State private var isLocalTargeted = false
     @State private var isBaseTargeted = false
     @State private var isRemoteTargeted = false
+    @State private var languageManager = LanguageManager.shared
 
     public init(viewModel: ThreeWayMergeViewModel) {
         self.viewModel = viewModel
@@ -24,7 +25,7 @@ public struct ThreeWayMergeView: View {
                     HStack(spacing: 0) {
                         // 1. Local Branch
                         branchColumn(
-                            title: "Local (Current Branch)",
+                            title: languageManager.text(.localBranch),
                             branch: viewModel.localBranchName,
                             content: viewModel.localContent,
                             hasFile: viewModel.localFileURL != nil || !viewModel.localContent.isEmpty,
@@ -41,7 +42,7 @@ public struct ThreeWayMergeView: View {
 
                         // 2. Base Common Ancestor
                         branchColumn(
-                            title: "Base (Common Ancestor)",
+                            title: languageManager.text(.baseBranch),
                             branch: viewModel.baseBranchName,
                             content: viewModel.baseContent,
                             hasFile: viewModel.baseFileURL != nil || !viewModel.baseContent.isEmpty,
@@ -58,7 +59,7 @@ public struct ThreeWayMergeView: View {
 
                         // 3. Remote Branch
                         branchColumn(
-                            title: "Remote (Incoming Branch)",
+                            title: languageManager.text(.remoteBranch),
                             branch: viewModel.remoteBranchName,
                             content: viewModel.remoteContent,
                             hasFile: viewModel.remoteFileURL != nil || !viewModel.remoteContent.isEmpty,
@@ -128,7 +129,7 @@ public struct ThreeWayMergeView: View {
                 .controlSize(.small)
                 .disabled(viewModel.totalConflicts == 0)
 
-                Text("Conflict (\(viewModel.totalConflicts > 0 ? viewModel.currentConflictIndex + 1 : 0) of \(viewModel.totalConflicts))")
+                Text("\(languageManager.text(.conflictCountFormat)) (\(viewModel.totalConflicts > 0 ? viewModel.currentConflictIndex + 1 : 0) / \(viewModel.totalConflicts))")
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
             }
@@ -138,7 +139,7 @@ public struct ThreeWayMergeView: View {
             Button {
                 viewModel.autoResolveNonConflicts()
             } label: {
-                Label("Auto-Resolve Non-Conflicts", systemImage: "wand.and.stars")
+                Label(languageManager.text(.autoResolveNonConflicts), systemImage: "wand.and.stars")
                     .font(.system(size: 11))
             }
             .buttonStyle(.bordered)
@@ -148,7 +149,7 @@ public struct ThreeWayMergeView: View {
             Button {
                 viewModel.saveAndCompleteMerge()
             } label: {
-                Label("Save & Complete Merge", systemImage: "arrow.down.doc.fill")
+                Label(languageManager.text(.saveAndCompleteMerge), systemImage: "arrow.down.doc.fill")
                     .font(.system(size: 11, weight: .semibold))
             }
             .buttonStyle(.borderedProminent)
@@ -189,7 +190,7 @@ public struct ThreeWayMergeView: View {
                 }
                 Spacer()
 
-                Button("Choose...") {
+                Button(languageManager.text(.chooseButton)) {
                     onOpen()
                 }
                 .buttonStyle(.bordered)
@@ -206,10 +207,10 @@ public struct ThreeWayMergeView: View {
                     Image(systemName: "doc.badge.plus")
                         .font(.system(size: 28))
                         .foregroundColor(.secondary.opacity(0.7))
-                    Text("No File Loaded")
+                    Text(languageManager.text(.noFileSelected))
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.secondary)
-                    Button("Choose...") {
+                    Button(languageManager.text(.chooseButton)) {
                         onOpen()
                     }
                     .buttonStyle(.bordered)
@@ -221,17 +222,17 @@ public struct ThreeWayMergeView: View {
                 // Conflict Action Overlay Bar (for Local & Remote)
                 if isLeft || isRight {
                     HStack(spacing: 8) {
-                        Button("Accept Local") { viewModel.acceptLocal() }
+                        Button(languageManager.text(.acceptLocal)) { viewModel.acceptLocal() }
                             .buttonStyle(.bordered)
                             .tint(.orange)
                             .controlSize(.mini)
 
-                        Button("Take Both") { viewModel.takeBoth() }
+                        Button(languageManager.text(.takeBoth)) { viewModel.takeBoth() }
                             .buttonStyle(.bordered)
                             .tint(.purple)
                             .controlSize(.mini)
 
-                        Button("Accept Remote") { viewModel.acceptRemote() }
+                        Button(languageManager.text(.acceptRemote)) { viewModel.acceptRemote() }
                             .buttonStyle(.bordered)
                             .tint(.green)
                             .controlSize(.mini)
@@ -272,7 +273,7 @@ public struct ThreeWayMergeView: View {
         VStack(spacing: 0) {
             // Output Header
             HStack(spacing: 8) {
-                Text("Merged Output Result")
+                Text(languageManager.text(.mergedOutputResult))
                     .font(.system(size: 12, weight: .semibold))
 
                 Text(viewModel.filePath)
@@ -290,7 +291,7 @@ public struct ThreeWayMergeView: View {
                 Button {
                     viewModel.saveAndCompleteMerge()
                 } label: {
-                    Label("Mark Resolved & Save", systemImage: "checkmark.circle.fill")
+                    Label(languageManager.text(.saveAndCompleteMerge), systemImage: "checkmark.circle.fill")
                         .font(.system(size: 11))
                 }
                 .buttonStyle(.borderedProminent)
@@ -301,13 +302,13 @@ public struct ThreeWayMergeView: View {
                     if viewModel.totalConflicts > 0 {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(.yellow)
-                        Text("\(viewModel.totalConflicts) Conflicts Remaining")
+                        Text("\(viewModel.totalConflicts) \(languageManager.text(.conflictsRemaining))")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundColor(.orange)
                     } else if viewModel.hasFilesLoaded {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)
-                        Text("All Conflicts Resolved")
+                        Text(languageManager.text(.allConflictsResolved))
                             .font(.system(size: 11, weight: .medium))
                             .foregroundColor(.green)
                     }

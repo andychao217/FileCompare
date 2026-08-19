@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct MainWindowView: View {
     @State private var tabManager = TabManager()
+    @State private var isSettingsSheetPresented: Bool = false
 
     public init() {}
 
@@ -135,6 +136,24 @@ public struct MainWindowView: View {
             guard let activeTab = tabManager.activeTab, activeTab.type == .textDiff else { return }
             let vm = tabManager.textDiffViewModel(for: activeTab.id)
             vm.ignoreCase.toggle()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .mcOpenSettings)) { _ in
+            isSettingsSheetPresented = true
+        }
+        .sheet(isPresented: $isSettingsSheetPresented) {
+            VStack(spacing: 0) {
+                HStack {
+                    Spacer()
+                    Button("Done") {
+                        isSettingsSheetPresented = false
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .padding(12)
+                }
+                SettingsView()
+            }
+            .frame(width: 520, height: 420)
         }
     }
 }
