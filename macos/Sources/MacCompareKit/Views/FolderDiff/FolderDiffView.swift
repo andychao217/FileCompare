@@ -10,16 +10,76 @@ public struct FolderDiffView: View {
     public var body: some View {
         NavigationSplitView {
             // Sidebar
-            List {
-                Section("Places") {
-                    Label("MacCompare", systemImage: "folder")
-                    Label("Source Directory", systemImage: "folder.badge.gearshape")
-                    Label("Documents", systemImage: "doc.on.doc")
-                    Label("Compare Tasks", systemImage: "arrow.triangle.2.circlepath")
+            List(selection: $viewModel.selectedSidebarSection) {
+                Section("Quick Places") {
+                    Button {
+                        viewModel.openDocumentsFolder()
+                    } label: {
+                        Label("Documents", systemImage: "doc.on.doc")
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        viewModel.openDownloadsFolder()
+                    } label: {
+                        Label("Downloads", systemImage: "arrow.down.circle")
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        viewModel.openDesktopFolder()
+                    } label: {
+                        Label("Desktop", systemImage: "desktopcomputer")
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        viewModel.chooseLeftFolder()
+                    } label: {
+                        Label("Browse Folder...", systemImage: "folder.badge.plus")
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Section("Tools") {
+                    Button {
+                        viewModel.swapFolders()
+                    } label: {
+                        Label("Swap Left & Right", systemImage: "arrow.left.arrow.right")
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        Task { await viewModel.scanDirectories() }
+                    } label: {
+                        Label("Rescan Folders", systemImage: "arrow.clockwise")
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                if !viewModel.recentSessions.isEmpty {
+                    Section("Recent Compares") {
+                        ForEach(viewModel.recentSessions) { session in
+                            Button {
+                                viewModel.loadRecentSession(session)
+                            } label: {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(session.title)
+                                        .font(.system(size: 11, weight: .medium))
+                                        .lineLimit(1)
+                                    Text(session.leftPath)
+                                        .font(.system(size: 9))
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(1)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
                 }
             }
             .listStyle(.sidebar)
-            .frame(minWidth: 160)
+            .frame(minWidth: 175, idealWidth: 190)
         } detail: {
             VStack(spacing: 0) {
                 // Top Toolbar

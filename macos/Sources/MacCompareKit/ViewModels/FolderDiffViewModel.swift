@@ -9,6 +9,22 @@ public enum FolderViewMode: String, CaseIterable, Identifiable, Sendable {
     public var id: String { rawValue }
 }
 
+public struct RecentCompareSession: Identifiable, Sendable, Codable, Equatable {
+    public let id: UUID
+    public let title: String
+    public let leftPath: String
+    public let rightPath: String
+    public let date: Date
+
+    public init(id: UUID = UUID(), title: String, leftPath: String, rightPath: String, date: Date = Date()) {
+        self.id = id
+        self.title = title
+        self.leftPath = leftPath
+        self.rightPath = rightPath
+        self.date = date
+    }
+}
+
 public struct AlignedFolderRow: Identifiable, Sendable {
     public var id: String { relativePath }
     public let relativePath: String
@@ -33,8 +49,8 @@ public struct AlignedFolderRow: Identifiable, Sendable {
 @MainActor
 @Observable
 public final class FolderDiffViewModel {
-    public var leftFolderName: String = "Source Folder (with SF Symbols)"
-    public var rightFolderName: String = "Remote Target Folder"
+    public var leftFolderName: String = "Source Folder"
+    public var rightFolderName: String = "Target Folder"
 
     public var leftFolderURL: URL?
     public var rightFolderURL: URL?
@@ -56,6 +72,9 @@ public final class FolderDiffViewModel {
     public var addedCount: Int = 0
     public var deletedCount: Int = 0
 
+    public var recentSessions: [RecentCompareSession] = []
+    public var selectedSidebarSection: String?
+
     public var onOpenFileDiff: ((URL, URL) -> Void)?
 
     private let diffEngine: DiffEngineProtocol
@@ -72,7 +91,7 @@ public final class FolderDiffViewModel {
         if let l = leftURL, let r = rightURL {
             setFolders(left: l, right: r)
         } else {
-            loadSampleData()
+            loadDefaultFolders()
         }
     }
 
@@ -81,6 +100,16 @@ public final class FolderDiffViewModel {
         self.rightFolderURL = right
         self.leftFolderName = left.lastPathComponent
         self.rightFolderName = right.lastPathComponent
+
+        // Record recent session
+        let title = "\(left.lastPathComponent) ↔ \(right.lastPathComponent)"
+        if !recentSessions.contains(where: { $0.leftPath == left.path && $0.rightPath == right.path }) {
+            recentSessions.insert(RecentCompareSession(title: title, leftPath: left.path, rightPath: right.path), at: 0)
+            if recentSessions.count > 10 {
+                recentSessions.removeLast()
+            }
+        }
+
         Task {
             await scanDirectories()
         }
@@ -88,7 +117,7 @@ public final class FolderDiffViewModel {
 
     public func chooseLeftFolder() {
         let panel = NSOpenPanel()
-        panel.title = "Select Left Directory"
+        panel.title = "Select Source (Left) Directory"
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
@@ -96,13 +125,17 @@ public final class FolderDiffViewModel {
         if panel.runModal() == .OK, let url = panel.url {
             self.leftFolderURL = url
             self.leftFolderName = url.lastPathComponent
-            Task { await scanDirectories() }
+            if let r = rightFolderURL {
+                setFolders(left: url, right: r)
+            } else {
+                Task { await scanDirectories() }
+            }
         }
     }
 
     public func chooseRightFolder() {
         let panel = NSOpenPanel()
-        panel.title = "Select Right Directory"
+        panel.title = "Select Target (Right) Directory"
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
@@ -110,8 +143,72 @@ public final class FolderDiffViewModel {
         if panel.runModal() == .OK, let url = panel.url {
             self.rightFolderURL = url
             self.rightFolderName = url.lastPathComponent
+            if let l = leftFolderURL {
+                setFolders(left: l, right: url)
+            } else {
+                Task { await scanDirectories() }
+            }
+        }
+    }
+
+    // MARK: - Quick Sidebar Actions
+
+    public func openDocumentsFolder(forLeft: Bool = true) {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+        if let docs = docs {
+            if forLeft {
+                leftFolderURL = docs
+                leftFolderName = "Documents"
+            } else {
+                rightFolderURL = docs
+                rightFolderName = "Documents"
+            }
             Task { await scanDirectories() }
         }
+    }
+
+    public func openDownloadsFolder(forLeft: Bool = true) {
+        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
+        if let downloads = downloads {
+            if forLeft {
+                leftFolderURL = downloads
+                leftFolderName = "Downloads"
+            } else {
+                rightFolderURL = downloads
+                rightFolderName = "Downloads"
+            }
+            Task { await scanDirectories() }
+        }
+    }
+
+    public func openDesktopFolder(forLeft: Bool = true) {
+        let desktop = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first
+        if let desktop = desktop {
+            if forLeft {
+                leftFolderURL = desktop
+                leftFolderName = "Desktop"
+            } else {
+                rightFolderURL = desktop
+                rightFolderName = "Desktop"
+            }
+            Task { await scanDirectories() }
+        }
+    }
+
+    public func swapFolders() {
+        let tempURL = leftFolderURL
+        let tempName = leftFolderName
+        leftFolderURL = rightFolderURL
+        leftFolderName = rightFolderName
+        rightFolderURL = tempURL
+        rightFolderName = tempName
+        Task { await scanDirectories() }
+    }
+
+    public func loadRecentSession(_ session: RecentCompareSession) {
+        let l = URL(fileURLWithPath: session.leftPath)
+        let r = URL(fileURLWithPath: session.rightPath)
+        setFolders(left: l, right: r)
     }
 
     public func scanDirectories() async {
@@ -120,15 +217,13 @@ public final class FolderDiffViewModel {
         }
 
         isScanning = true
-        let modeInt = selectedMode == .deepHash ? 1 : 0
-        let results = await diffEngine.compareFolders(
+        let rawEntries = await diffEngine.compareFolders(
             leftPath: left.path,
             rightPath: right.path,
-            mode: modeInt,
+            mode: selectedMode == .deepHash ? 1 : 0,
             excludePatterns: excludePatterns
         )
 
-        var rows: [AlignedFolderRow] = []
         var mod = 0
         var add = 0
         var del = 0
@@ -136,7 +231,7 @@ public final class FolderDiffViewModel {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MMM d, yyyy 'at' HH:mm"
 
-        for entry in results {
+        let mapped = rawEntries.map { entry -> AlignedFolderRow in
             switch entry.status {
             case .contentDifferent, .metadataDifferent:
                 mod += 1
@@ -148,17 +243,19 @@ public final class FolderDiffViewModel {
                 break
             }
 
-            let lSizeStr = entry.leftSize.map { formatByteSize($0) } ?? ""
-            let rSizeStr = entry.rightSize.map { formatByteSize($0) } ?? ""
+            let lSizeStr = entry.leftSize.map { formatByteCount($0) } ?? "---"
+            let rSizeStr = entry.rightSize.map { formatByteCount($0) } ?? "---"
 
-            let lDateStr = entry.leftModifiedTimestamp.map { dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval($0))) } ?? "---"
-            let rDateStr = entry.rightModifiedTimestamp.map { dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval($0))) } ?? "---"
+            let lDateStr = entry.leftModifiedTimestamp.map {
+                dateFormatter.string(from: Date(timeIntervalSince1970: Double($0)))
+            } ?? "---"
+            let rDateStr = entry.rightModifiedTimestamp.map {
+                dateFormatter.string(from: Date(timeIntervalSince1970: Double($0)))
+            } ?? "---"
 
-            let fileName = (entry.relativePath as NSString).lastPathComponent
-
-            rows.append(AlignedFolderRow(
+            return AlignedFolderRow(
                 relativePath: entry.relativePath,
-                name: fileName,
+                name: URL(fileURLWithPath: entry.relativePath).lastPathComponent,
                 isDirectory: entry.isDirectory,
                 status: entry.status,
                 leftSizeFormatted: lSizeStr,
@@ -169,60 +266,54 @@ public final class FolderDiffViewModel {
                 rightHash: entry.rightHash,
                 leftURL: entry.leftURL,
                 rightURL: entry.rightURL
-            ))
+            )
         }
 
-        self.entries = rows
-        self.totalScanned = rows.count
+        self.entries = mapped
+        self.totalScanned = mapped.count
         self.modifiedCount = mod
         self.addedCount = add
         self.deletedCount = del
         self.isScanning = false
     }
 
-    private func formatByteSize(_ bytes: UInt64) -> String {
-        if bytes < 1024 { return "\(bytes) B" }
-        let kb = Double(bytes) / 1024.0
-        if kb < 1024 { return String(format: "%.1f KB", kb) }
-        let mb = kb / 1024.0
-        return String(format: "%.1f MB", mb)
-    }
-
-    // MARK: - Double Click File Action
-
     public func handleRowDoubleClick(entry: AlignedFolderRow) {
         guard !entry.isDirectory else { return }
-        if let l = entry.leftURL, let r = entry.rightURL {
-            onOpenFileDiff?(l, r)
-        } else if let l = entry.leftURL, let rightBase = rightFolderURL {
-            let r = rightBase.appendingPathComponent(entry.relativePath)
-            onOpenFileDiff?(l, r)
-        } else if let r = entry.rightURL, let leftBase = leftFolderURL {
-            let l = leftBase.appendingPathComponent(entry.relativePath)
-            onOpenFileDiff?(l, r)
-        }
-    }
-
-    // MARK: - Sync Plan Generation & Execution
-
-    public func syncLeftToRight() {
-        guard let leftBase = leftFolderURL, let rightBase = rightFolderURL else {
-            isDryRunPresented = true
+        guard let lURL = entry.leftURL ?? leftFolderURL?.appendingPathComponent(entry.relativePath),
+              let rURL = entry.rightURL ?? rightFolderURL?.appendingPathComponent(entry.relativePath) else {
             return
         }
+        onOpenFileDiff?(lURL, rURL)
+    }
 
+    public func syncLeftToRight() {
         var plan: [SyncPlanItem] = []
         for entry in entries {
-            let src = leftBase.appendingPathComponent(entry.relativePath)
-            let dst = rightBase.appendingPathComponent(entry.relativePath)
-
             switch entry.status {
             case .leftOnly:
-                plan.append(SyncPlanItem(action: .copyLeftToRight, relativePath: entry.relativePath, sourceURL: src, targetURL: dst, size: nil))
+                plan.append(SyncPlanItem(
+                    action: .copyLeftToRight,
+                    relativePath: entry.relativePath,
+                    sourceURL: entry.leftURL ?? leftFolderURL?.appendingPathComponent(entry.relativePath),
+                    targetURL: rightFolderURL?.appendingPathComponent(entry.relativePath),
+                    size: nil
+                ))
             case .contentDifferent, .metadataDifferent:
-                plan.append(SyncPlanItem(action: .overwriteLeftToRight, relativePath: entry.relativePath, sourceURL: src, targetURL: dst, size: nil))
+                plan.append(SyncPlanItem(
+                    action: .overwriteLeftToRight,
+                    relativePath: entry.relativePath,
+                    sourceURL: entry.leftURL ?? leftFolderURL?.appendingPathComponent(entry.relativePath),
+                    targetURL: entry.rightURL ?? rightFolderURL?.appendingPathComponent(entry.relativePath),
+                    size: nil
+                ))
             case .rightOnly:
-                plan.append(SyncPlanItem(action: .deleteRight, relativePath: entry.relativePath, sourceURL: nil, targetURL: dst, size: nil))
+                plan.append(SyncPlanItem(
+                    action: .deleteRight,
+                    relativePath: entry.relativePath,
+                    sourceURL: nil,
+                    targetURL: entry.rightURL ?? rightFolderURL?.appendingPathComponent(entry.relativePath),
+                    size: nil
+                ))
             case .equal:
                 break
             }
@@ -232,23 +323,33 @@ public final class FolderDiffViewModel {
     }
 
     public func syncRightToLeft() {
-        guard let leftBase = leftFolderURL, let rightBase = rightFolderURL else {
-            isDryRunPresented = true
-            return
-        }
-
         var plan: [SyncPlanItem] = []
         for entry in entries {
-            let src = rightBase.appendingPathComponent(entry.relativePath)
-            let dst = leftBase.appendingPathComponent(entry.relativePath)
-
             switch entry.status {
             case .rightOnly:
-                plan.append(SyncPlanItem(action: .copyRightToLeft, relativePath: entry.relativePath, sourceURL: dst, targetURL: src, size: nil))
+                plan.append(SyncPlanItem(
+                    action: .copyRightToLeft,
+                    relativePath: entry.relativePath,
+                    sourceURL: entry.rightURL ?? rightFolderURL?.appendingPathComponent(entry.relativePath),
+                    targetURL: leftFolderURL?.appendingPathComponent(entry.relativePath),
+                    size: nil
+                ))
             case .contentDifferent, .metadataDifferent:
-                plan.append(SyncPlanItem(action: .overwriteRightToLeft, relativePath: entry.relativePath, sourceURL: dst, targetURL: src, size: nil))
+                plan.append(SyncPlanItem(
+                    action: .overwriteRightToLeft,
+                    relativePath: entry.relativePath,
+                    sourceURL: entry.rightURL ?? rightFolderURL?.appendingPathComponent(entry.relativePath),
+                    targetURL: entry.leftURL ?? leftFolderURL?.appendingPathComponent(entry.relativePath),
+                    size: nil
+                ))
             case .leftOnly:
-                plan.append(SyncPlanItem(action: .deleteLeft, relativePath: entry.relativePath, sourceURL: dst, targetURL: nil, size: nil))
+                plan.append(SyncPlanItem(
+                    action: .deleteLeft,
+                    relativePath: entry.relativePath,
+                    sourceURL: entry.leftURL ?? leftFolderURL?.appendingPathComponent(entry.relativePath),
+                    targetURL: nil,
+                    size: nil
+                ))
             case .equal:
                 break
             }
@@ -260,118 +361,31 @@ public final class FolderDiffViewModel {
     public func executePendingSync() async {
         guard !pendingSyncPlan.isEmpty else { return }
         do {
-            let result = try await diffEngine.executeSyncPlan(items: pendingSyncPlan)
-            self.syncExecutionResult = "Sync Complete: \(result.successCount) files synchronized."
+            let res = try await diffEngine.executeSyncPlan(items: pendingSyncPlan)
+            syncExecutionResult = "Sync completed: \(res.successCount) succeeded, \(res.errorCount) errors."
+            pendingSyncPlan = []
             await scanDirectories()
         } catch {
-            self.syncExecutionResult = "Sync Error: \(error.localizedDescription)"
+            syncExecutionResult = "Sync Failed: \(error.localizedDescription)"
         }
     }
 
-    public func loadSampleData() {
-        self.entries = [
-            AlignedFolderRow(
-                relativePath: "blts",
-                name: "blts",
-                isDirectory: true,
-                status: .equal,
-                leftSizeFormatted: "",
-                leftModifiedFormatted: "Nov 3, 2021 at 22:35",
-                rightSizeFormatted: "",
-                rightModifiedFormatted: "Nov 3, 2021 at 12:38",
-                leftHash: nil,
-                rightHash: nil,
-                leftURL: nil,
-                rightURL: nil
-            ),
-            AlignedFolderRow(
-                relativePath: "source/config",
-                name: "config",
-                isDirectory: true,
-                status: .equal,
-                leftSizeFormatted: "",
-                leftModifiedFormatted: "Nov 3, 2021 at 22:35",
-                rightSizeFormatted: "",
-                rightModifiedFormatted: "Nov 3, 2021 at 12:30",
-                leftHash: nil,
-                rightHash: nil,
-                leftURL: nil,
-                rightURL: nil
-            ),
-            AlignedFolderRow(
-                relativePath: "source/config/.gitigmode.swift",
-                name: ".gitigmode.swift",
-                isDirectory: false,
-                status: .equal,
-                leftSizeFormatted: "1.5 KB",
-                leftModifiedFormatted: "Nov 3, 2021 at 22:35",
-                rightSizeFormatted: "1.5 KB",
-                rightModifiedFormatted: "Nov 3, 2021 at 12:39",
-                leftHash: "A1B2C3D4",
-                rightHash: "A1B2C3D4",
-                leftURL: nil,
-                rightURL: nil
-            ),
-            AlignedFolderRow(
-                relativePath: "source/config/.gitignore.swift",
-                name: ".gitignore.swift",
-                isDirectory: false,
-                status: .contentDifferent,
-                leftSizeFormatted: "159 KB",
-                leftModifiedFormatted: "Nov 3, 2021 at 22:35",
-                rightSizeFormatted: "153 KB",
-                rightModifiedFormatted: "Dec 3, 2021 at 12:37",
-                leftHash: "5F8A1B2C",
-                rightHash: "9E7D4C3B",
-                leftURL: nil,
-                rightURL: nil
-            ),
-            AlignedFolderRow(
-                relativePath: "source/config/macCompare.swift",
-                name: "macCompare.swift",
-                isDirectory: false,
-                status: .contentDifferent,
-                leftSizeFormatted: "15.4 KB",
-                leftModifiedFormatted: "Dec 3, 2021 at 20:56",
-                rightSizeFormatted: "---",
-                rightModifiedFormatted: "---",
-                leftHash: "7C3D2E1F",
-                rightHash: nil,
-                leftURL: nil,
-                rightURL: nil
-            ),
-            AlignedFolderRow(
-                relativePath: "source/config/licensed.swift",
-                name: "licensed.swift",
-                isDirectory: false,
-                status: .leftOnly,
-                leftSizeFormatted: "3.3 KB",
-                leftModifiedFormatted: "Dec 3, 2021 at 13:38",
-                rightSizeFormatted: "---",
-                rightModifiedFormatted: "---",
-                leftHash: "8D4E1F2A",
-                rightHash: nil,
-                leftURL: nil,
-                rightURL: nil
-            ),
-            AlignedFolderRow(
-                relativePath: "source/config/result.swift",
-                name: "result.swift",
-                isDirectory: false,
-                status: .rightOnly,
-                leftSizeFormatted: "---",
-                leftModifiedFormatted: "---",
-                rightSizeFormatted: "1.1 KB",
-                rightModifiedFormatted: "Dec 3, 2021 at 10:58",
-                leftHash: nil,
-                rightHash: "3B2A1F9E",
-                leftURL: nil,
-                rightURL: nil
-            )
-        ]
-        self.totalScanned = 1420
-        self.modifiedCount = 18
-        self.addedCount = 5
-        self.deletedCount = 2
+    private func loadDefaultFolders() {
+        let cwd = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+        self.leftFolderURL = cwd
+        self.leftFolderName = cwd.lastPathComponent
+        self.rightFolderURL = cwd
+        self.rightFolderName = cwd.lastPathComponent
+
+        Task {
+            await scanDirectories()
+        }
+    }
+
+    private func formatByteCount(_ bytes: UInt64) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useAll]
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: Int64(bytes))
     }
 }
