@@ -33,15 +33,18 @@ public struct TabItem: Identifiable, Equatable, Sendable {
 @MainActor
 @Observable
 public final class TabManager {
-    public var tabs: [TabItem] = [
-        TabItem(title: "Compare: script.py", type: .textDiff),
-        TabItem(title: "Compare: src", type: .folderDiff),
-        TabItem(title: "Merge: MainView.swift", type: .threeWayMerge)
-    ]
+    public var tabs: [TabItem] = []
     public var selectedTabId: UUID?
 
+    public var textDiffViewModels: [UUID: TextDiffViewModel] = [:]
+    public var folderDiffViewModels: [UUID: FolderDiffViewModel] = [:]
+    public var threeWayMergeViewModels: [UUID: ThreeWayMergeViewModel] = [:]
+
     public init() {
-        self.selectedTabId = tabs.first?.id
+        let initialTab = TabItem(title: "Compare: script.py", type: .textDiff)
+        tabs.append(initialTab)
+        selectedTabId = initialTab.id
+        textDiffViewModels[initialTab.id] = TextDiffViewModel()
     }
 
     public var activeTab: TabItem? {
@@ -55,6 +58,10 @@ public final class TabManager {
     public func closeTab(id: UUID) {
         guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
         tabs.remove(at: index)
+        textDiffViewModels.removeValue(forKey: id)
+        folderDiffViewModels.removeValue(forKey: id)
+        threeWayMergeViewModels.removeValue(forKey: id)
+
         if selectedTabId == id {
             selectedTabId = tabs.indices.contains(index) ? tabs[index].id : tabs.last?.id
         }
@@ -65,5 +72,81 @@ public final class TabManager {
         let newTab = TabItem(title: newTitle, type: type)
         tabs.append(newTab)
         selectedTabId = newTab.id
+
+        switch type {
+        case .textDiff:
+            textDiffViewModels[newTab.id] = TextDiffViewModel()
+        case .folderDiff:
+            let vm = FolderDiffViewModel()
+            vm.onOpenFileDiff = { [weak self] left, right in
+                self?.openTextDiff(left: left, right: right)
+            }
+            folderDiffViewModels[newTab.id] = vm
+        case .threeWayMerge:
+            threeWayMergeViewModels[newTab.id] = ThreeWayMergeViewModel()
+        }
+    }
+
+    public func openTextDiff(left: URL, right: URL) {
+        let title = "\(left.lastPathComponent) ↔ \(right.lastPathComponent)"
+        let newTab = TabItem(title: title, type: .textDiff)
+        tabs.append(newTab)
+        selectedTabId = newTab.id
+
+        let vm = TextDiffViewModel(leftURL: left, rightURL: right)
+        textDiffViewModels[newTab.id] = vm
+    }
+
+    public func openFolderDiff(left: URL, right: URL) {
+        let title = "\(left.lastPathComponent) ↔ \(right.lastPathComponent)"
+        let newTab = TabItem(title: title, type: .folderDiff)
+        tabs.append(newTab)
+        selectedTabId = newTab.id
+
+        let vm = FolderDiffViewModel(leftURL: left, rightURL: right)
+        vm.onOpenFileDiff = { [weak self] l, r in
+            self?.openTextDiff(left: l, right: r)
+        }
+        folderDiffViewModels[newTab.id] = vm
+    }
+
+    public func openThreeWayMerge(local: URL, base: URL, remote: URL, output: URL? = nil) {
+        let title = "Merge: \(local.lastPathComponent)"
+        let newTab = TabItem(title: title, type: .threeWayMerge)
+        tabs.append(newTab)
+        selectedTabId = newTab.id
+
+        let vm = ThreeWayMergeViewModel(localURL: local, baseURL: base, remoteURL: remote, outputURL: output)
+        threeWayMergeViewModels[newTab.id] = vm
+    }
+
+    public func textDiffViewModel(for tabId: UUID) -> TextDiffViewModel {
+        if let vm = textDiffViewModels[tabId] {
+            return vm
+        }
+        let vm = TextDiffViewModel()
+        textDiffViewModels[tabId] = vm
+        return vm
+    }
+
+    public func folderDiffViewModel(for tabId: UUID) -> FolderDiffViewModel {
+        if let vm = folderDiffViewModels[tabId] {
+            return vm
+        }
+        let vm = FolderDiffViewModel()
+        vm.onOpenFileDiff = { [weak self] l, r in
+            self?.openTextDiff(left: l, right: r)
+        }
+        folderDiffViewModels[tabId] = vm
+        return vm
+    }
+
+    public func threeWayMergeViewModel(for tabId: UUID) -> ThreeWayMergeViewModel {
+        if let vm = threeWayMergeViewModels[tabId] {
+            return vm
+        }
+        let vm = ThreeWayMergeViewModel()
+        threeWayMergeViewModels[tabId] = vm
+        return vm
     }
 }

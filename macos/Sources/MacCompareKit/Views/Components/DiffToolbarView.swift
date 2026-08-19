@@ -19,6 +19,7 @@ public struct DiffToolbarView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+                .help("Jump to previous difference hunk")
 
                 Button {
                     viewModel.nextDiff()
@@ -28,6 +29,7 @@ public struct DiffToolbarView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+                .help("Jump to next difference hunk")
             }
 
             Divider().frame(height: 16)
@@ -40,33 +42,47 @@ public struct DiffToolbarView: View {
             .toggleStyle(.switch)
             .controlSize(.mini)
 
+            Toggle(isOn: $viewModel.ignoreCase) {
+                Text("Ignore Case")
+                    .font(.system(size: 12))
+            }
+            .toggleStyle(.switch)
+            .controlSize(.mini)
+
             Spacer()
 
             // Merge Actions
             HStack(spacing: 6) {
-                Button("Take Left") {
+                Button {
                     viewModel.takeLeft()
+                } label: {
+                    Label("Take Left", systemImage: "arrow.right.to.line")
+                        .font(.system(size: 11))
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+                .help("Copy current diff hunk from left to right")
 
-                Button("Take Right") {
+                Button {
                     viewModel.takeRight()
+                } label: {
+                    Label("Take Right", systemImage: "arrow.left.to.line")
+                        .font(.system(size: 11))
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+                .help("Copy current diff hunk from right to left")
             }
 
             Divider().frame(height: 16)
 
-            // Encoding
+            // Encoding Selector
             Picker("", selection: $viewModel.selectedEncoding) {
-                Text("UTF-8").tag("UTF-8")
-                Text("UTF-16").tag("UTF-16")
-                Text("GBK").tag("GBK")
-                Text("ASCII").tag("ASCII")
+                ForEach(FileEncoding.allCases) { enc in
+                    Text(enc.rawValue).tag(enc)
+                }
             }
-            .frame(width: 90)
+            .frame(width: 100)
             .controlSize(.small)
         }
         .padding(.horizontal, 14)
@@ -79,19 +95,29 @@ public struct StatusBarView: View {
     public let cursorInfo: String
     public let diffStats: String
     public let encoding: String
+    public let statusMessage: String?
 
     public init(
-        cursorInfo: String = "Ln 42, Col 15",
-        diffStats: String = "3 changes, 1 addition, 2 deletions",
-        encoding: String = "UTF-8"
+        cursorInfo: String = "Ln 1, Col 1",
+        diffStats: String = "0 changes",
+        encoding: String = "UTF-8",
+        statusMessage: String? = nil
     ) {
         self.cursorInfo = cursorInfo
         self.diffStats = diffStats
         self.encoding = encoding
+        self.statusMessage = statusMessage
     }
 
     public var body: some View {
         HStack(spacing: 16) {
+            if let msg = statusMessage {
+                Text(msg)
+                    .font(.system(size: 11))
+                    .foregroundColor(.accentColor)
+                    .lineLimit(1)
+            }
+
             Spacer()
 
             Text(cursorInfo)

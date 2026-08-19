@@ -24,7 +24,8 @@ public struct ThreeWayMergeView: View {
                             branch: viewModel.localBranchName,
                             content: viewModel.localContent,
                             accentColor: .orange,
-                            isLeft: true
+                            isLeft: true,
+                            onOpen: { viewModel.openLocalFile() }
                         )
 
                         Divider()
@@ -35,7 +36,8 @@ public struct ThreeWayMergeView: View {
                             branch: viewModel.baseBranchName,
                             content: viewModel.baseContent,
                             accentColor: .gray,
-                            isBase: true
+                            isBase: true,
+                            onOpen: { viewModel.openBaseFile() }
                         )
 
                         Divider()
@@ -46,16 +48,17 @@ public struct ThreeWayMergeView: View {
                             branch: viewModel.remoteBranchName,
                             content: viewModel.remoteContent,
                             accentColor: .green,
-                            isRight: true
+                            isRight: true,
+                            onOpen: { viewModel.openRemoteFile() }
                         )
                     }
-                    .frame(height: geometry.size.height * 0.6)
+                    .frame(height: geometry.size.height * 0.58)
 
                     Divider()
 
                     // Bottom Merged Result Output
                     mergedOutputPane()
-                        .frame(height: geometry.size.height * 0.4)
+                        .frame(height: geometry.size.height * 0.42)
                 }
             }
         }
@@ -64,32 +67,38 @@ public struct ThreeWayMergeView: View {
 
     private func mergeHeaderBar() -> some View {
         HStack(spacing: 12) {
-            Image(systemName: "doc.text")
+            Image(systemName: "arrow.triangle.branch")
                 .foregroundColor(.secondary)
 
             Text(viewModel.filePath)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(.primary)
 
             Spacer()
 
             // Conflict Navigation
             HStack(spacing: 6) {
-                Button {} label: {
+                Button {
+                    viewModel.previousConflict()
+                } label: {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 10, weight: .bold))
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+                .disabled(viewModel.totalConflicts == 0)
 
-                Button {} label: {
+                Button {
+                    viewModel.nextConflict()
+                } label: {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 10, weight: .bold))
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+                .disabled(viewModel.totalConflicts == 0)
 
-                Text("Next Conflict (\(viewModel.currentConflictIndex) of \(viewModel.totalConflicts))")
+                Text("Conflict (\(viewModel.totalConflicts > 0 ? viewModel.currentConflictIndex + 1 : 0) of \(viewModel.totalConflicts))")
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
             }
@@ -126,7 +135,8 @@ public struct ThreeWayMergeView: View {
         accentColor: Color,
         isLeft: Bool = false,
         isBase: Bool = false,
-        isRight: Bool = false
+        isRight: Bool = false,
+        onOpen: @escaping () -> Void
     ) -> some View {
         VStack(spacing: 0) {
             // Column Header
@@ -145,6 +155,12 @@ public struct ThreeWayMergeView: View {
                     .foregroundColor(.secondary)
                 }
                 Spacer()
+
+                Button("Open...") {
+                    onOpen()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.mini)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
@@ -178,13 +194,13 @@ public struct ThreeWayMergeView: View {
 
             // Code Content
             ScrollView {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 1) {
                     ForEach(Array(content.components(separatedBy: .newlines).enumerated()), id: \.offset) { idx, line in
                         HStack(spacing: 8) {
-                            Text("\(idx + 43)")
+                            Text("\(idx + 1)")
                                 .font(.system(size: 10, design: .monospaced))
                                 .foregroundColor(.secondary)
-                                .frame(width: 24, alignment: .trailing)
+                                .frame(width: 28, alignment: .trailing)
 
                             Text(line)
                                 .font(.system(size: 11, design: .monospaced))
@@ -213,27 +229,41 @@ public struct ThreeWayMergeView: View {
                 Text("Merged Output Result")
                     .font(.system(size: 12, weight: .semibold))
 
-                Text("src/MainView.swift")
+                Text(viewModel.filePath)
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
+
+                if let msg = viewModel.statusMessage {
+                    Text("• \(msg)")
+                        .font(.system(size: 11))
+                        .foregroundColor(.accentColor)
+                }
 
                 Spacer()
 
                 Button {
-                    // Mark resolved
+                    viewModel.saveAndCompleteMerge()
                 } label: {
-                    Label("Mark Resolved", systemImage: "checkmark.circle.fill")
+                    Label("Mark Resolved & Save", systemImage: "checkmark.circle.fill")
                         .font(.system(size: 11))
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
 
                 HStack(spacing: 4) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundColor(.yellow)
-                    Text("Conflicts Detected (\(viewModel.totalConflicts) total)")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.secondary)
+                    if viewModel.totalConflicts > 0 {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.yellow)
+                        Text("\(viewModel.totalConflicts) Conflicts Remaining")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.orange)
+                    } else {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("All Conflicts Resolved")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.green)
+                    }
                 }
             }
             .padding(.horizontal, 12)
@@ -242,32 +272,12 @@ public struct ThreeWayMergeView: View {
 
             Divider()
 
-            // Merged Content
-            ScrollView {
-                VStack(alignment: .leading, spacing: 2) {
-                    ForEach(Array(viewModel.mergeResult.mergedText.components(separatedBy: .newlines).enumerated()), id: \.offset) { idx, line in
-                        HStack(spacing: 8) {
-                            Text("\(idx + 48)")
-                                .font(.system(size: 10, design: .monospaced))
-                                .foregroundColor(.secondary)
-                                .frame(width: 24, alignment: .trailing)
-
-                            Text(line)
-                                .font(.system(size: 11, design: .monospaced))
-                                .foregroundColor(line.contains("<<<<<<<") || line.contains(">>>>>>>") ? .red : .primary)
-
-                            Spacer()
-                        }
-                        .frame(height: 18)
-                        .background(
-                            line.contains("<<<<<<<") || line.contains(">>>>>>>") || line.contains("=======")
-                                ? Color.red.opacity(0.12)
-                                : Color.clear
-                        )
-                    }
-                }
-                .padding(.vertical, 4)
-            }
+            // Merged Content Text Editor
+            TextEditor(text: $viewModel.mergeResult.mergedText)
+                .font(.system(size: 12, design: .monospaced))
+                .scrollContentBackground(.hidden)
+                .background(Color(nsColor: .textBackgroundColor))
+                .padding(6)
         }
         .background(Color(nsColor: .windowBackgroundColor).opacity(0.3))
     }

@@ -1,7 +1,13 @@
 import SwiftUI
 
 public struct SyncActionSheet: View {
+    @Bindable public var viewModel: FolderDiffViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var isExecuting = false
+
+    public init(viewModel: FolderDiffViewModel) {
+        self.viewModel = viewModel
+    }
 
     public var body: some View {
         VStack(spacing: 16) {
@@ -12,7 +18,7 @@ public struct SyncActionSheet: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Dry Run: Sync Actions Preview")
                         .font(.headline)
-                    Text("No changes will be written to disk in preview mode.")
+                    Text("Review pending disk operations before executing.")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -21,32 +27,45 @@ public struct SyncActionSheet: View {
 
             Divider()
 
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Pending Sync Operations:")
-                    .font(.system(size: 12, weight: .semibold))
-
-                HStack {
-                    Image(systemName: "plus.circle.fill")
+            if viewModel.pendingSyncPlan.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 32))
                         .foregroundColor(.green)
-                    Text("Copy 5 files from Source to Target")
-                        .font(.system(size: 12))
+                    Text("Directories are completely in sync.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
                 }
-                HStack {
-                    Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
-                        .foregroundColor(.blue)
-                    Text("Overwrite 18 modified files")
-                        .font(.system(size: 12))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Pending Sync Operations (\(viewModel.pendingSyncPlan.count) items):")
+                        .font(.system(size: 12, weight: .semibold))
+
+                    ScrollView {
+                        VStack(spacing: 4) {
+                            ForEach(viewModel.pendingSyncPlan) { item in
+                                HStack(spacing: 8) {
+                                    icon(for: item.action)
+                                    Text(item.relativePath)
+                                        .font(.system(size: 11, design: .monospaced))
+                                        .lineLimit(1)
+                                    Spacer()
+                                    Text(item.action.rawValue)
+                                        .font(.system(size: 10))
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(RoundedRectangle(cornerRadius: 4).fill(Color(nsColor: .windowBackgroundColor).opacity(0.5)))
+                            }
+                        }
+                    }
+                    .frame(height: 160)
                 }
-                HStack {
-                    Image(systemName: "trash.circle.fill")
-                        .foregroundColor(.red)
-                    Text("Delete 2 orphan files on Target")
-                        .font(.system(size: 12))
-                }
+                .padding(8)
+                .background(RoundedRectangle(cornerRadius: 6).fill(Color(nsColor: .controlBackgroundColor)))
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(12)
-            .background(RoundedRectangle(cornerRadius: 6).fill(Color(nsColor: .controlBackgroundColor)))
 
             Spacer()
 
@@ -58,13 +77,31 @@ public struct SyncActionSheet: View {
 
                 Spacer()
 
-                Button("Execute Sync") {
-                    dismiss()
+                Button(isExecuting ? "Executing..." : "Execute Sync") {
+                    isExecuting = true
+                    Task {
+                        await viewModel.executePendingSync()
+                        isExecuting = false
+                        dismiss()
+                    }
                 }
                 .buttonStyle(.borderedProminent)
+                .disabled(viewModel.pendingSyncPlan.isEmpty || isExecuting)
             }
         }
         .padding(20)
-        .frame(width: 480, height: 280)
+        .frame(width: 520, height: 340)
+    }
+
+    @ViewBuilder
+    private func icon(for action: SyncActionType) -> some View {
+        switch action {
+        case .copyLeftToRight, .copyRightToLeft:
+            Image(systemName: "plus.circle.fill").foregroundColor(.green)
+        case .overwriteLeftToRight, .overwriteRightToLeft:
+            Image(systemName: "arrow.triangle.2.circlepath.circle.fill").foregroundColor(.blue)
+        case .deleteRight, .deleteLeft:
+            Image(systemName: "trash.circle.fill").foregroundColor(.red)
+        }
     }
 }

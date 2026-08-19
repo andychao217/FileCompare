@@ -2,9 +2,6 @@ import SwiftUI
 
 public struct MainWindowView: View {
     @State private var tabManager = TabManager()
-    @State private var textDiffViewModel = TextDiffViewModel()
-    @State private var folderDiffViewModel = FolderDiffViewModel()
-    @State private var threeWayMergeViewModel = ThreeWayMergeViewModel()
 
     public init() {}
 
@@ -19,11 +16,11 @@ public struct MainWindowView: View {
             if let activeTab = tabManager.activeTab {
                 switch activeTab.type {
                 case .textDiff:
-                    TwoWayDiffView(viewModel: textDiffViewModel)
+                    TwoWayDiffView(viewModel: tabManager.textDiffViewModel(for: activeTab.id))
                 case .folderDiff:
-                    FolderDiffView(viewModel: folderDiffViewModel)
+                    FolderDiffView(viewModel: tabManager.folderDiffViewModel(for: activeTab.id))
                 case .threeWayMerge:
-                    ThreeWayMergeView(viewModel: threeWayMergeViewModel)
+                    ThreeWayMergeView(viewModel: tabManager.threeWayMergeViewModel(for: activeTab.id))
                 }
             } else {
                 VStack(spacing: 12) {

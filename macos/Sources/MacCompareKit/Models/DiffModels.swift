@@ -1,5 +1,26 @@
 import Foundation
 
+/// Supported text encodings for reading and writing files.
+public enum FileEncoding: String, CaseIterable, Identifiable, Sendable {
+    case utf8 = "UTF-8"
+    case utf16 = "UTF-16"
+    case gbk = "GBK"
+    case ascii = "ASCII"
+    case isoLatin1 = "ISO-8859-1"
+
+    public var id: String { rawValue }
+
+    public var stringEncoding: String.Encoding {
+        switch self {
+        case .utf8: return .utf8
+        case .utf16: return .utf16
+        case .gbk: return String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue)))
+        case .ascii: return .ascii
+        case .isoLatin1: return .isoLatin1
+        }
+    }
+}
+
 /// Type of change for line or token diff.
 public enum ChangeType: String, Codable, Sendable {
     case unchanged = "Unchanged"
@@ -28,6 +49,28 @@ public struct DiffToken: Codable, Sendable, Identifiable {
     }
 }
 
+/// A contiguous group of changed lines (Hunk).
+public struct DiffHunk: Codable, Identifiable, Sendable {
+    public let id: Int
+    public let startLineIndex: Int
+    public let lineCount: Int
+    public let changeType: ChangeType
+
+    public init(id: Int, startLineIndex: Int, lineCount: Int, changeType: ChangeType) {
+        self.id = id
+        self.startLineIndex = startLineIndex
+        self.lineCount = lineCount
+        self.changeType = changeType
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case startLineIndex = "start_line_index"
+        case lineCount = "line_count"
+        case changeType = "change_type"
+    }
+}
+
 /// A visual diff line in a 2-way diff view.
 public struct DiffLine: Codable, Sendable, Identifiable {
     public var id: String {
@@ -35,11 +78,12 @@ public struct DiffLine: Codable, Sendable, Identifiable {
     }
     public let leftLineNumber: UInt32?
     public let rightLineNumber: UInt32?
-    public let contentLeft: String
-    public let contentRight: String
-    public let changeType: ChangeType
-    public let tokensLeft: [DiffToken]
-    public let tokensRight: [DiffToken]
+    public var contentLeft: String
+    public var contentRight: String
+    public var changeType: ChangeType
+    public var tokensLeft: [DiffToken]
+    public var tokensRight: [DiffToken]
+    public var hunkIndex: Int?
 
     public var isPhantomLeft: Bool { leftLineNumber == nil }
     public var isPhantomRight: Bool { rightLineNumber == nil }
@@ -51,7 +95,8 @@ public struct DiffLine: Codable, Sendable, Identifiable {
         contentRight: String,
         changeType: ChangeType,
         tokensLeft: [DiffToken] = [],
-        tokensRight: [DiffToken] = []
+        tokensRight: [DiffToken] = [],
+        hunkIndex: Int? = nil
     ) {
         self.leftLineNumber = leftLineNumber
         self.rightLineNumber = rightLineNumber
@@ -60,6 +105,7 @@ public struct DiffLine: Codable, Sendable, Identifiable {
         self.changeType = changeType
         self.tokensLeft = tokensLeft
         self.tokensRight = tokensRight
+        self.hunkIndex = hunkIndex
     }
 
     enum CodingKeys: String, CodingKey {
@@ -70,26 +116,30 @@ public struct DiffLine: Codable, Sendable, Identifiable {
         case changeType = "change_type"
         case tokensLeft = "tokens_left"
         case tokensRight = "tokens_right"
+        case hunkIndex = "hunk_index"
     }
 }
 
 /// Overall 2-way text diff result summary.
 public struct TextDiffResult: Codable, Sendable {
-    public let lines: [DiffLine]
-    public let totalAdditions: UInt32
-    public let totalDeletions: UInt32
-    public let totalModifications: UInt32
+    public var lines: [DiffLine]
+    public var totalAdditions: UInt32
+    public var totalDeletions: UInt32
+    public var totalModifications: UInt32
+    public var hunks: [DiffHunk]
 
     public init(
         lines: [DiffLine] = [],
         totalAdditions: UInt32 = 0,
         totalDeletions: UInt32 = 0,
-        totalModifications: UInt32 = 0
+        totalModifications: UInt32 = 0,
+        hunks: [DiffHunk] = []
     ) {
         self.lines = lines
         self.totalAdditions = totalAdditions
         self.totalDeletions = totalDeletions
         self.totalModifications = totalModifications
+        self.hunks = hunks
     }
 
     enum CodingKeys: String, CodingKey {
@@ -97,6 +147,7 @@ public struct TextDiffResult: Codable, Sendable {
         case totalAdditions = "total_additions"
         case totalDeletions = "total_deletions"
         case totalModifications = "total_modifications"
+        case hunks
     }
 }
 
@@ -122,6 +173,9 @@ public struct FolderDiffEntry: Codable, Sendable, Identifiable {
     public let leftHash: String?
     public let rightHash: String?
 
+    public var leftURL: URL?
+    public var rightURL: URL?
+
     public init(
         relativePath: String,
         isDirectory: Bool,
@@ -131,7 +185,9 @@ public struct FolderDiffEntry: Codable, Sendable, Identifiable {
         leftModifiedTimestamp: UInt64? = nil,
         rightModifiedTimestamp: UInt64? = nil,
         leftHash: String? = nil,
-        rightHash: String? = nil
+        rightHash: String? = nil,
+        leftURL: URL? = nil,
+        rightURL: URL? = nil
     ) {
         self.relativePath = relativePath
         self.isDirectory = isDirectory
@@ -142,6 +198,8 @@ public struct FolderDiffEntry: Codable, Sendable, Identifiable {
         self.rightModifiedTimestamp = rightModifiedTimestamp
         self.leftHash = leftHash
         self.rightHash = rightHash
+        self.leftURL = leftURL
+        self.rightURL = rightURL
     }
 
     enum CodingKeys: String, CodingKey {
@@ -154,6 +212,36 @@ public struct FolderDiffEntry: Codable, Sendable, Identifiable {
         case rightModifiedTimestamp = "right_modified_timestamp"
         case leftHash = "left_hash"
         case rightHash = "right_hash"
+    }
+}
+
+/// Types of file sync actions.
+public enum SyncActionType: String, Sendable, Identifiable {
+    case copyLeftToRight = "Copy from Source to Target"
+    case copyRightToLeft = "Copy from Target to Source"
+    case overwriteLeftToRight = "Overwrite Target with Source"
+    case overwriteRightToLeft = "Overwrite Source with Target"
+    case deleteRight = "Delete orphan on Target"
+    case deleteLeft = "Delete orphan on Source"
+
+    public var id: String { rawValue }
+}
+
+/// A specific sync operation for dry run.
+public struct SyncPlanItem: Identifiable, Sendable {
+    public var id: String { "\(action.rawValue)-\(relativePath)" }
+    public let action: SyncActionType
+    public let relativePath: String
+    public let sourceURL: URL?
+    public let targetURL: URL?
+    public let size: UInt64?
+
+    public init(action: SyncActionType, relativePath: String, sourceURL: URL?, targetURL: URL?, size: UInt64?) {
+        self.action = action
+        self.relativePath = relativePath
+        self.sourceURL = sourceURL
+        self.targetURL = targetURL
+        self.size = size
     }
 }
 
@@ -176,8 +264,9 @@ public struct MergeLine: Codable, Sendable, Identifiable {
     public let contentLocal: String
     public let contentBase: String
     public let contentRemote: String
-    public let status: MergeHunkStatus
+    public var status: MergeHunkStatus
     public var resolvedContent: String?
+    public var conflictIndex: Int?
 
     public init(
         localLineNumber: UInt32?,
@@ -187,7 +276,8 @@ public struct MergeLine: Codable, Sendable, Identifiable {
         contentBase: String,
         contentRemote: String,
         status: MergeHunkStatus,
-        resolvedContent: String? = nil
+        resolvedContent: String? = nil,
+        conflictIndex: Int? = nil
     ) {
         self.localLineNumber = localLineNumber
         self.baseLineNumber = baseLineNumber
@@ -197,6 +287,7 @@ public struct MergeLine: Codable, Sendable, Identifiable {
         self.contentRemote = contentRemote
         self.status = status
         self.resolvedContent = resolvedContent
+        self.conflictIndex = conflictIndex
     }
 
     enum CodingKeys: String, CodingKey {
@@ -208,6 +299,7 @@ public struct MergeLine: Codable, Sendable, Identifiable {
         case contentRemote = "content_remote"
         case status
         case resolvedContent = "resolved_content"
+        case conflictIndex = "conflict_index"
     }
 }
 

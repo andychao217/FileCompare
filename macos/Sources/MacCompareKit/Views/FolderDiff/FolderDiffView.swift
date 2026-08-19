@@ -11,11 +11,11 @@ public struct FolderDiffView: View {
         NavigationSplitView {
             // Sidebar
             List {
-                Section("Local") {
+                Section("Places") {
                     Label("MacCompare", systemImage: "folder")
-                    Label("Directory", systemImage: "folder")
+                    Label("Source Directory", systemImage: "folder.badge.gearshape")
                     Label("Documents", systemImage: "doc.on.doc")
-                    Label("Compare", systemImage: "arrow.triangle.2.circlepath")
+                    Label("Compare Tasks", systemImage: "arrow.triangle.2.circlepath")
                 }
             }
             .listStyle(.sidebar)
@@ -31,16 +31,18 @@ public struct FolderDiffView: View {
                 HStack(spacing: 0) {
                     // Left Folder Pane
                     folderColumn(
-                        title: viewModel.leftFolderPath,
-                        isLeft: true
+                        title: viewModel.leftFolderName,
+                        isLeft: true,
+                        onChoose: { viewModel.chooseLeftFolder() }
                     )
 
                     Divider()
 
                     // Right Folder Pane
                     folderColumn(
-                        title: viewModel.rightFolderPath,
-                        isLeft: false
+                        title: viewModel.rightFolderName,
+                        isLeft: false,
+                        onChoose: { viewModel.chooseRightFolder() }
                     )
                 }
 
@@ -48,14 +50,27 @@ public struct FolderDiffView: View {
 
                 // Bottom Status Bar
                 HStack(spacing: 8) {
-                    Text("\(viewModel.totalScanned) files scanned,")
-                        .foregroundColor(.secondary)
-                    Text("\(viewModel.modifiedCount) modified,")
-                        .foregroundColor(.orange)
-                    Text("\(viewModel.addedCount) added,")
-                        .foregroundColor(.green)
-                    Text("\(viewModel.deletedCount) deleted")
-                        .foregroundColor(.red)
+                    if viewModel.isScanning {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text("Scanning directory tree...")
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("\(viewModel.totalScanned) items,")
+                            .foregroundColor(.secondary)
+                        Text("\(viewModel.modifiedCount) modified,")
+                            .foregroundColor(.orange)
+                        Text("\(viewModel.addedCount) added,")
+                            .foregroundColor(.green)
+                        Text("\(viewModel.deletedCount) deleted")
+                            .foregroundColor(.red)
+                    }
+
+                    if let syncMsg = viewModel.syncExecutionResult {
+                        Spacer()
+                        Text(syncMsg)
+                            .foregroundColor(.accentColor)
+                    }
 
                     Spacer()
                 }
@@ -65,7 +80,7 @@ public struct FolderDiffView: View {
                 .background(Color(nsColor: .windowBackgroundColor).opacity(0.8))
             }
             .sheet(isPresented: $viewModel.isDryRunPresented) {
-                SyncActionSheet()
+                SyncActionSheet(viewModel: viewModel)
             }
         }
     }
@@ -90,6 +105,7 @@ public struct FolderDiffView: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
+            .help("Preview and sync all source files to target")
 
             Button {
                 viewModel.syncRightToLeft()
@@ -99,20 +115,21 @@ public struct FolderDiffView: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
+            .help("Preview and sync all target files to source")
 
             Spacer()
 
             Button {
-                // Filter rules
+                Task { await viewModel.scanDirectories() }
             } label: {
-                Label("Filter Rules (\(viewModel.filterRulesSummary))", systemImage: "line.3.horizontal.decrease.circle")
+                Label("Refresh", systemImage: "arrow.clockwise")
                     .font(.system(size: 11))
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
 
             Button {
-                viewModel.isDryRunPresented = true
+                viewModel.syncLeftToRight()
             } label: {
                 Label("Dry Run Preview", systemImage: "play.circle")
                     .font(.system(size: 11))
@@ -125,7 +142,11 @@ public struct FolderDiffView: View {
         .background(Color(nsColor: .controlBackgroundColor))
     }
 
-    private func folderColumn(title: String, isLeft: Bool) -> some View {
+    private func folderColumn(
+        title: String,
+        isLeft: Bool,
+        onChoose: @escaping () -> Void
+    ) -> some View {
         VStack(spacing: 0) {
             // Pane Header
             HStack(spacing: 6) {
@@ -133,20 +154,15 @@ public struct FolderDiffView: View {
                     .foregroundColor(isLeft ? .blue : .green)
                 Text(title)
                     .font(.system(size: 12, weight: .semibold))
+                    .lineLimit(1)
 
                 Spacer()
 
-                Button {} label: {
-                    Image(systemName: "info.circle")
-                        .font(.system(size: 11))
+                Button("Choose...") {
+                    onChoose()
                 }
-                .buttonStyle(.plain)
-
-                Button {} label: {
-                    Image(systemName: "square.split.2x1")
-                        .font(.system(size: 11))
-                }
-                .buttonStyle(.plain)
+                .buttonStyle(.bordered)
+                .controlSize(.mini)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
@@ -157,6 +173,9 @@ public struct FolderDiffView: View {
             // Column Titles
             HStack {
                 Text("Name").frame(maxWidth: .infinity, alignment: .leading)
+                if viewModel.selectedMode == .deepHash {
+                    Text("CRC32").frame(width: 80, alignment: .trailing)
+                }
                 Text("Size").frame(width: 70, alignment: .trailing)
                 Text("Modified").frame(width: 140, alignment: .trailing)
             }
@@ -173,6 +192,9 @@ public struct FolderDiffView: View {
                 VStack(spacing: 0) {
                     ForEach(viewModel.entries) { entry in
                         rowView(entry: entry, isLeft: isLeft)
+                            .onTapGesture(count: 2) {
+                                viewModel.handleRowDoubleClick(entry: entry)
+                            }
                     }
                 }
             }
@@ -187,10 +209,11 @@ public struct FolderDiffView: View {
                     .font(.system(size: 11, design: .monospaced))
                     .foregroundColor(.secondary.opacity(0.4))
                 Spacer()
-                Text("---").frame(width: 70, alignment: .trailing)
-                    .foregroundColor(.secondary.opacity(0.4))
-                Text("---").frame(width: 140, alignment: .trailing)
-                    .foregroundColor(.secondary.opacity(0.4))
+                if viewModel.selectedMode == .deepHash {
+                    Text("---").frame(width: 80, alignment: .trailing).foregroundColor(.secondary.opacity(0.4))
+                }
+                Text("---").frame(width: 70, alignment: .trailing).foregroundColor(.secondary.opacity(0.4))
+                Text("---").frame(width: 140, alignment: .trailing).foregroundColor(.secondary.opacity(0.4))
             } else {
                 HStack(spacing: 6) {
                     Image(systemName: entry.isDirectory ? "folder.fill" : "doc.text")
@@ -202,6 +225,13 @@ public struct FolderDiffView: View {
                         .lineLimit(1)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+
+                if viewModel.selectedMode == .deepHash {
+                    Text(isLeft ? (entry.leftHash ?? "---") : (entry.rightHash ?? "---"))
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(.secondary)
+                        .frame(width: 80, alignment: .trailing)
+                }
 
                 Text(isLeft ? entry.leftSizeFormatted : entry.rightSizeFormatted)
                     .font(.system(size: 10, design: .monospaced))
@@ -217,6 +247,7 @@ public struct FolderDiffView: View {
         .font(.system(size: 11))
         .padding(.horizontal, 12)
         .padding(.vertical, 3)
+        .contentShape(Rectangle())
         .background(rowBackground(for: entry.status, isLeft: isLeft))
     }
 
