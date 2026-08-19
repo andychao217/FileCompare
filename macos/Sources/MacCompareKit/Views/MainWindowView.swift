@@ -47,13 +47,11 @@ public struct MainWindowView: View {
         }
         .id(languageManager.effectiveLanguage)
         .frame(minWidth: 960, minHeight: 600)
-        .onAppear {
-            DispatchQueue.main.async {
-                if let window = NSApp.keyWindow ?? NSApp.windows.first(where: { $0.isVisible && $0.styleMask.contains(.titled) }) {
-                    WindowTabRegistry.shared.register(manager: tabManager, window: window)
-                }
+        .background(
+            WindowAccessor { window in
+                WindowTabRegistry.shared.register(manager: tabManager, window: window)
             }
-        }
+        )
         // MARK: - Menu Command Notification Listeners
         .onReceive(NotificationCenter.default.publisher(for: .mcNewTextCompare)) { _ in
             tabManager.addTab(type: .textDiff)

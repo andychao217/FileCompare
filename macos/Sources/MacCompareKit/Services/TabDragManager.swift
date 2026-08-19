@@ -35,14 +35,23 @@ public final class WindowTabRegistry {
         windowBindings[managerId]
     }
 
+    public func getAllRegistered() -> [(manager: TabManager, window: NSWindow)] {
+        var results: [(manager: TabManager, window: NSWindow)] = []
+        for (id, mgr) in registeredManagers {
+            if let win = windowBindings[id], win.isVisible {
+                results.append((mgr, win))
+            }
+        }
+        return results
+    }
+
     public func findHit(mousePos: NSPoint, sourceManagerId: UUID) -> TabDragHitResult {
-        // Find visible titled windows
         for (mgrId, window) in windowBindings {
             guard window.isVisible, !window.isMiniaturized else { continue }
             guard let manager = registeredManagers[mgrId] else { continue }
 
-            // Top Tab Bar frame in macOS screen coordinates
-            let barHeight: CGFloat = 40
+            // Top Tab Bar region (top 50px of window frame)
+            let barHeight: CGFloat = 50
             let barRect = NSRect(
                 x: window.frame.minX,
                 y: window.frame.maxY - barHeight,
@@ -67,6 +76,38 @@ public final class WindowTabRegistry {
     }
 }
 
+public struct WindowAccessor: NSViewRepresentable {
+    public let onWindow: (NSWindow) -> Void
+
+    public init(onWindow: @escaping (NSWindow) -> Void) {
+        self.onWindow = onWindow
+    }
+
+    public func makeNSView(context: Context) -> WindowAccessorView {
+        let view = WindowAccessorView()
+        view.onWindow = onWindow
+        return view
+    }
+
+    public func updateNSView(_ nsView: WindowAccessorView, context: Context) {
+        nsView.onWindow = onWindow
+        if let window = nsView.window {
+            onWindow(window)
+        }
+    }
+
+    public final class WindowAccessorView: NSView {
+        public var onWindow: ((NSWindow) -> Void)?
+
+        public override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            if let window = window {
+                onWindow?(window)
+            }
+        }
+    }
+}
+
 @MainActor
 @Observable
 public final class TabDragManager {
@@ -88,12 +129,6 @@ public final class TabDragManager {
 
     public func startDragging(tab: TabItem, from tabManager: TabManager) {
         guard !isDragging else { return }
-
-        // If only 1 tab in the entire app (1 window with 1 tab), dragging cannot tear off or merge
-        let allManagers = NSApp.windows.filter { $0.isVisible && $0.styleMask.contains(.titled) }
-        if tabManager.tabs.count <= 1 && allManagers.count <= 1 {
-            return
-        }
 
         self.isDragging = true
         self.draggingTabId = tab.id
@@ -216,6 +251,7 @@ public final class TabDragManager {
             if srcManager.tabs.isEmpty {
                 DispatchQueue.main.async {
                     sourceWin?.close()
+                    WindowTabRegistry.shared.unregister(managerId: srcManager.id)
                 }
             }
 

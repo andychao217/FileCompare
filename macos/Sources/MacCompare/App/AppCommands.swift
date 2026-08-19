@@ -48,11 +48,11 @@ public struct AppCommands: Commands {
 
         CommandGroup(after: .windowList) {
             Button(languageManager.text(.moveTabToNewWindow)) {
-                NotificationCenter.default.post(name: .mcMoveTabToNewWindow, object: nil)
+                WindowManager.shared.moveActiveTabToNewWindow()
             }
 
             Button(languageManager.text(.mergeAllWindows)) {
-                NotificationCenter.default.post(name: .mcMergeAllWindows, object: nil)
+                WindowManager.shared.mergeAllWindows()
             }
         }
 

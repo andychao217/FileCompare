@@ -20,7 +20,7 @@ public final class WindowManager {
         )
 
         window.tabbingIdentifier = defaultTabbingIdentifier
-        window.tabbingMode = .preferred
+        window.tabbingMode = .disallowed
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.contentView = hostingView
@@ -37,16 +37,48 @@ public final class WindowManager {
     }
 
     public func mergeAllWindows() {
-        if let keyWindow = NSApp.keyWindow {
-            keyWindow.mergeAllWindows(nil)
-        } else if let firstWindow = NSApp.windows.first(where: { $0.isVisible }) {
-            firstWindow.mergeAllWindows(nil)
+        let allEntries = WindowTabRegistry.shared.getAllRegistered()
+        guard allEntries.count > 1 else { return }
+
+        // Find key window or first window as destination
+        guard let primaryEntry = allEntries.first(where: { $0.window.isKeyWindow }) ?? allEntries.first else { return }
+        let targetManager = primaryEntry.manager
+        let targetWindow = primaryEntry.window
+
+        let otherEntries = allEntries.filter { $0.manager.id != targetManager.id }
+
+        for entry in otherEntries {
+            let srcManager = entry.manager
+            let srcWindow = entry.window
+
+            // Move all tabs from secondary window into destination window
+            let tabsToMove = srcManager.tabs
+            for tab in tabsToMove {
+                targetManager.transferTab(tabId: tab.id, from: srcManager)
+            }
+
+            // Close the secondary window safely
+            DispatchQueue.main.async {
+                srcWindow.close()
+                WindowTabRegistry.shared.unregister(managerId: srcManager.id)
+            }
         }
+
+        targetWindow.makeKeyAndOrderFront(nil)
     }
 
-    public func moveActiveTabToNewWindow(from tabManager: TabManager) {
-        guard let activeId = tabManager.selectedTabId, tabManager.tabs.count > 1 else { return }
-        guard let detachedManager = tabManager.detachTabToNewManager(id: activeId) else { return }
+    public func moveActiveTabToNewWindow(from tabManager: TabManager? = nil) {
+        let mgr: TabManager
+        if let tabManager {
+            mgr = tabManager
+        } else if let keyEntry = WindowTabRegistry.shared.getAllRegistered().first(where: { $0.window.isKeyWindow }) {
+            mgr = keyEntry.manager
+        } else {
+            return
+        }
+
+        guard let activeId = mgr.selectedTabId, mgr.tabs.count > 1 else { return }
+        guard let detachedManager = mgr.detachTabToNewManager(id: activeId) else { return }
         openDetachedWindow(with: detachedManager)
     }
 }
