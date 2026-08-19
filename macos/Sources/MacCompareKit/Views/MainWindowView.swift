@@ -1,12 +1,12 @@
 import SwiftUI
 
 public struct MainWindowView: View {
-    @Bindable public var tabManager: TabManager
+    @State private var tabManager: TabManager
     @State private var isSettingsSheetPresented: Bool = false
     @State private var languageManager = LanguageManager.shared
 
     public init(tabManager: TabManager? = nil) {
-        self.tabManager = tabManager ?? TabManager()
+        _tabManager = State(initialValue: tabManager ?? TabManager())
     }
 
     public var body: some View {

@@ -3,7 +3,7 @@ import AppKit
 import MacCompareKit
 
 public struct AppCommands: Commands {
-    @State private var languageManager = LanguageManager.shared
+    private var languageManager: LanguageManager { LanguageManager.shared }
 
     public init() {}
 

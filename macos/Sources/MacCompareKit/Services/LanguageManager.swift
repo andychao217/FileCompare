@@ -20,7 +20,7 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-public enum L10nKey: String, Sendable {
+public enum L10nKey: String, Sendable, CaseIterable {
     // Dialog Buttons & Actions
     case done
     case cancel
@@ -189,10 +189,12 @@ public final class LanguageManager {
 
     public private(set) var effectiveLanguage: AppLanguage = .en
     private var isUpdatingMenu = false
+    private var reverseLookupMap: [String: L10nKey] = [:]
 
     private init() {
         let saved = UserDefaults.standard.string(forKey: "mc_app_language") ?? AppLanguage.system.rawValue
         self.currentLanguage = AppLanguage(rawValue: saved) ?? .system
+        buildReverseLookup()
         updateEffectiveLanguage()
 
         NotificationCenter.default.addObserver(
@@ -204,6 +206,13 @@ public final class LanguageManager {
                 self?.localizeSystemMenu()
             }
         }
+    }
+
+    private func buildReverseLookup() {
+        reverseLookupMap.removeAll()
+        for (key, val) in enDictionary { reverseLookupMap[val] = key }
+        for (key, val) in zhHansDictionary { reverseLookupMap[val] = key }
+        for (key, val) in jaDictionary { reverseLookupMap[val] = key }
     }
 
     public func updateEffectiveLanguage() {
@@ -222,7 +231,6 @@ public final class LanguageManager {
             UserDefaults.standard.set([currentLanguage.rawValue, "en"], forKey: "AppleLanguages")
         }
 
-        // Schedule multiple passes to persist over SwiftUI menu rebuilds
         applyMenuLocalizationCycle()
     }
 
@@ -310,47 +318,70 @@ public final class LanguageManager {
     }
 
     private func localizeMenuItem(_ item: NSMenuItem) {
+        // 1. Match from Reverse Dictionary Map
+        if let key = reverseLookupMap[item.title] {
+            item.title = text(key)
+            return
+        }
+
+        // 2. Match standard selectors
         if let action = item.action {
             let actionName = NSStringFromSelector(action)
             switch actionName {
             case "orderFrontStandardAboutPanel:":
                 item.title = text(.aboutApp)
+                return
             case "hide:":
                 item.title = text(.hideApp)
+                return
             case "hideOtherApplications:":
                 item.title = text(.hideOthers)
+                return
             case "unhideAllApplications:":
                 item.title = text(.showAll)
+                return
             case "terminate:":
                 item.title = text(.quitApp)
+                return
             case "undo:":
                 item.title = text(.undo)
+                return
             case "redo:":
                 item.title = text(.redo)
+                return
             case "cut:":
                 item.title = text(.cut)
+                return
             case "copy:":
                 item.title = text(.copy)
+                return
             case "paste:":
                 item.title = text(.paste)
+                return
             case "delete:":
                 item.title = text(.delete)
+                return
             case "selectAll:":
                 item.title = text(.selectAll)
+                return
             case "toggleFullScreen:":
                 item.title = text(.toggleFullScreen)
+                return
             case "performMiniaturize:":
                 item.title = text(.minimize)
+                return
             case "performZoom:":
                 item.title = text(.zoom)
+                return
             case "arrangeInFront:":
                 item.title = text(.bringAllToFront)
+                return
             default:
                 break
             }
         }
 
-        // Catch Settings / Preferences / Services / Tab bar strings
+        // 3. Fallback substrings
         let lower = item.title.lowercased()
         if lower.contains("settings") || lower.contains("preferences") || item.title.contains("设置") || item.title.contains("設定") {
             item.title = text(.settings)
