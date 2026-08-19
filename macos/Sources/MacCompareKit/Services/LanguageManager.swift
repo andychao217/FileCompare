@@ -65,6 +65,16 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case shortcuts
     case coreFeatures
 
+    // Help Specific
+    case helpSubtitle
+    case tabDragMergeTitle
+    case textDiffDesc
+    case folderDiffDesc
+    case threeWayMergeDesc
+    case tabDragMergeDesc
+    case cancelTabDragDesc
+    case aboutFooter
+
     // Menu Items - Custom Commands
     case general
     case appearance
@@ -441,6 +451,14 @@ public final class LanguageManager {
         .userGuide: "User Guide",
         .shortcuts: "Keyboard Shortcuts",
         .coreFeatures: "Core Features",
+        .helpSubtitle: "macOS Native Diff & Merge Suite",
+        .tabDragMergeTitle: "Chrome-Style Tab Drag & Merge",
+        .textDiffDesc: "High-performance two-way diff with line highlighting, hunk merge actions (take left/right), character-level diffs, whitespace and case options.",
+        .folderDiffDesc: "Deep directory comparison and sync. Supports recursive tree scanning, CRC32 deep hashing, quick places navigation, and dry-run preview.",
+        .threeWayMergeDesc: "Interactive 3-way merge for Git conflicts (Local, Base, Remote). Auto-resolves non-conflicts and outputs clean merged files.",
+        .tabDragMergeDesc: "Drag tabs to reorder within window, drag outside to tear off into standalone window, and drag into another window's tab bar to merge seamlessly.",
+        .cancelTabDragDesc: "Cancel ongoing tab dragging operation",
+        .aboutFooter: "Built for macOS 14.0+ with Swift & SwiftUI.",
         .general: "General",
         .appearance: "Appearance",
         .language: "Language",
@@ -570,6 +588,14 @@ public final class LanguageManager {
         .userGuide: "用户使用指南",
         .shortcuts: "快捷键大全",
         .coreFeatures: "核心功能说明",
+        .helpSubtitle: "macOS 原生高效比对与合并套件",
+        .tabDragMergeTitle: "Chrome 风格标签页拖拽与合并",
+        .textDiffDesc: "高性能双向文本比对，支持逐行差异高亮、一键采纳左侧/右侧差异、字符级高亮、忽略空白符与大小写。",
+        .folderDiffDesc: "深度目录比对与同步工具。支持递归树形扫描、CRC32 深度哈希比对、常用位置快捷跳转与 Dry-Run 预演同步。",
+        .threeWayMergeDesc: "支持 Git 冲突三向合并 (Local, Base, Remote)。智能自动解决非冲突块，支持一键保存合并产物。",
+        .tabDragMergeDesc: "支持在窗口内拖拽排序、按住标签拖出窗口拆分为独立新窗口、将标签拖入其他窗口顶部标签栏实现多窗口自由合并。",
+        .cancelTabDragDesc: "取消当前正在进行的标签页拖拽",
+        .aboutFooter: "专为 macOS 14.0+ 打造，采用 Swift 与 SwiftUI 纯原生实现。",
         .general: "常规",
         .appearance: "外观",
         .language: "语言",
@@ -699,6 +725,14 @@ public final class LanguageManager {
         .userGuide: "ユーザーガイド",
         .shortcuts: "ショートカット一覧",
         .coreFeatures: "主な機能",
+        .helpSubtitle: "macOS ネイティブの差分比較・マージツール",
+        .tabDragMergeTitle: "Chrome風タブドラッグ＆結合",
+        .textDiffDesc: "行ハイライト、差分マージ（左右採用）、文字単位の差分、空白・大文字小文字無視を備えた高速2方向テキスト比較。",
+        .folderDiffDesc: "詳細なディレクトリ比較と同期。再帰ツリースキャン、CRC32ハッシュ比較、よく使う場所への移動、Dry-Runプレビューに対応。",
+        .threeWayMergeDesc: "Git競合用3方向マージ (Local, Base, Remote)。非競合箇所の自動解決とマージファイルの保存に対応。",
+        .tabDragMergeDesc: "ウインドウ内でのタブ並べ替え、ドラッグして独立ウインドウへ分離、他ウインドウのタブバーへドラッグしてシームレスに結合。",
+        .cancelTabDragDesc: "進行中のタブドラッグ操作をキャンセル",
+        .aboutFooter: "macOS 14.0+ 向けに Swift と SwiftUI で開発。",
         .general: "一般",
         .appearance: "外観",
         .language: "言語",

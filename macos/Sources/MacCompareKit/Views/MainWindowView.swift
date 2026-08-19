@@ -168,19 +168,9 @@ public struct MainWindowView: View {
             .frame(width: 520, height: 420)
         }
         .sheet(isPresented: $isHelpSheetPresented) {
-            VStack(spacing: 0) {
-                HStack {
-                    Spacer()
-                    Button(languageManager.text(.done)) {
-                        isHelpSheetPresented = false
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                    .padding(12)
-                }
-                HelpView()
+            HelpView {
+                isHelpSheetPresented = false
             }
-            .frame(width: 640, height: 500)
         }
     }
 }
