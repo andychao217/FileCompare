@@ -18,15 +18,27 @@ public enum TabContentType: String, CaseIterable, Identifiable, Sendable {
 
 public struct TabItem: Identifiable, Equatable, Sendable {
     public let id: UUID
-    public var title: String
+    public var customTitle: String?
     public var type: TabContentType
     public var isModified: Bool
 
-    public init(id: UUID = UUID(), title: String, type: TabContentType, isModified: Bool = false) {
+    public init(id: UUID = UUID(), title: String? = nil, type: TabContentType, isModified: Bool = false) {
         self.id = id
-        self.title = title
+        self.customTitle = title
         self.type = type
         self.isModified = isModified
+    }
+
+    @MainActor
+    public var displayTitle: String {
+        if let custom = customTitle, !custom.isEmpty {
+            return custom
+        }
+        switch type {
+        case .textDiff: return LanguageManager.shared.text(.newTextCompare)
+        case .folderDiff: return LanguageManager.shared.text(.newFolderCompare)
+        case .threeWayMerge: return LanguageManager.shared.text(.newThreeWayMerge)
+        }
     }
 }
 
@@ -41,7 +53,7 @@ public final class TabManager {
     public var threeWayMergeViewModels: [UUID: ThreeWayMergeViewModel] = [:]
 
     public init() {
-        let initialTab = TabItem(title: LanguageManager.shared.text(.newTextCompare), type: .textDiff)
+        let initialTab = TabItem(type: .textDiff)
         tabs.append(initialTab)
         selectedTabId = initialTab.id
         textDiffViewModels[initialTab.id] = TextDiffViewModel()
@@ -68,15 +80,7 @@ public final class TabManager {
     }
 
     public func addTab(type: TabContentType, title: String? = nil) {
-        let defaultTitle: String
-        switch type {
-        case .textDiff: defaultTitle = LanguageManager.shared.text(.newTextCompare)
-        case .folderDiff: defaultTitle = LanguageManager.shared.text(.newFolderCompare)
-        case .threeWayMerge: defaultTitle = LanguageManager.shared.text(.newThreeWayMerge)
-        }
-
-        let newTitle = title ?? defaultTitle
-        let newTab = TabItem(title: newTitle, type: type)
+        let newTab = TabItem(title: title, type: type)
         tabs.append(newTab)
         selectedTabId = newTab.id
 

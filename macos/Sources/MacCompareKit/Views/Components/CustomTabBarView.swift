@@ -21,7 +21,7 @@ public struct CustomTabBarView: View {
                             .font(.system(size: 11, weight: .medium))
                             .foregroundColor(isSelected ? .accentColor : .secondary)
 
-                        Text(tab.title)
+                        Text(tab.displayTitle)
                             .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
                             .foregroundColor(isSelected ? .primary : .secondary)
                             .lineLimit(1)
@@ -35,6 +35,7 @@ public struct CustomTabBarView: View {
                                     .foregroundColor(.secondary)
                             }
                             .buttonStyle(.plain)
+                            .focusEffectDisabled()
                             .padding(.leading, 2)
                         }
                     }
@@ -47,6 +48,7 @@ public struct CustomTabBarView: View {
                     )
                 }
                 .buttonStyle(.plain)
+                .focusEffectDisabled()
             }
 
             Spacer()
@@ -54,13 +56,13 @@ public struct CustomTabBarView: View {
             // New Tab Menu
             Menu {
                 Button(languageManager.text(.newTextCompare)) {
-                    tabManager.addTab(type: .textDiff, title: languageManager.text(.newTextCompare))
+                    tabManager.addTab(type: .textDiff)
                 }
                 Button(languageManager.text(.newFolderCompare)) {
-                    tabManager.addTab(type: .folderDiff, title: languageManager.text(.newFolderCompare))
+                    tabManager.addTab(type: .folderDiff)
                 }
                 Button(languageManager.text(.newThreeWayMerge)) {
-                    tabManager.addTab(type: .threeWayMerge, title: languageManager.text(.newThreeWayMerge))
+                    tabManager.addTab(type: .threeWayMerge)
                 }
             } label: {
                 Image(systemName: "plus")
@@ -69,6 +71,7 @@ public struct CustomTabBarView: View {
                     .padding(6)
             }
             .menuStyle(.borderlessButton)
+            .focusEffectDisabled()
 
             // Settings Button
             Button {
@@ -80,6 +83,7 @@ public struct CustomTabBarView: View {
                     .padding(6)
             }
             .buttonStyle(.plain)
+            .focusEffectDisabled()
             .help(languageManager.text(.settings))
         }
         .padding(.horizontal, 8)

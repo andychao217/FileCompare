@@ -101,7 +101,7 @@ public struct ThreeWayMergeView: View {
             Image(systemName: "arrow.triangle.branch")
                 .foregroundColor(.secondary)
 
-            Text(viewModel.filePath)
+            Text(viewModel.hasFilesLoaded ? viewModel.filePath : languageManager.text(.noFilesSelected))
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(.primary)
 
@@ -276,7 +276,7 @@ public struct ThreeWayMergeView: View {
                 Text(languageManager.text(.mergedOutputResult))
                     .font(.system(size: 12, weight: .semibold))
 
-                Text(viewModel.filePath)
+                Text(viewModel.hasFilesLoaded ? viewModel.filePath : languageManager.text(.noFilesSelected))
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
 

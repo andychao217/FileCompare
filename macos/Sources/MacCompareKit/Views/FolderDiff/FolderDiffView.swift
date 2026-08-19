@@ -95,7 +95,7 @@ public struct FolderDiffView: View {
                 HStack(spacing: 0) {
                     // Left Folder Pane
                     folderColumn(
-                        title: viewModel.leftFolderName,
+                        title: viewModel.leftFolderURL != nil ? viewModel.leftFolderName : languageManager.text(.noSourceFolder),
                         isLeft: true,
                         hasFolder: viewModel.leftFolderURL != nil,
                         onChoose: { viewModel.chooseLeftFolder() }
@@ -109,7 +109,7 @@ public struct FolderDiffView: View {
 
                     // Right Folder Pane
                     folderColumn(
-                        title: viewModel.rightFolderName,
+                        title: viewModel.rightFolderURL != nil ? viewModel.rightFolderName : languageManager.text(.noTargetFolder),
                         isLeft: false,
                         hasFolder: viewModel.rightFolderURL != nil,
                         onChoose: { viewModel.chooseRightFolder() }

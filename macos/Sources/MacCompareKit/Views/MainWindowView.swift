@@ -3,6 +3,7 @@ import SwiftUI
 public struct MainWindowView: View {
     @State private var tabManager = TabManager()
     @State private var isSettingsSheetPresented: Bool = false
+    @State private var languageManager = LanguageManager.shared
 
     public init() {}
 
@@ -28,10 +29,10 @@ public struct MainWindowView: View {
                     Image(systemName: "square.stack.3d.up.slash")
                         .font(.system(size: 36))
                         .foregroundColor(.secondary)
-                    Text("No Active Comparison")
+                    Text(languageManager.text(.noFileSelected))
                         .font(.headline)
                         .foregroundColor(.secondary)
-                    Button("Open New Comparison") {
+                    Button(languageManager.text(.newTextCompare)) {
                         tabManager.addTab(type: .textDiff)
                     }
                     .buttonStyle(.borderedProminent)
@@ -40,6 +41,7 @@ public struct MainWindowView: View {
                 .background(Color(nsColor: .windowBackgroundColor))
             }
         }
+        .id(languageManager.effectiveLanguage)
         .frame(minWidth: 960, minHeight: 600)
         // MARK: - Menu Command Notification Listeners
         .onReceive(NotificationCenter.default.publisher(for: .mcNewTextCompare)) { _ in
