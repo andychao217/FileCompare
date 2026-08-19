@@ -9,79 +9,61 @@ public enum TabDragHitResult {
 }
 
 @MainActor
-public final class TabBarRegistry {
-    public static let shared = TabBarRegistry()
+public final class WindowTabRegistry {
+    public static let shared = WindowTabRegistry()
 
-    private var registeredViews: [UUID: (manager: TabManager, view: NSView)] = [:]
+    private var registeredManagers: [UUID: TabManager] = [:]
+    private var windowBindings: [UUID: NSWindow] = [:]
 
     private init() {}
 
-    public func register(tabManager: TabManager, view: NSView) {
-        registeredViews[tabManager.id] = (tabManager, view)
+    public func register(manager: TabManager, window: NSWindow) {
+        registeredManagers[manager.id] = manager
+        windowBindings[manager.id] = window
     }
 
-    public func unregister(tabManager: TabManager) {
-        registeredViews.removeValue(forKey: tabManager.id)
+    public func unregister(managerId: UUID) {
+        registeredManagers.removeValue(forKey: managerId)
+        windowBindings.removeValue(forKey: managerId)
+    }
+
+    public func getManager(for id: UUID) -> TabManager? {
+        registeredManagers[id]
+    }
+
+    public func getWindow(for managerId: UUID) -> NSWindow? {
+        windowBindings[managerId]
     }
 
     public func findHit(mousePos: NSPoint, sourceManagerId: UUID) -> TabDragHitResult {
-        for (_, entry) in registeredViews {
-            guard let window = entry.view.window, window.isVisible else { continue }
-            let windowRect = entry.view.convert(entry.view.bounds, to: nil)
-            let screenFrame = window.convertToScreen(windowRect)
+        // Find visible titled windows
+        for (mgrId, window) in windowBindings {
+            guard window.isVisible, !window.isMiniaturized else { continue }
+            guard let manager = registeredManagers[mgrId] else { continue }
 
-            if screenFrame.contains(mousePos) {
-                let localX = max(0, mousePos.x - screenFrame.minX)
+            // Top Tab Bar frame in macOS screen coordinates
+            let barHeight: CGFloat = 40
+            let barRect = NSRect(
+                x: window.frame.minX,
+                y: window.frame.maxY - barHeight,
+                width: window.frame.width,
+                height: barHeight
+            )
+
+            if barRect.contains(mousePos) {
+                let localX = max(0, mousePos.x - barRect.minX)
                 let tabWidth: CGFloat = 130
-                let index = min(max(0, Int(round((localX - 16) / tabWidth))), entry.manager.tabs.count)
+                let calculatedIndex = min(max(0, Int(round((localX - 16) / tabWidth))), manager.tabs.count)
 
-                if entry.manager.id == sourceManagerId {
-                    return .sameWindowTabBar(manager: entry.manager, window: window, insertIndex: index)
+                if mgrId == sourceManagerId {
+                    return .sameWindowTabBar(manager: manager, window: window, insertIndex: calculatedIndex)
                 } else {
-                    return .otherWindowTabBar(manager: entry.manager, window: window, insertIndex: index)
+                    return .otherWindowTabBar(manager: manager, window: window, insertIndex: calculatedIndex)
                 }
             }
         }
+
         return .none
-    }
-}
-
-public struct TabBarFrameTracker: NSViewRepresentable {
-    public let tabManager: TabManager
-
-    public init(tabManager: TabManager) {
-        self.tabManager = tabManager
-    }
-
-    public func makeNSView(context: Context) -> TrackerNSView {
-        let view = TrackerNSView()
-        view.tabManager = tabManager
-        return view
-    }
-
-    public func updateNSView(_ nsView: TrackerNSView, context: Context) {
-        nsView.tabManager = tabManager
-        if nsView.window != nil {
-            TabBarRegistry.shared.register(tabManager: tabManager, view: nsView)
-        }
-    }
-
-    public final class TrackerNSView: NSView {
-        var tabManager: TabManager?
-
-        public override func viewDidMoveToWindow() {
-            super.viewDidMoveToWindow()
-            if window != nil, let manager = tabManager {
-                TabBarRegistry.shared.register(tabManager: manager, view: self)
-            }
-        }
-
-        public override func removeFromSuperview() {
-            if let manager = tabManager {
-                TabBarRegistry.shared.unregister(tabManager: manager)
-            }
-            super.removeFromSuperview()
-        }
     }
 }
 
@@ -106,18 +88,21 @@ public final class TabDragManager {
 
     public func startDragging(tab: TabItem, from tabManager: TabManager) {
         guard !isDragging else { return }
+
+        // If only 1 tab in the entire app (1 window with 1 tab), dragging cannot tear off or merge
+        let allManagers = NSApp.windows.filter { $0.isVisible && $0.styleMask.contains(.titled) }
+        if tabManager.tabs.count <= 1 && allManagers.count <= 1 {
+            return
+        }
+
         self.isDragging = true
         self.draggingTabId = tab.id
         self.sourceTabManager = tabManager
         self.initialMouseLocation = NSEvent.mouseLocation
+        self.sourceWindow = WindowTabRegistry.shared.getWindow(for: tabManager.id) ?? NSApp.keyWindow
 
-        // Locate source NSWindow
-        self.sourceWindow = NSApp.keyWindow ?? NSApp.windows.first(where: { $0.isKeyWindow || $0.isVisible })
-
-        // Create floating proxy panel
         createFloatingPanel(for: tab)
 
-        // Install Drag & Mouse Tracking Monitor
         dragEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged, .leftMouseUp, .mouseMoved]) { [weak self] event in
             guard let self = self else { return event }
 
@@ -129,10 +114,9 @@ public final class TabDragManager {
             return event
         }
 
-        // Install ESC Key Monitor to cancel drag
         keyEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self = self else { return event }
-            if event.keyCode == 53 { // ESC key
+            if event.keyCode == 53 { // ESC
                 self.cancelDrag()
                 return nil
             }
@@ -192,13 +176,19 @@ public final class TabDragManager {
             }
         }
 
-        // Hit Testing using live TabBarRegistry
         guard let srcManager = sourceTabManager else { return }
-        let hit = TabBarRegistry.shared.findHit(mousePos: mouse, sourceManagerId: srcManager.id)
+        let hit = WindowTabRegistry.shared.findHit(mousePos: mouse, sourceManagerId: srcManager.id)
 
         switch hit {
-        case .sameWindowTabBar(let manager, _, let insertIndex),
-             .otherWindowTabBar(let manager, _, let insertIndex):
+        case .sameWindowTabBar(let manager, _, let insertIndex):
+            if manager.tabs.count > 1 {
+                self.activeDropZoneManagerId = manager.id
+                self.activeDropZoneIndex = insertIndex
+            } else {
+                self.activeDropZoneManagerId = nil
+                self.activeDropZoneIndex = nil
+            }
+        case .otherWindowTabBar(let manager, _, let insertIndex):
             self.activeDropZoneManagerId = manager.id
             self.activeDropZoneIndex = insertIndex
         case .none:
@@ -215,7 +205,7 @@ public final class TabDragManager {
             return
         }
 
-        let hit = TabBarRegistry.shared.findHit(mousePos: mouse, sourceManagerId: srcManager.id)
+        let hit = WindowTabRegistry.shared.findHit(mousePos: mouse, sourceManagerId: srcManager.id)
         let sourceWin = self.sourceWindow
 
         switch hit {
@@ -240,16 +230,11 @@ public final class TabDragManager {
             let dy = mouse.y - initialMouseLocation.y
             let distance = sqrt(dx * dx + dy * dy)
 
-            if distance > 20 {
-                if srcManager.tabs.count > 1 {
-                    // Tear-Off: Create standalone window
-                    if let detached = srcManager.detachTabToNewManager(id: tabId) {
-                        let origin = NSPoint(x: mouse.x - 120, y: mouse.y + 20)
-                        WindowManager.shared.openDetachedWindow(with: detached, at: origin)
-                    }
-                } else {
-                    // Only 1 tab in source window: Reposition the window smoothly to mouse drop location
-                    sourceWin?.setFrameTopLeftPoint(NSPoint(x: mouse.x - 120, y: mouse.y + 20))
+            // Tear-Off: ONLY if source window has more than 1 tab
+            if distance > 25 && srcManager.tabs.count > 1 {
+                if let detached = srcManager.detachTabToNewManager(id: tabId) {
+                    let origin = NSPoint(x: mouse.x - 120, y: mouse.y + 20)
+                    WindowManager.shared.openDetachedWindow(with: detached, at: origin)
                 }
             }
         }

@@ -139,12 +139,7 @@ public struct CustomTabBarView: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(
-            ZStack {
-                Color(nsColor: .windowBackgroundColor).opacity(0.6)
-                TabBarFrameTracker(tabManager: tabManager)
-            }
-        )
+        .background(Color(nsColor: .windowBackgroundColor).opacity(0.6))
         .sheet(isPresented: $isSettingsPresented) {
             VStack(spacing: 0) {
                 HStack {

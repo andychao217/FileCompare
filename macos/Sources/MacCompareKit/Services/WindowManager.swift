@@ -32,6 +32,7 @@ public final class WindowManager {
             window.center()
         }
 
+        WindowTabRegistry.shared.register(manager: tabManager, window: window)
         window.makeKeyAndOrderFront(nil)
     }
 
