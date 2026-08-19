@@ -1,0 +1,13 @@
+[package]
+name = "fs-scanner"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+rayon = "1.10"
+crc32fast = "1.4"
+memmap2 = "0.9"
+globset = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "2.0"

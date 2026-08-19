@@ -1,0 +1,37 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# Xcode & Swift
+.build/
+Packages/
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcworkspace/contents.xcworkspacedata
+*.xcworkspace/*
+!*.xcworkspace/contents.xcworkspacedata
+*.xcuserstate
+xcuserdata/
+DerivedData/
+*.xcresult
+
+# Rust & Cargo
+target/
+**/*.rs.bk
+Cargo.lock
+
+# UniFFI Generated
+macos/MacCompare/Generated/lib/
+macos/Sources/MacCompare/Generated/lib/
+
+# Temporary files & Logs
+*.log
+*.tmp
+*.bak
+.cache/

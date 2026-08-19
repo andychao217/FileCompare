@@ -1,0 +1,28 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/diff-core",
+    "crates/fs-scanner",
+    "crates/syntax-highlighter",
+    "crates/maccompare-ffi",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+authors = ["MacCompare Team"]
+license = "MIT OR Apache-2.0"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = true
+
+# Apple Silicon & Intel Universal binary optimizations
+[profile.release.package.fs-scanner]
+opt-level = 3
+
+[profile.release.package.diff-core]
+opt-level = 3
