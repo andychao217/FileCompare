@@ -18,7 +18,7 @@ public struct SettingsView: View {
 
             folderDiffTab
                 .tabItem {
-                    Label("Folder Diff", systemImage: "folder")
+                    Label(languageManager.text(.folderDiff), systemImage: "folder")
                 }
 
             aboutTab
@@ -48,7 +48,7 @@ public struct SettingsView: View {
                 .pickerStyle(.menu)
             }
 
-            Section(header: Text("Default Diff Settings").font(.caption).foregroundColor(.secondary)) {
+            Section(header: Text(languageManager.text(.defaultDiffSettings)).font(.caption).foregroundColor(.secondary)) {
                 Toggle(languageManager.text(.ignoreWhitespace), isOn: $defaultIgnoreWhitespace)
                 Toggle(languageManager.text(.ignoreCase), isOn: $defaultIgnoreCase)
             }
@@ -59,14 +59,14 @@ public struct SettingsView: View {
     private var folderDiffTab: some View {
         Form {
             Section {
-                Picker("Default Compare Mode", selection: $defaultFolderMode) {
+                Picker(languageManager.text(.defaultCompareMode), selection: $defaultFolderMode) {
                     Text(languageManager.text(.quickCompareMode)).tag("Quick")
                     Text(languageManager.text(.deepHashCompareMode)).tag("DeepHash")
                 }
                 .pickerStyle(.radioGroup)
             }
 
-            Section(header: Text("Default Excluded Patterns").font(.caption).foregroundColor(.secondary)) {
+            Section(header: Text(languageManager.text(.defaultExcludedPatterns)).font(.caption).foregroundColor(.secondary)) {
                 Text(".git, .DS_Store, node_modules, target, build")
                     .font(.system(size: 11, design: .monospaced))
                     .foregroundColor(.secondary)
@@ -98,7 +98,7 @@ public struct SettingsView: View {
 
             Divider().padding(.vertical, 4)
 
-            Link("GitHub Repository (andychao217/FileCompare)", destination: URL(string: "https://github.com/andychao217/FileCompare")!)
+            Link(languageManager.text(.gitHubRepo), destination: URL(string: "https://github.com/andychao217/FileCompare")!)
                 .font(.caption)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

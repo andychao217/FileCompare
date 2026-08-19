@@ -24,7 +24,7 @@ public struct TwoWayDiffView: View {
                     // Left Buffer (Original / Source)
                     VStack(spacing: 0) {
                         fileHeader(
-                            title: viewModel.leftTitle,
+                            title: viewModel.leftFileURL != nil ? viewModel.leftTitle : languageManager.text(.sourceFile),
                             icon: "doc.text",
                             isDirty: viewModel.isLeftDirty,
                             onOpen: { viewModel.openLeftFile() },
@@ -56,7 +56,7 @@ public struct TwoWayDiffView: View {
                     // Right Buffer (Modified / Target)
                     VStack(spacing: 0) {
                         fileHeader(
-                            title: viewModel.rightTitle,
+                            title: viewModel.rightFileURL != nil ? viewModel.rightTitle : languageManager.text(.targetFile),
                             icon: "doc.text.fill",
                             isDirty: viewModel.isRightDirty,
                             onOpen: { viewModel.openRightFile() },

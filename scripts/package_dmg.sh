@@ -1,32 +1,28 @@
 #!/usr/bin/env bash
 set -e
 
-# ==============================================================================
-# MacCompare Release Packager & Universal DMG Generator
-# Supports Universal Binary 2 (Apple Silicon arm64 + Intel x86_64)
-# ==============================================================================
+# ========================================================
+# MacCompare Universal Binary DMG Packaging Script
+# Architecture: Universal Binary 2 (arm64 + x86_64)
+# ========================================================
 
 VERSION="${1:-0.1.0}"
 APP_NAME="MacCompare"
-BUNDLE_ID="com.andychao.maccompare"
+BUNDLE_ID="com.andychao217.MacCompare"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 DIST_DIR="${ROOT_DIR}/dist"
-STAGE_DIR="${DIST_DIR}/stage"
+STAGE_DIR="${DIST_DIR}/staging"
 APP_BUNDLE="${STAGE_DIR}/${APP_NAME}.app"
-DMG_NAME="${APP_NAME}-${VERSION}.dmg"
-DMG_PATH="${DIST_DIR}/${DMG_NAME}"
+DMG_PATH="${DIST_DIR}/${APP_NAME}-${VERSION}.dmg"
 
 echo "========================================================"
 echo "📦 Packaging ${APP_NAME} v${VERSION} (Universal Binary 2)"
 echo "========================================================"
 
-SWIFT_BIN="swift"
-if command -v xcrun &> /dev/null; then
-    SWIFT_BIN="xcrun swift"
-fi
+SWIFT_BIN="$(xcrun -f swift || which swift)"
 
-# 1. Build Universal Binary 2 (arm64 + x86_64)
+# 1. Compile Universal Binary 2 (Dual Architecture: arm64 + x86_64)
 echo "[1/4] Compiling Universal Binary 2 (arm64 + x86_64)..."
 cd "${ROOT_DIR}/macos"
 if ! ${SWIFT_BIN} build -c release --arch arm64 --arch x86_64; then
@@ -73,10 +69,11 @@ fi
 
 echo "Found MacCompare at: ${MACCOMPARE_BIN}"
 if command -v lipo &> /dev/null; then
-    echo "Binary Architecture Info: $(lipo -info "${MACCOMPARE_BIN}" 2>&1)"
+    echo -n "Binary Architecture Info: "
+    lipo -info "${MACCOMPARE_BIN}" || true
 fi
 
-# 2. Prepare .app Bundle Structure
+# 2. Build MacCompare.app bundle
 echo "[2/4] Constructing ${APP_NAME}.app bundle..."
 rm -rf "${STAGE_DIR}"
 mkdir -p "${APP_BUNDLE}/Contents/MacOS"
@@ -95,12 +92,32 @@ if [ -f "${ROOT_DIR}/macos/Resources/AppIcon.icns" ]; then
     echo "Included AppIcon.icns in bundle."
 fi
 
+# Generate Localized .lproj directories
+mkdir -p "${APP_BUNDLE}/Contents/Resources/en.lproj"
+mkdir -p "${APP_BUNDLE}/Contents/Resources/zh_CN.lproj"
+mkdir -p "${APP_BUNDLE}/Contents/Resources/zh_Hans.lproj"
+mkdir -p "${APP_BUNDLE}/Contents/Resources/ja.lproj"
+
+echo 'CFBundleDisplayName = "MacCompare";' > "${APP_BUNDLE}/Contents/Resources/en.lproj/InfoPlist.strings"
+echo 'CFBundleDisplayName = "MacCompare";' > "${APP_BUNDLE}/Contents/Resources/zh_CN.lproj/InfoPlist.strings"
+echo 'CFBundleDisplayName = "MacCompare";' > "${APP_BUNDLE}/Contents/Resources/zh_Hans.lproj/InfoPlist.strings"
+echo 'CFBundleDisplayName = "MacCompare";' > "${APP_BUNDLE}/Contents/Resources/ja.lproj/InfoPlist.strings"
+
 # Generate Info.plist
 cat <<EOF > "${APP_BUNDLE}/Contents/Info.plist"
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+        <string>zh-Hans</string>
+        <string>zh_CN</string>
+        <string>ja</string>
+    </array>
     <key>CFBundleExecutable</key>
     <string>${APP_NAME}</string>
     <key>CFBundleIconFile</key>
@@ -143,11 +160,8 @@ hdiutil create \
     -format UDZO \
     "${DMG_PATH}"
 
-# Clean staging directory
-rm -rf "${STAGE_DIR}"
-
 echo "========================================================"
 echo "✅ Universal DMG Packaging Complete!"
 echo "📍 DMG File: ${DMG_PATH}"
-echo "📏 Size: $(du -sh "${DMG_PATH}" | awk '{print $1}')"
+echo "📏 Size: $(du -sh "${DMG_PATH}" | cut -f1)"
 echo "========================================================"

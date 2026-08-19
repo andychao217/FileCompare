@@ -20,7 +20,18 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
 }
 
 public enum L10nKey: String, Sendable {
-    // Menu & App
+    // Dialog Buttons & Actions
+    case done
+    case cancel
+
+    // Menu Headers
+    case fileMenu
+    case editMenu
+    case viewMenu
+    case windowMenu
+    case helpMenu
+
+    // Menu Items
     case settings
     case general
     case appearance
@@ -37,6 +48,8 @@ public enum L10nKey: String, Sendable {
     case openFile
     case save
     case closeTab
+    case close
+    case closeAll
     case compare
     case nextDiff
     case prevDiff
@@ -44,6 +57,24 @@ public enum L10nKey: String, Sendable {
     case takeRight
     case ignoreWhitespace
     case ignoreCase
+    case undo
+    case redo
+    case cut
+    case copy
+    case paste
+    case selectAll
+    case toggleSidebar
+    case minimize
+    case zoom
+    case gitHubRepo
+
+    // Settings Specific
+    case folderDiff
+    case textDiff
+    case threeWayMerge
+    case defaultCompareMode
+    case defaultExcludedPatterns
+    case defaultDiffSettings
 
     // Text Diff
     case sourceFile
@@ -94,7 +125,6 @@ public enum L10nKey: String, Sendable {
     case dryRunSubtitle
     case completelyInSync
     case pendingOperations
-    case cancel
     case executeSync
     case executing
 
@@ -136,6 +166,7 @@ public final class LanguageManager {
 
     private func updateEffectiveLanguage() {
         if currentLanguage == .system {
+            UserDefaults.standard.removeObject(forKey: "AppleLanguages")
             let preferred = Locale.preferredLanguages.first ?? "en"
             if preferred.starts(with: "zh") {
                 effectiveLanguage = .zhHans
@@ -146,6 +177,7 @@ public final class LanguageManager {
             }
         } else {
             effectiveLanguage = currentLanguage
+            UserDefaults.standard.set([currentLanguage.rawValue, "en"], forKey: "AppleLanguages")
         }
     }
 
@@ -163,6 +195,13 @@ public final class LanguageManager {
     // MARK: - Dictionaries
 
     private let enDictionary: [L10nKey: String] = [
+        .done: "Done",
+        .cancel: "Cancel",
+        .fileMenu: "File",
+        .editMenu: "Edit",
+        .viewMenu: "View",
+        .windowMenu: "Window",
+        .helpMenu: "Help",
         .settings: "Settings...",
         .general: "General",
         .appearance: "Appearance",
@@ -179,6 +218,8 @@ public final class LanguageManager {
         .openFile: "Open File...",
         .save: "Save",
         .closeTab: "Close Tab",
+        .close: "Close",
+        .closeAll: "Close All",
         .compare: "Compare",
         .nextDiff: "Next Difference",
         .prevDiff: "Previous Difference",
@@ -186,6 +227,22 @@ public final class LanguageManager {
         .takeRight: "Take Right",
         .ignoreWhitespace: "Ignore Whitespace",
         .ignoreCase: "Ignore Case",
+        .undo: "Undo",
+        .redo: "Redo",
+        .cut: "Cut",
+        .copy: "Copy",
+        .paste: "Paste",
+        .selectAll: "Select All",
+        .toggleSidebar: "Toggle Sidebar",
+        .minimize: "Minimize",
+        .zoom: "Zoom",
+        .gitHubRepo: "GitHub Repository (andychao217/FileCompare)",
+        .folderDiff: "Folder Diff",
+        .textDiff: "Text Diff",
+        .threeWayMerge: "3-Way Merge",
+        .defaultCompareMode: "Default Compare Mode",
+        .defaultExcludedPatterns: "Default Excluded Patterns",
+        .defaultDiffSettings: "Default Diff Settings",
         .sourceFile: "Source File (Left)",
         .targetFile: "Target File (Right)",
         .noFileSelected: "No File Selected",
@@ -230,7 +287,6 @@ public final class LanguageManager {
         .dryRunSubtitle: "Review pending disk operations before executing.",
         .completelyInSync: "Directories are completely in sync.",
         .pendingOperations: "Pending Sync Operations",
-        .cancel: "Cancel",
         .executeSync: "Execute Sync",
         .executing: "Executing...",
         .localBranch: "Local (Current Branch)",
@@ -249,6 +305,13 @@ public final class LanguageManager {
     ]
 
     private let zhHansDictionary: [L10nKey: String] = [
+        .done: "完成",
+        .cancel: "取消",
+        .fileMenu: "文件",
+        .editMenu: "编辑",
+        .viewMenu: "显示",
+        .windowMenu: "窗口",
+        .helpMenu: "帮助",
         .settings: "设置...",
         .general: "常规",
         .appearance: "外观",
@@ -265,6 +328,8 @@ public final class LanguageManager {
         .openFile: "打开文件...",
         .save: "保存",
         .closeTab: "关闭标签页",
+        .close: "关闭窗口",
+        .closeAll: "关闭全部窗口",
         .compare: "比对",
         .nextDiff: "下一个差异",
         .prevDiff: "上一个差异",
@@ -272,6 +337,22 @@ public final class LanguageManager {
         .takeRight: "采纳右侧",
         .ignoreWhitespace: "忽略空白符",
         .ignoreCase: "忽略大小写",
+        .undo: "撤回",
+        .redo: "重做",
+        .cut: "剪切",
+        .copy: "复制",
+        .paste: "粘贴",
+        .selectAll: "全选",
+        .toggleSidebar: "切换侧边栏",
+        .minimize: "最小化",
+        .zoom: "缩放",
+        .gitHubRepo: "GitHub 开源仓库 (andychao217/FileCompare)",
+        .folderDiff: "文件夹比对",
+        .textDiff: "文本比对",
+        .threeWayMerge: "三向合并",
+        .defaultCompareMode: "默认比对模式",
+        .defaultExcludedPatterns: "默认排除过滤规则",
+        .defaultDiffSettings: "默认比对配置",
         .sourceFile: "源文件 (左侧)",
         .targetFile: "目标文件 (右侧)",
         .noFileSelected: "未选择文件",
@@ -316,7 +397,6 @@ public final class LanguageManager {
         .dryRunSubtitle: "在执行实际磁盘写操作前仔细检查以下变更项目。",
         .completelyInSync: "两侧文件夹内容完全一致，无需同步。",
         .pendingOperations: "待执行同步项",
-        .cancel: "取消",
         .executeSync: "执行同步",
         .executing: "正在执行...",
         .localBranch: "本地分支 (Local)",
@@ -335,6 +415,13 @@ public final class LanguageManager {
     ]
 
     private let jaDictionary: [L10nKey: String] = [
+        .done: "完了",
+        .cancel: "キャンセル",
+        .fileMenu: "ファイル",
+        .editMenu: "編集",
+        .viewMenu: "表示",
+        .windowMenu: "ウインドウ",
+        .helpMenu: "ヘルプ",
         .settings: "設定...",
         .general: "一般",
         .appearance: "外観",
@@ -351,6 +438,8 @@ public final class LanguageManager {
         .openFile: "ファイルを開く...",
         .save: "保存",
         .closeTab: "タブを閉じる",
+        .close: "ウインドウを閉じる",
+        .closeAll: "すべてのウインドウを閉じる",
         .compare: "比較",
         .nextDiff: "次の差分",
         .prevDiff: "前の差分",
@@ -358,6 +447,22 @@ public final class LanguageManager {
         .takeRight: "右側を採用",
         .ignoreWhitespace: "空白を無視",
         .ignoreCase: "大文字/小文字を無視",
+        .undo: "取り消す",
+        .redo: "やり直す",
+        .cut: "カット",
+        .copy: "コピー",
+        .paste: "ペースト",
+        .selectAll: "すべてを選択",
+        .toggleSidebar: "サイドバーの表示切替",
+        .minimize: "最小化",
+        .zoom: "拡大/縮小",
+        .gitHubRepo: "GitHub リポジトリ (andychao217/FileCompare)",
+        .folderDiff: "フォルダ比較",
+        .textDiff: "テキスト比較",
+        .threeWayMerge: "3方向マージ",
+        .defaultCompareMode: "デフォルト比較モード",
+        .defaultExcludedPatterns: "デフォルト除外パターン",
+        .defaultDiffSettings: "デフォルト比較設定",
         .sourceFile: "ソースファイル (左)",
         .targetFile: "ターゲットファイル (右)",
         .noFileSelected: "ファイルが選択されていません",
@@ -402,7 +507,6 @@ public final class LanguageManager {
         .dryRunSubtitle: "実際の同期を実行する前に変更内容を確認してください。",
         .completelyInSync: "両側のフォルダは完全に一致しています。",
         .pendingOperations: "保留中の同期項目",
-        .cancel: "キャンセル",
         .executeSync: "同期を実行",
         .executing: "実行中...",
         .localBranch: "ローカルブランチ (Local)",

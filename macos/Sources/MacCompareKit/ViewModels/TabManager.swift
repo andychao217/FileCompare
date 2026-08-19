@@ -41,7 +41,7 @@ public final class TabManager {
     public var threeWayMergeViewModels: [UUID: ThreeWayMergeViewModel] = [:]
 
     public init() {
-        let initialTab = TabItem(title: "New Text Compare", type: .textDiff)
+        let initialTab = TabItem(title: LanguageManager.shared.text(.newTextCompare), type: .textDiff)
         tabs.append(initialTab)
         selectedTabId = initialTab.id
         textDiffViewModels[initialTab.id] = TextDiffViewModel()
@@ -68,7 +68,14 @@ public final class TabManager {
     }
 
     public func addTab(type: TabContentType, title: String? = nil) {
-        let newTitle = title ?? "New \(type.rawValue)"
+        let defaultTitle: String
+        switch type {
+        case .textDiff: defaultTitle = LanguageManager.shared.text(.newTextCompare)
+        case .folderDiff: defaultTitle = LanguageManager.shared.text(.newFolderCompare)
+        case .threeWayMerge: defaultTitle = LanguageManager.shared.text(.newThreeWayMerge)
+        }
+
+        let newTitle = title ?? defaultTitle
         let newTab = TabItem(title: newTitle, type: type)
         tabs.append(newTab)
         selectedTabId = newTab.id

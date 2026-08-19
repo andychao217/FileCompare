@@ -89,7 +89,7 @@ public struct CustomTabBarView: View {
             VStack(spacing: 0) {
                 HStack {
                     Spacer()
-                    Button("Done") {
+                    Button(languageManager.text(.done)) {
                         isSettingsPresented = false
                     }
                     .buttonStyle(.borderedProminent)

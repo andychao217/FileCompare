@@ -3,81 +3,87 @@ import AppKit
 import MacCompareKit
 
 public struct AppCommands: Commands {
+    @State private var languageManager = LanguageManager.shared
+
     public init() {}
 
     public var body: some Commands {
         CommandGroup(after: .appInfo) {
-            Button(LanguageManager.shared.text(.settings)) {
+            Button(languageManager.text(.settings)) {
                 NotificationCenter.default.post(name: .mcOpenSettings, object: nil)
             }
             .keyboardShortcut(",", modifiers: .command)
         }
 
         CommandGroup(replacing: .newItem) {
-            Button(LanguageManager.shared.text(.newTextCompare)) {
+            Button(languageManager.text(.newTextCompare)) {
                 NotificationCenter.default.post(name: .mcNewTextCompare, object: nil)
             }
             .keyboardShortcut("n", modifiers: .command)
 
-            Button(LanguageManager.shared.text(.newFolderCompare)) {
+            Button(languageManager.text(.newFolderCompare)) {
                 NotificationCenter.default.post(name: .mcNewFolderCompare, object: nil)
             }
             .keyboardShortcut("n", modifiers: [.command, .shift])
 
-            Button(LanguageManager.shared.text(.newThreeWayMerge)) {
+            Button(languageManager.text(.newThreeWayMerge)) {
                 NotificationCenter.default.post(name: .mcNewThreeWayMerge, object: nil)
             }
             .keyboardShortcut("m", modifiers: [.command, .option])
 
             Divider()
 
-            Button(LanguageManager.shared.text(.openFile)) {
+            Button(languageManager.text(.openFile)) {
                 NotificationCenter.default.post(name: .mcOpenFile, object: nil)
             }
             .keyboardShortcut("o", modifiers: .command)
 
-            Button(LanguageManager.shared.text(.save)) {
+            Button(languageManager.text(.save)) {
                 NotificationCenter.default.post(name: .mcSaveActive, object: nil)
             }
             .keyboardShortcut("s", modifiers: .command)
 
-            Button(LanguageManager.shared.text(.closeTab)) {
+            Button(languageManager.text(.closeTab)) {
                 NotificationCenter.default.post(name: .mcCloseActiveTab, object: nil)
             }
             .keyboardShortcut("w", modifiers: .command)
         }
 
-        CommandMenu(LanguageManager.shared.text(.compare)) {
-            Button(LanguageManager.shared.text(.nextDiff)) {
+        CommandGroup(replacing: .saveItem) {
+            // Handled in newItem group
+        }
+
+        CommandMenu(languageManager.text(.compare)) {
+            Button(languageManager.text(.nextDiff)) {
                 NotificationCenter.default.post(name: .mcNextDiff, object: nil)
             }
             .keyboardShortcut("]", modifiers: .command)
 
-            Button(LanguageManager.shared.text(.prevDiff)) {
+            Button(languageManager.text(.prevDiff)) {
                 NotificationCenter.default.post(name: .mcPrevDiff, object: nil)
             }
             .keyboardShortcut("[", modifiers: .command)
 
             Divider()
 
-            Button(LanguageManager.shared.text(.takeLeft)) {
+            Button(languageManager.text(.takeLeft)) {
                 NotificationCenter.default.post(name: .mcTakeLeft, object: nil)
             }
             .keyboardShortcut(.leftArrow, modifiers: [.command, .option])
 
-            Button(LanguageManager.shared.text(.takeRight)) {
+            Button(languageManager.text(.takeRight)) {
                 NotificationCenter.default.post(name: .mcTakeRight, object: nil)
             }
             .keyboardShortcut(.rightArrow, modifiers: [.command, .option])
 
             Divider()
 
-            Button(LanguageManager.shared.text(.ignoreWhitespace)) {
+            Button(languageManager.text(.ignoreWhitespace)) {
                 NotificationCenter.default.post(name: .mcToggleIgnoreWhitespace, object: nil)
             }
             .keyboardShortcut("w", modifiers: [.command, .option])
 
-            Button(LanguageManager.shared.text(.ignoreCase)) {
+            Button(languageManager.text(.ignoreCase)) {
                 NotificationCenter.default.post(name: .mcToggleIgnoreCase, object: nil)
             }
             .keyboardShortcut("c", modifiers: [.command, .option])
