@@ -35,3 +35,5 @@ macos/Sources/MacCompare/Generated/lib/
 *.tmp
 *.bak
 .cache/
+dist/
+
