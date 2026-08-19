@@ -9,6 +9,9 @@ on:
 permissions:
   contents: write
 
+env:
+  ACTIONS_RUNNER_FORCE_ACTIONS_NODE_VERSION: "node20"
+
 jobs:
   release:
     name: Build & Publish Release
@@ -38,13 +41,10 @@ jobs:
           ./scripts/package_dmg.sh "${{ steps.get_version.outputs.version }}"
 
       - name: Create GitHub Release & Upload Asset
-        uses: softprops/action-gh-release@v2
-        with:
-          name: "MacCompare v${{ steps.get_version.outputs.version }}"
-          tag_name: ${{ github.ref_name }}
-          draft: false
-          prerelease: false
-          files: dist/*.dmg
-          generate_release_notes: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" dist/*.dmg \
+            --title "MacCompare v${{ steps.get_version.outputs.version }}" \
+            --generate-notes || \
+          gh release upload "${{ github.ref_name }}" dist/*.dmg --clobber
