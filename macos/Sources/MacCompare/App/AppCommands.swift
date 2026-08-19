@@ -1,49 +1,79 @@
 import SwiftUI
 import AppKit
+import MacCompareKit
 
 public struct AppCommands: Commands {
     public init() {}
 
     public var body: some Commands {
-        CommandGroup(after: .newItem) {
+        CommandGroup(replacing: .newItem) {
             Button("New Text Compare") {
-                NSApp.sendAction(#selector(AppDelegate.newTextCompareAction), to: nil, from: nil)
+                NotificationCenter.default.post(name: .mcNewTextCompare, object: nil)
             }
             .keyboardShortcut("n", modifiers: .command)
 
             Button("New Folder Compare") {
-                NSApp.sendAction(#selector(AppDelegate.newFolderCompareAction), to: nil, from: nil)
+                NotificationCenter.default.post(name: .mcNewFolderCompare, object: nil)
             }
             .keyboardShortcut("n", modifiers: [.command, .shift])
 
             Button("New 3-Way Merge") {
-                NSApp.sendAction(#selector(AppDelegate.newThreeWayMergeAction), to: nil, from: nil)
+                NotificationCenter.default.post(name: .mcNewThreeWayMerge, object: nil)
             }
             .keyboardShortcut("m", modifiers: [.command, .option])
+
+            Divider()
+
+            Button("Open File...") {
+                NotificationCenter.default.post(name: .mcOpenFile, object: nil)
+            }
+            .keyboardShortcut("o", modifiers: .command)
+
+            Button("Save") {
+                NotificationCenter.default.post(name: .mcSaveActive, object: nil)
+            }
+            .keyboardShortcut("s", modifiers: .command)
+
+            Button("Close Tab") {
+                NotificationCenter.default.post(name: .mcCloseActiveTab, object: nil)
+            }
+            .keyboardShortcut("w", modifiers: .command)
         }
 
         CommandMenu("Compare") {
             Button("Next Difference") {
-                NSApp.sendAction(#selector(AppDelegate.nextDiffAction), to: nil, from: nil)
+                NotificationCenter.default.post(name: .mcNextDiff, object: nil)
             }
             .keyboardShortcut("]", modifiers: .command)
 
             Button("Previous Difference") {
-                NSApp.sendAction(#selector(AppDelegate.prevDiffAction), to: nil, from: nil)
+                NotificationCenter.default.post(name: .mcPrevDiff, object: nil)
             }
             .keyboardShortcut("[", modifiers: .command)
 
             Divider()
 
             Button("Take Left") {
-                NSApp.sendAction(#selector(AppDelegate.takeLeftAction), to: nil, from: nil)
+                NotificationCenter.default.post(name: .mcTakeLeft, object: nil)
             }
             .keyboardShortcut(.leftArrow, modifiers: [.command, .option])
 
             Button("Take Right") {
-                NSApp.sendAction(#selector(AppDelegate.takeRightAction), to: nil, from: nil)
+                NotificationCenter.default.post(name: .mcTakeRight, object: nil)
             }
             .keyboardShortcut(.rightArrow, modifiers: [.command, .option])
+
+            Divider()
+
+            Button("Toggle Ignore Whitespace") {
+                NotificationCenter.default.post(name: .mcToggleIgnoreWhitespace, object: nil)
+            }
+            .keyboardShortcut("w", modifiers: [.command, .option])
+
+            Button("Toggle Ignore Case") {
+                NotificationCenter.default.post(name: .mcToggleIgnoreCase, object: nil)
+            }
+            .keyboardShortcut("c", modifiers: [.command, .option])
         }
     }
 }

@@ -21,6 +21,21 @@ public enum FileEncoding: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+public extension Notification.Name {
+    static let mcNewTextCompare = Notification.Name("MCNewTextCompare")
+    static let mcNewFolderCompare = Notification.Name("MCNewFolderCompare")
+    static let mcNewThreeWayMerge = Notification.Name("MCNewThreeWayMerge")
+    static let mcOpenFile = Notification.Name("MCOpenFile")
+    static let mcSaveActive = Notification.Name("MCSaveActive")
+    static let mcCloseActiveTab = Notification.Name("MCCloseActiveTab")
+    static let mcNextDiff = Notification.Name("MCNextDiff")
+    static let mcPrevDiff = Notification.Name("MCPrevDiff")
+    static let mcTakeLeft = Notification.Name("MCTakeLeft")
+    static let mcTakeRight = Notification.Name("MCTakeRight")
+    static let mcToggleIgnoreWhitespace = Notification.Name("MCToggleIgnoreWhitespace")
+    static let mcToggleIgnoreCase = Notification.Name("MCToggleIgnoreCase")
+}
+
 /// Type of change for line or token diff.
 public enum ChangeType: String, Codable, Sendable {
     case unchanged = "Unchanged"
