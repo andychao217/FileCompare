@@ -38,6 +38,7 @@ public extension Notification.Name {
     static let mcMoveTabToNewWindow = Notification.Name("MCMoveTabToNewWindow")
     static let mcMergeAllWindows = Notification.Name("MCMergeAllWindows")
     static let mcNewWindow = Notification.Name("MCNewWindow")
+    static let mcOpenHelp = Notification.Name("MCOpenHelp")
 }
 
 /// Type of change for line or token diff.

@@ -74,6 +74,21 @@ public final class TextDiffViewModel {
         loadSingleFile(from: right, isLeft: false)
     }
 
+    public func clearAll() {
+        leftFileURL = nil
+        rightFileURL = nil
+        leftTitle = LanguageManager.shared.text(.sourceFile)
+        rightTitle = LanguageManager.shared.text(.targetFile)
+        leftContent = ""
+        rightContent = ""
+        isLeftDirty = false
+        isRightDirty = false
+        diffResult = TextDiffResult()
+        statusMessage = nil
+        currentHunkIndex = 0
+        scrollToLineIndex = nil
+    }
+
     public func loadSingleFile(from url: URL, isLeft: Bool) {
         do {
             let content = try diffEngine.loadFile(from: url, encoding: selectedEncoding)

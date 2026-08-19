@@ -18,81 +18,85 @@ public struct TwoWayDiffView: View {
 
             Divider()
 
+            // File Headers
+            HStack(spacing: 0) {
+                fileHeader(
+                    title: viewModel.leftFileURL != nil ? viewModel.leftTitle : languageManager.text(.sourceFile),
+                    icon: "doc.text",
+                    isDirty: viewModel.isLeftDirty,
+                    onOpen: { viewModel.openLeftFile() },
+                    onSave: { viewModel.saveLeftFile() }
+                )
+                .frame(maxWidth: .infinity)
+
+                Divider()
+
+                fileHeader(
+                    title: viewModel.rightFileURL != nil ? viewModel.rightTitle : languageManager.text(.targetFile),
+                    icon: "doc.text.fill",
+                    isDirty: viewModel.isRightDirty,
+                    onOpen: { viewModel.openRightFile() },
+                    onSave: { viewModel.saveRightFile() }
+                )
+                .frame(maxWidth: .infinity)
+
+                // Minimap Header Spacer
+                Spacer().frame(width: 58)
+            }
+
+            Divider()
+
             // Main Diff Split View
-            ScrollViewReader { proxy in
+            if viewModel.leftContent.isEmpty && viewModel.leftFileURL == nil && viewModel.rightContent.isEmpty && viewModel.rightFileURL == nil {
                 HStack(spacing: 0) {
-                    // Left Buffer (Original / Source)
-                    VStack(spacing: 0) {
-                        fileHeader(
-                            title: viewModel.leftFileURL != nil ? viewModel.leftTitle : languageManager.text(.sourceFile),
-                            icon: "doc.text",
-                            isDirty: viewModel.isLeftDirty,
-                            onOpen: { viewModel.openLeftFile() },
-                            onSave: { viewModel.saveLeftFile() }
-                        )
-                        Divider()
-
-                        if viewModel.leftContent.isEmpty && viewModel.leftFileURL == nil {
-                            emptyDropZone(isLeft: true)
-                        } else {
-                            ScrollView {
-                                VStack(spacing: 0) {
-                                    ForEach(Array(viewModel.diffResult.lines.enumerated()), id: \.offset) { idx, line in
-                                        leftLineRow(index: idx, line: line)
-                                            .id(idx)
-                                    }
-                                }
-                            }
+                    emptyDropZone(isLeft: true)
+                        .background(isLeftDropTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
+                        .onDrop(of: [.fileURL], isTargeted: $isLeftDropTargeted) { providers in
+                            handleDrop(providers: providers, isLeft: true)
                         }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .background(isLeftDropTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
-                    .onDrop(of: [.fileURL], isTargeted: $isLeftDropTargeted) { providers in
-                        handleDrop(providers: providers, isLeft: true)
-                    }
 
                     Divider()
 
-                    // Right Buffer (Modified / Target)
-                    VStack(spacing: 0) {
-                        fileHeader(
-                            title: viewModel.rightFileURL != nil ? viewModel.rightTitle : languageManager.text(.targetFile),
-                            icon: "doc.text.fill",
-                            isDirty: viewModel.isRightDirty,
-                            onOpen: { viewModel.openRightFile() },
-                            onSave: { viewModel.saveRightFile() }
-                        )
-                        Divider()
-
-                        if viewModel.rightContent.isEmpty && viewModel.rightFileURL == nil {
-                            emptyDropZone(isLeft: false)
-                        } else {
-                            ScrollView {
-                                VStack(spacing: 0) {
-                                    ForEach(Array(viewModel.diffResult.lines.enumerated()), id: \.offset) { idx, line in
-                                        rightLineRow(index: idx, line: line)
-                                            .id(idx)
-                                    }
-                                }
-                            }
+                    emptyDropZone(isLeft: false)
+                        .background(isRightDropTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
+                        .onDrop(of: [.fileURL], isTargeted: $isRightDropTargeted) { providers in
+                            handleDrop(providers: providers, isLeft: false)
                         }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .background(isRightDropTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
-                    .onDrop(of: [.fileURL], isTargeted: $isRightDropTargeted) { providers in
-                        handleDrop(providers: providers, isLeft: false)
-                    }
-
-                    Divider()
-
-                    // Minimap with Interactive Scroll
-                    MinimapView(lines: viewModel.diffResult.lines) { targetLine in
-                        viewModel.scrollToLineIndex = targetLine
-                    }
                 }
-                .onChange(of: viewModel.scrollToLineIndex) { _, targetLine in
-                    if let line = targetLine {
-                        withAnimation(.easeInOut(duration: 0.2)) {
+            } else {
+                ScrollViewReader { proxy in
+                    HStack(spacing: 0) {
+                        // Unified Synchronized Scroll View for Left and Right Buffers
+                        ScrollView([.vertical, .horizontal]) {
+                            LazyVStack(spacing: 0) {
+                                ForEach(Array(viewModel.diffResult.lines.enumerated()), id: \.offset) { idx, line in
+                                    HStack(spacing: 0) {
+                                        leftLineRow(index: idx, line: line)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                                        Divider()
+
+                                        rightLineRow(index: idx, line: line)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                    .id(idx)
+                                }
+                            }
+                        }
+                        .background(isLeftDropTargeted || isRightDropTargeted ? Color.accentColor.opacity(0.05) : Color.clear)
+                        .onDrop(of: [.fileURL], isTargeted: $isLeftDropTargeted) { providers in
+                            handleDrop(providers: providers, isLeft: true)
+                        }
+
+                        Divider()
+
+                        // Minimap with Synchronous Real-time Drag & Click Jump
+                        MinimapView(lines: viewModel.diffResult.lines) { targetLine in
+                            viewModel.scrollToLineIndex = targetLine
+                        }
+                    }
+                    .onChange(of: viewModel.scrollToLineIndex) { _, targetLine in
+                        if let line = targetLine {
                             proxy.scrollTo(line, anchor: .center)
                         }
                     }
@@ -259,9 +263,11 @@ public struct TwoWayDiffView: View {
                 .padding(.trailing, 6)
                 .background(Color(nsColor: .windowBackgroundColor).opacity(0.3))
 
-                // Line Content with Token Highlight
+                // Line Content
                 HStack {
-                    renderRightContentWithTokens(line: line)
+                    Text(line.contentRight)
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundColor(.primary)
                     Spacer()
                 }
                 .padding(.horizontal, 6)
@@ -271,34 +277,16 @@ public struct TwoWayDiffView: View {
         }
     }
 
-    @ViewBuilder
-    private func renderRightContentWithTokens(line: DiffLine) -> some View {
-        if line.tokensRight.isEmpty {
-            Text(line.contentRight)
-                .font(.system(size: 12, design: .monospaced))
-        } else {
-            HStack(spacing: 0) {
-                Text(line.contentRight)
-                    .font(.system(size: 12, design: .monospaced))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(Color.yellow.opacity(0.3))
-                            .padding(.vertical, 1)
-                    )
-            }
-        }
-    }
-
-    private func lineBackground(for change: ChangeType, isLeft: Bool) -> Color {
-        switch change {
+    private func lineBackground(for type: ChangeType, isLeft: Bool) -> Color {
+        switch type {
         case .unchanged:
             return Color.clear
-        case .deleted:
-            return Color.red.opacity(0.18)
         case .added:
-            return Color.green.opacity(0.18)
+            return isLeft ? Color.clear : Color.green.opacity(0.18)
+        case .deleted:
+            return isLeft ? Color.red.opacity(0.18) : Color.clear
         case .modified:
-            return isLeft ? Color.red.opacity(0.15) : Color.green.opacity(0.15)
+            return Color.orange.opacity(0.15)
         }
     }
 }

@@ -3,6 +3,7 @@ import SwiftUI
 public struct MainWindowView: View {
     @State private var tabManager: TabManager
     @State private var isSettingsSheetPresented: Bool = false
+    @State private var isHelpSheetPresented: Bool = false
     @State private var languageManager = LanguageManager.shared
 
     public var currentTabManager: TabManager { tabManager }
@@ -148,6 +149,9 @@ public struct MainWindowView: View {
         .onReceive(NotificationCenter.default.publisher(for: .mcOpenSettings)) { _ in
             isSettingsSheetPresented = true
         }
+        .onReceive(NotificationCenter.default.publisher(for: .mcOpenHelp)) { _ in
+            isHelpSheetPresented = true
+        }
         .sheet(isPresented: $isSettingsSheetPresented) {
             VStack(spacing: 0) {
                 HStack {
@@ -162,6 +166,21 @@ public struct MainWindowView: View {
                 SettingsView()
             }
             .frame(width: 520, height: 420)
+        }
+        .sheet(isPresented: $isHelpSheetPresented) {
+            VStack(spacing: 0) {
+                HStack {
+                    Spacer()
+                    Button(languageManager.text(.done)) {
+                        isHelpSheetPresented = false
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .padding(12)
+                }
+                HelpView()
+            }
+            .frame(width: 640, height: 500)
         }
     }
 }

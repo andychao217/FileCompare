@@ -91,5 +91,16 @@ public struct AppCommands: Commands {
             }
             .keyboardShortcut("c", modifiers: [.command, .option])
         }
+
+        CommandGroup(replacing: .help) {
+            Button(languageManager.text(.help)) {
+                NotificationCenter.default.post(name: .mcOpenHelp, object: nil)
+            }
+            .keyboardShortcut("?", modifiers: .command)
+
+            Divider()
+
+            Link(languageManager.text(.gitHubRepo), destination: URL(string: "https://github.com/andychao217/FileCompare")!)
+        }
     }
 }

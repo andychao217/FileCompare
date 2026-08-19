@@ -77,6 +77,19 @@ public struct DiffToolbarView: View {
 
             Divider().frame(height: 16)
 
+            // Clear All Button
+            Button {
+                viewModel.clearAll()
+            } label: {
+                Label(languageManager.text(.clearAll), systemImage: "trash")
+                    .font(.system(size: 11))
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .help(languageManager.text(.clearAll))
+
+            Divider().frame(height: 16)
+
             // Encoding Selector
             Picker("", selection: $viewModel.selectedEncoding) {
                 ForEach(FileEncoding.allCases) { enc in

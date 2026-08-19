@@ -24,6 +24,8 @@ public enum L10nKey: String, Sendable, CaseIterable {
     // Dialog Buttons & Actions
     case done
     case cancel
+    case clear
+    case clearAll
 
     // Menu Headers
     case fileMenu
@@ -41,7 +43,7 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case showAll
     case quitApp
 
-    // Menu Items - Standard Edit & View & Window
+    // Menu Items - Standard Edit & View & Window & Help
     case undo
     case redo
     case cut
@@ -58,6 +60,10 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case moveTabToNewWindow
     case mergeAllWindows
     case newWindow
+    case help
+    case userGuide
+    case shortcuts
+    case coreFeatures
 
     // Menu Items - Custom Commands
     case general
@@ -391,6 +397,8 @@ public final class LanguageManager {
             item.title = text(.showTabBar)
         } else if lower.contains("all tabs") || item.title.contains("所有标签页") || item.title.contains("すべてのタブ") {
             item.title = text(.showAllTabs)
+        } else if lower.contains("help") || item.title.contains("帮助") || item.title.contains("ヘルプ") {
+            item.title = text(.help)
         }
     }
 
@@ -399,6 +407,8 @@ public final class LanguageManager {
     private let enDictionary: [L10nKey: String] = [
         .done: "Done",
         .cancel: "Cancel",
+        .clear: "Clear",
+        .clearAll: "Clear All",
         .fileMenu: "File",
         .editMenu: "Edit",
         .viewMenu: "View",
@@ -427,6 +437,10 @@ public final class LanguageManager {
         .moveTabToNewWindow: "Move Tab to New Window",
         .mergeAllWindows: "Merge All Windows",
         .newWindow: "New Window",
+        .help: "MacCompare Help",
+        .userGuide: "User Guide",
+        .shortcuts: "Keyboard Shortcuts",
+        .coreFeatures: "Core Features",
         .general: "General",
         .appearance: "Appearance",
         .language: "Language",
@@ -522,6 +536,8 @@ public final class LanguageManager {
     private let zhHansDictionary: [L10nKey: String] = [
         .done: "完成",
         .cancel: "取消",
+        .clear: "清空",
+        .clearAll: "一键清空",
         .fileMenu: "文件",
         .editMenu: "编辑",
         .viewMenu: "显示",
@@ -550,6 +566,10 @@ public final class LanguageManager {
         .moveTabToNewWindow: "将标签页移到新窗口",
         .mergeAllWindows: "合并所有窗口",
         .newWindow: "新建窗口",
+        .help: "MacCompare 帮助",
+        .userGuide: "用户使用指南",
+        .shortcuts: "快捷键大全",
+        .coreFeatures: "核心功能说明",
         .general: "常规",
         .appearance: "外观",
         .language: "语言",
@@ -645,6 +665,8 @@ public final class LanguageManager {
     private let jaDictionary: [L10nKey: String] = [
         .done: "完了",
         .cancel: "キャンセル",
+        .clear: "クリア",
+        .clearAll: "すべてクリア",
         .fileMenu: "ファイル",
         .editMenu: "編集",
         .viewMenu: "表示",
@@ -673,6 +695,10 @@ public final class LanguageManager {
         .moveTabToNewWindow: "タブを新しいウインドウに移動",
         .mergeAllWindows: "すべてのウインドウを結合",
         .newWindow: "新規ウインドウ",
+        .help: "MacCompare ヘルプ",
+        .userGuide: "ユーザーガイド",
+        .shortcuts: "ショートカット一覧",
+        .coreFeatures: "主な機能",
         .general: "一般",
         .appearance: "外観",
         .language: "言語",

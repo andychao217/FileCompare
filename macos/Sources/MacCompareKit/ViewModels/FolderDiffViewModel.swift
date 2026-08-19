@@ -121,6 +121,21 @@ public final class FolderDiffViewModel {
         }
     }
 
+    public func clearFolders() {
+        leftFolderURL = nil
+        rightFolderURL = nil
+        leftFolderName = LanguageManager.shared.text(.noSourceFolder)
+        rightFolderName = LanguageManager.shared.text(.noTargetFolder)
+        entries = []
+        pendingSyncPlan = []
+        syncExecutionResult = nil
+        isScanning = false
+        totalScanned = 0
+        modifiedCount = 0
+        addedCount = 0
+        deletedCount = 0
+    }
+
     public func loadSingleFolder(from url: URL, isLeft: Bool) {
         if isLeft {
             self.leftFolderURL = url

@@ -147,6 +147,17 @@ public struct ThreeWayMergeView: View {
             .disabled(!viewModel.hasFilesLoaded)
 
             Button {
+                viewModel.clearAll()
+            } label: {
+                Label(languageManager.text(.clearAll), systemImage: "trash")
+                    .font(.system(size: 11))
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .disabled(!viewModel.hasFilesLoaded)
+            .help(languageManager.text(.clearAll))
+
+            Button {
                 viewModel.saveAndCompleteMerge()
             } label: {
                 Label(languageManager.text(.saveAndCompleteMerge), systemImage: "arrow.down.doc.fill")

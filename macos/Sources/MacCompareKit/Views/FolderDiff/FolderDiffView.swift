@@ -59,6 +59,14 @@ public struct FolderDiffView: View {
                         Label(languageManager.text(.rescanFolders), systemImage: "arrow.clockwise")
                     }
                     .buttonStyle(.plain)
+
+                    Button {
+                        viewModel.clearFolders()
+                    } label: {
+                        Label(languageManager.text(.clearAll), systemImage: "trash")
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!viewModel.hasFoldersLoaded)
                 }
 
                 if !viewModel.recentSessions.isEmpty {
@@ -220,6 +228,17 @@ public struct FolderDiffView: View {
             .buttonStyle(.bordered)
             .controlSize(.small)
             .disabled(!viewModel.hasFoldersLoaded)
+
+            Button {
+                viewModel.clearFolders()
+            } label: {
+                Label(languageManager.text(.clearAll), systemImage: "trash")
+                    .font(.system(size: 11))
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .disabled(!viewModel.hasFoldersLoaded)
+            .help(languageManager.text(.clearAll))
 
             Button {
                 viewModel.syncLeftToRight()

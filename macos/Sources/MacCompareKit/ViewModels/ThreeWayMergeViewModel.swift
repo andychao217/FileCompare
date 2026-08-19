@@ -58,6 +58,22 @@ public final class ThreeWayMergeViewModel {
         }
     }
 
+    public func clearAll() {
+        localFileURL = nil
+        baseFileURL = nil
+        remoteFileURL = nil
+        outputFileURL = nil
+        filePath = LanguageManager.shared.text(.noFilesSelected)
+        localContent = ""
+        baseContent = ""
+        remoteContent = ""
+        mergeResult = MergeResult()
+        conflictHunks = []
+        currentConflictIndex = 0
+        totalConflicts = 0
+        statusMessage = nil
+    }
+
     public func loadFiles(local: URL, base: URL, remote: URL, output: URL? = nil) {
         self.localFileURL = local
         self.baseFileURL = base
