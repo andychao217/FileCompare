@@ -7,6 +7,8 @@ public struct CustomTabBarView: View {
     @State private var isSettingsPresented: Bool = false
     @State private var languageManager = LanguageManager.shared
     @State private var draggingTabId: UUID?
+    @State private var dragOffset: CGSize = .zero
+    @State private var isDropTargeted: Bool = false
 
     public init(tabManager: TabManager) {
         self.tabManager = tabManager
@@ -16,6 +18,8 @@ public struct CustomTabBarView: View {
         HStack(spacing: 4) {
             ForEach(Array(tabManager.tabs.enumerated()), id: \.element.id) { index, tab in
                 let isSelected = tab.id == tabManager.selectedTabId
+                let isCurrentDragging = draggingTabId == tab.id
+
                 Button {
                     tabManager.selectTab(id: tab.id)
                 } label: {
@@ -52,17 +56,49 @@ public struct CustomTabBarView: View {
                 }
                 .buttonStyle(.plain)
                 .focusEffectDisabled()
-                // Drag Support (Tear-off & Merge)
+                .offset(x: isCurrentDragging ? dragOffset.width : 0, y: isCurrentDragging ? dragOffset.height : 0)
+                .opacity(isCurrentDragging && abs(dragOffset.height) > 30 ? 0.6 : 1.0)
+                // 1. Interactive Drag Gesture (Smooth Chrome-style Tear-Off & Reorder)
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 8, coordinateSpace: .global)
+                        .onChanged { value in
+                            self.draggingTabId = tab.id
+                            self.dragOffset = value.translation
+                        }
+                        .onEnded { value in
+                            let offset = value.translation
+                            let mousePos = NSEvent.mouseLocation
+
+                            // Check if dragged outside the tab bar (Tear-off into new window)
+                            if abs(offset.height) > 35 && tabManager.tabs.count > 1 {
+                                if let detachedManager = tabManager.detachTabToNewManager(id: tab.id) {
+                                    WindowManager.shared.openDetachedWindow(with: detachedManager, at: mousePos)
+                                }
+                            } else if abs(offset.width) > 60 {
+                                // Horizontal reorder
+                                let steps = Int(round(offset.width / 90.0))
+                                let targetIdx = min(max(index + steps, 0), tabManager.tabs.count - 1)
+                                if targetIdx != index {
+                                    withAnimation(.easeInOut(duration: 0.15)) {
+                                        tabManager.moveTab(from: index, to: targetIdx)
+                                    }
+                                }
+                            }
+
+                            self.draggingTabId = nil
+                            self.dragOffset = .zero
+                        }
+                )
+                // 2. Native Pasteboard Drag for Inter-Window Merging
                 .onDrag {
-                    self.draggingTabId = tab.id
                     let payload = "\(tabManager.id.uuidString):\(tab.id.uuidString)"
                     return NSItemProvider(object: payload as NSString)
                 }
-                // Drop Destination for Re-ordering & Window Merging
+                // 3. Drop Destination for Cross-Window Merge
                 .onDrop(of: [.text, .plainText], isTargeted: nil) { providers in
                     handleTabDrop(providers: providers, targetIndex: index)
                 }
-                // Context Menu on Tab
+                // 4. Right-Click Context Menu
                 .contextMenu {
                     if tabManager.tabs.count > 1 {
                         Button {
@@ -120,7 +156,11 @@ public struct CustomTabBarView: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(Color(nsColor: .windowBackgroundColor).opacity(0.6))
+        .background(Color(nsColor: .windowBackgroundColor).opacity(isDropTargeted ? 0.9 : 0.6))
+        // Accept Drop on entire Tab Bar area for cross-window merge
+        .onDrop(of: [.text, .plainText], isTargeted: $isDropTargeted) { providers in
+            handleTabDrop(providers: providers, targetIndex: tabManager.tabs.count)
+        }
         .sheet(isPresented: $isSettingsPresented) {
             VStack(spacing: 0) {
                 HStack {
@@ -149,7 +189,9 @@ public struct CustomTabBarView: View {
 
             DispatchQueue.main.async {
                 if let sourceManager = TabTransferRegistry.shared.getTabManager(for: sourceManagerId) {
-                    self.tabManager.transferTab(tabId: tabId, from: sourceManager, toIndex: targetIndex)
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        self.tabManager.transferTab(tabId: tabId, from: sourceManager, toIndex: targetIndex)
+                    }
                 }
             }
         }
