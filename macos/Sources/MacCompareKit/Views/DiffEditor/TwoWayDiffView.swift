@@ -63,12 +63,14 @@ public struct TwoWayDiffView: View {
 
                     Divider()
 
-                    // Minimap
-                    MinimapView(lines: viewModel.diffResult.lines)
+                    // Minimap with Interactive Scroll
+                    MinimapView(lines: viewModel.diffResult.lines) { targetLine in
+                        viewModel.scrollToLineIndex = targetLine
+                    }
                 }
                 .onChange(of: viewModel.scrollToLineIndex) { _, targetLine in
                     if let line = targetLine {
-                        withAnimation(.easeInOut(duration: 0.25)) {
+                        withAnimation(.easeInOut(duration: 0.2)) {
                             proxy.scrollTo(line, anchor: .center)
                         }
                     }
