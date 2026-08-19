@@ -8,13 +8,6 @@ public struct AppCommands: Commands {
     public init() {}
 
     public var body: some Commands {
-        CommandGroup(after: .appInfo) {
-            Button(languageManager.text(.settings)) {
-                NotificationCenter.default.post(name: .mcOpenSettings, object: nil)
-            }
-            .keyboardShortcut(",", modifiers: .command)
-        }
-
         CommandGroup(replacing: .newItem) {
             Button(languageManager.text(.newTextCompare)) {
                 NotificationCenter.default.post(name: .mcNewTextCompare, object: nil)

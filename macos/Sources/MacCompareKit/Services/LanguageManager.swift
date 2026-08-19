@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import AppKit
 
 public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     case system = "system"
@@ -31,8 +32,31 @@ public enum L10nKey: String, Sendable {
     case windowMenu
     case helpMenu
 
-    // Menu Items
+    // Menu Items - App Menu
+    case aboutApp
     case settings
+    case services
+    case hideApp
+    case hideOthers
+    case showAll
+    case quitApp
+
+    // Menu Items - Standard Edit & View & Window
+    case undo
+    case redo
+    case cut
+    case copy
+    case paste
+    case delete
+    case selectAll
+    case showTabBar
+    case showAllTabs
+    case toggleFullScreen
+    case minimize
+    case zoom
+    case bringAllToFront
+
+    // Menu Items - Custom Commands
     case general
     case appearance
     case language
@@ -57,15 +81,6 @@ public enum L10nKey: String, Sendable {
     case takeRight
     case ignoreWhitespace
     case ignoreCase
-    case undo
-    case redo
-    case cut
-    case copy
-    case paste
-    case selectAll
-    case toggleSidebar
-    case minimize
-    case zoom
     case gitHubRepo
 
     // Settings Specific
@@ -162,9 +177,19 @@ public final class LanguageManager {
         let saved = UserDefaults.standard.string(forKey: "mc_app_language") ?? AppLanguage.system.rawValue
         self.currentLanguage = AppLanguage(rawValue: saved) ?? .system
         updateEffectiveLanguage()
+
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didFinishLaunchingNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.localizeSystemMenu()
+            }
+        }
     }
 
-    private func updateEffectiveLanguage() {
+    public func updateEffectiveLanguage() {
         if currentLanguage == .system {
             UserDefaults.standard.removeObject(forKey: "AppleLanguages")
             let preferred = Locale.preferredLanguages.first ?? "en"
@@ -179,6 +204,7 @@ public final class LanguageManager {
             effectiveLanguage = currentLanguage
             UserDefaults.standard.set([currentLanguage.rawValue, "en"], forKey: "AppleLanguages")
         }
+        localizeSystemMenu()
     }
 
     public func text(_ key: L10nKey) -> String {
@@ -192,6 +218,111 @@ public final class LanguageManager {
         }
     }
 
+    // MARK: - Dynamic AppKit Main Menu Localization
+
+    public func localizeSystemMenu() {
+        guard let mainMenu = NSApp.mainMenu else { return }
+
+        for menuIndex in 0..<mainMenu.items.count {
+            let item = mainMenu.items[menuIndex]
+            guard let submenu = item.submenu else { continue }
+
+            // 1. Localize Top-Level Menu Titles
+            switch menuIndex {
+            case 0:
+                // App menu
+                item.title = "MacCompare"
+                submenu.title = "MacCompare"
+            case 1:
+                item.title = text(.fileMenu)
+                submenu.title = text(.fileMenu)
+            case 2:
+                item.title = text(.editMenu)
+                submenu.title = text(.editMenu)
+            case 3:
+                item.title = text(.viewMenu)
+                submenu.title = text(.viewMenu)
+            case 4:
+                item.title = text(.compare)
+                submenu.title = text(.compare)
+            case 5:
+                item.title = text(.windowMenu)
+                submenu.title = text(.windowMenu)
+            case 6:
+                item.title = text(.helpMenu)
+                submenu.title = text(.helpMenu)
+            default:
+                break
+            }
+
+            // 2. Localize Submenu Items
+            for subItem in submenu.items {
+                localizeMenuItem(subItem)
+                if let childSubmenu = subItem.submenu {
+                    for childItem in childSubmenu.items {
+                        localizeMenuItem(childItem)
+                    }
+                }
+            }
+        }
+    }
+
+    private func localizeMenuItem(_ item: NSMenuItem) {
+        if let action = item.action {
+            let actionName = NSStringFromSelector(action)
+            switch actionName {
+            case "orderFrontStandardAboutPanel:":
+                item.title = text(.aboutApp)
+            case "hide:":
+                item.title = text(.hideApp)
+            case "hideOtherApplications:":
+                item.title = text(.hideOthers)
+            case "unhideAllApplications:":
+                item.title = text(.showAll)
+            case "terminate:":
+                item.title = text(.quitApp)
+            case "undo:":
+                item.title = text(.undo)
+            case "redo:":
+                item.title = text(.redo)
+            case "cut:":
+                item.title = text(.cut)
+            case "copy:":
+                item.title = text(.copy)
+            case "paste:":
+                item.title = text(.paste)
+            case "delete:":
+                item.title = text(.delete)
+            case "selectAll:":
+                item.title = text(.selectAll)
+            case "toggleFullScreen:":
+                item.title = text(.toggleFullScreen)
+            case "performMiniaturize:":
+                item.title = text(.minimize)
+            case "performZoom:":
+                item.title = text(.zoom)
+            case "arrangeInFront:":
+                item.title = text(.bringAllToFront)
+            case "showHelp:":
+                item.title = text(.aboutApp)
+            default:
+                break
+            }
+        }
+
+        // Catch Settings / Preferences
+        let lower = item.title.lowercased()
+        if lower.contains("settings") || lower.contains("preferences") || item.title.contains("设置") || item.title.contains("設定") {
+            item.title = text(.settings)
+        } else if lower.contains("services") || item.title.contains("服务") || item.title.contains("サービス") {
+            item.title = text(.services)
+        } else if lower.contains("tab bar") || item.title.contains("标签页栏") || item.title.contains("タブバー") {
+            item.title = text(.showTabBar)
+        } else if lower.contains("all tabs") || item.title.contains("所有标签页") || item.title.contains("すべてのタブ") {
+            item.title = text(.showAllTabs)
+        }
+    }
+
     // MARK: - Dictionaries
 
     private let enDictionary: [L10nKey: String] = [
@@ -202,7 +333,26 @@ public final class LanguageManager {
         .viewMenu: "View",
         .windowMenu: "Window",
         .helpMenu: "Help",
+        .aboutApp: "About MacCompare",
         .settings: "Settings...",
+        .services: "Services",
+        .hideApp: "Hide MacCompare",
+        .hideOthers: "Hide Others",
+        .showAll: "Show All",
+        .quitApp: "Quit MacCompare",
+        .undo: "Undo",
+        .redo: "Redo",
+        .cut: "Cut",
+        .copy: "Copy",
+        .paste: "Paste",
+        .delete: "Delete",
+        .selectAll: "Select All",
+        .showTabBar: "Show Tab Bar",
+        .showAllTabs: "Show All Tabs",
+        .toggleFullScreen: "Enter Full Screen",
+        .minimize: "Minimize",
+        .zoom: "Zoom",
+        .bringAllToFront: "Bring All to Front",
         .general: "General",
         .appearance: "Appearance",
         .language: "Language",
@@ -227,15 +377,6 @@ public final class LanguageManager {
         .takeRight: "Take Right",
         .ignoreWhitespace: "Ignore Whitespace",
         .ignoreCase: "Ignore Case",
-        .undo: "Undo",
-        .redo: "Redo",
-        .cut: "Cut",
-        .copy: "Copy",
-        .paste: "Paste",
-        .selectAll: "Select All",
-        .toggleSidebar: "Toggle Sidebar",
-        .minimize: "Minimize",
-        .zoom: "Zoom",
         .gitHubRepo: "GitHub Repository (andychao217/FileCompare)",
         .folderDiff: "Folder Diff",
         .textDiff: "Text Diff",
@@ -293,7 +434,7 @@ public final class LanguageManager {
         .baseBranch: "Base (Common Ancestor)",
         .remoteBranch: "Remote (Incoming Branch)",
         .conflictCountFormat: "Conflict",
-        .autoResolveNonConflicts: "Auto-Resolve Non-Conflicts",
+        .autoResolveNonConflicts: "Auto-Resolve NonConflicts",
         .saveAndCompleteMerge: "Save & Complete Merge",
         .acceptLocal: "Accept Local",
         .takeBoth: "Take Both",
@@ -312,7 +453,26 @@ public final class LanguageManager {
         .viewMenu: "显示",
         .windowMenu: "窗口",
         .helpMenu: "帮助",
+        .aboutApp: "关于 MacCompare",
         .settings: "设置...",
+        .services: "服务",
+        .hideApp: "隐藏 MacCompare",
+        .hideOthers: "隐藏其他",
+        .showAll: "全部显示",
+        .quitApp: "退出 MacCompare",
+        .undo: "撤销",
+        .redo: "重做",
+        .cut: "剪切",
+        .copy: "拷贝",
+        .paste: "粘贴",
+        .delete: "删除",
+        .selectAll: "全选",
+        .showTabBar: "显示标签页栏",
+        .showAllTabs: "显示所有标签页",
+        .toggleFullScreen: "进入全屏幕",
+        .minimize: "最小化",
+        .zoom: "缩放",
+        .bringAllToFront: "前置全部窗口",
         .general: "常规",
         .appearance: "外观",
         .language: "语言",
@@ -337,15 +497,6 @@ public final class LanguageManager {
         .takeRight: "采纳右侧",
         .ignoreWhitespace: "忽略空白符",
         .ignoreCase: "忽略大小写",
-        .undo: "撤回",
-        .redo: "重做",
-        .cut: "剪切",
-        .copy: "复制",
-        .paste: "粘贴",
-        .selectAll: "全选",
-        .toggleSidebar: "切换侧边栏",
-        .minimize: "最小化",
-        .zoom: "缩放",
         .gitHubRepo: "GitHub 开源仓库 (andychao217/FileCompare)",
         .folderDiff: "文件夹比对",
         .textDiff: "文本比对",
@@ -422,7 +573,26 @@ public final class LanguageManager {
         .viewMenu: "表示",
         .windowMenu: "ウインドウ",
         .helpMenu: "ヘルプ",
+        .aboutApp: "MacCompare について",
         .settings: "設定...",
+        .services: "サービス",
+        .hideApp: "MacCompare を隠す",
+        .hideOthers: "他を隠す",
+        .showAll: "すべてを表示",
+        .quitApp: "MacCompare を終了",
+        .undo: "取り消す",
+        .redo: "やり直す",
+        .cut: "カット",
+        .copy: "コピー",
+        .paste: "ペースト",
+        .delete: "削除",
+        .selectAll: "すべてを選択",
+        .showTabBar: "タブバーを表示",
+        .showAllTabs: "すべてのタブを表示",
+        .toggleFullScreen: "フルスクリーンにする",
+        .minimize: "最小化",
+        .zoom: "拡大/縮小",
+        .bringAllToFront: "すべてを手前に移動",
         .general: "一般",
         .appearance: "外観",
         .language: "言語",
@@ -447,15 +617,6 @@ public final class LanguageManager {
         .takeRight: "右側を採用",
         .ignoreWhitespace: "空白を無視",
         .ignoreCase: "大文字/小文字を無視",
-        .undo: "取り消す",
-        .redo: "やり直す",
-        .cut: "カット",
-        .copy: "コピー",
-        .paste: "ペースト",
-        .selectAll: "すべてを選択",
-        .toggleSidebar: "サイドバーの表示切替",
-        .minimize: "最小化",
-        .zoom: "拡大/縮小",
         .gitHubRepo: "GitHub リポジトリ (andychao217/FileCompare)",
         .folderDiff: "フォルダ比較",
         .textDiff: "テキスト比較",
