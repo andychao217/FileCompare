@@ -49,8 +49,8 @@ public struct AlignedFolderRow: Identifiable, Sendable {
 @MainActor
 @Observable
 public final class FolderDiffViewModel {
-    public var leftFolderName: String = "Source Folder"
-    public var rightFolderName: String = "Target Folder"
+    public var leftFolderName: String = "No Source Folder Selected"
+    public var rightFolderName: String = "No Target Folder Selected"
 
     public var leftFolderURL: URL?
     public var rightFolderURL: URL?
@@ -79,6 +79,10 @@ public final class FolderDiffViewModel {
 
     private let diffEngine: DiffEngineProtocol
 
+    public var hasFoldersLoaded: Bool {
+        leftFolderURL != nil || rightFolderURL != nil
+    }
+
     public init(
         diffEngine: DiffEngineProtocol = DiffEngineService.shared,
         leftURL: URL? = nil,
@@ -90,8 +94,10 @@ public final class FolderDiffViewModel {
 
         if let l = leftURL, let r = rightURL {
             setFolders(left: l, right: r)
-        } else {
-            loadDefaultFolders()
+        } else if let l = leftURL {
+            loadSingleFolder(from: l, isLeft: true)
+        } else if let r = rightURL {
+            loadSingleFolder(from: r, isLeft: false)
         }
     }
 
@@ -115,6 +121,22 @@ public final class FolderDiffViewModel {
         }
     }
 
+    public func loadSingleFolder(from url: URL, isLeft: Bool) {
+        if isLeft {
+            self.leftFolderURL = url
+            self.leftFolderName = url.lastPathComponent
+        } else {
+            self.rightFolderURL = url
+            self.rightFolderName = url.lastPathComponent
+        }
+
+        if let l = leftFolderURL, let r = rightFolderURL {
+            setFolders(left: l, right: r)
+        } else {
+            Task { await scanDirectories() }
+        }
+    }
+
     public func chooseLeftFolder() {
         let panel = NSOpenPanel()
         panel.title = "Select Source (Left) Directory"
@@ -123,13 +145,7 @@ public final class FolderDiffViewModel {
         panel.allowsMultipleSelection = false
 
         if panel.runModal() == .OK, let url = panel.url {
-            self.leftFolderURL = url
-            self.leftFolderName = url.lastPathComponent
-            if let r = rightFolderURL {
-                setFolders(left: url, right: r)
-            } else {
-                Task { await scanDirectories() }
-            }
+            loadSingleFolder(from: url, isLeft: true)
         }
     }
 
@@ -141,57 +157,27 @@ public final class FolderDiffViewModel {
         panel.allowsMultipleSelection = false
 
         if panel.runModal() == .OK, let url = panel.url {
-            self.rightFolderURL = url
-            self.rightFolderName = url.lastPathComponent
-            if let l = leftFolderURL {
-                setFolders(left: l, right: url)
-            } else {
-                Task { await scanDirectories() }
-            }
+            loadSingleFolder(from: url, isLeft: false)
         }
     }
 
     // MARK: - Quick Sidebar Actions
 
     public func openDocumentsFolder(forLeft: Bool = true) {
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
-        if let docs = docs {
-            if forLeft {
-                leftFolderURL = docs
-                leftFolderName = "Documents"
-            } else {
-                rightFolderURL = docs
-                rightFolderName = "Documents"
-            }
-            Task { await scanDirectories() }
+        if let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+            loadSingleFolder(from: docs, isLeft: forLeft)
         }
     }
 
     public func openDownloadsFolder(forLeft: Bool = true) {
-        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
-        if let downloads = downloads {
-            if forLeft {
-                leftFolderURL = downloads
-                leftFolderName = "Downloads"
-            } else {
-                rightFolderURL = downloads
-                rightFolderName = "Downloads"
-            }
-            Task { await scanDirectories() }
+        if let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first {
+            loadSingleFolder(from: downloads, isLeft: forLeft)
         }
     }
 
     public func openDesktopFolder(forLeft: Bool = true) {
-        let desktop = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first
-        if let desktop = desktop {
-            if forLeft {
-                leftFolderURL = desktop
-                leftFolderName = "Desktop"
-            } else {
-                rightFolderURL = desktop
-                rightFolderName = "Desktop"
-            }
-            Task { await scanDirectories() }
+        if let desktop = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first {
+            loadSingleFolder(from: desktop, isLeft: forLeft)
         }
     }
 
@@ -213,6 +199,11 @@ public final class FolderDiffViewModel {
 
     public func scanDirectories() async {
         guard let left = leftFolderURL, let right = rightFolderURL else {
+            self.entries = []
+            self.totalScanned = 0
+            self.modifiedCount = 0
+            self.addedCount = 0
+            self.deletedCount = 0
             return
         }
 
@@ -367,18 +358,6 @@ public final class FolderDiffViewModel {
             await scanDirectories()
         } catch {
             syncExecutionResult = "Sync Failed: \(error.localizedDescription)"
-        }
-    }
-
-    private func loadDefaultFolders() {
-        let cwd = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-        self.leftFolderURL = cwd
-        self.leftFolderName = cwd.lastPathComponent
-        self.rightFolderURL = cwd
-        self.rightFolderName = cwd.lastPathComponent
-
-        Task {
-            await scanDirectories()
         }
     }
 

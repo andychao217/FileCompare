@@ -5,11 +5,11 @@ import AppKit
 @MainActor
 @Observable
 public final class ThreeWayMergeViewModel {
-    public var filePath: String = "repository/project/src/MainView.swift"
+    public var filePath: String = "No Files Selected"
 
-    public var localBranchName: String = "main"
-    public var baseBranchName: String = "base"
-    public var remoteBranchName: String = "feature/new-design"
+    public var localBranchName: String = "Local (Current)"
+    public var baseBranchName: String = "Base (Ancestor)"
+    public var remoteBranchName: String = "Remote (Incoming)"
 
     public var localFileURL: URL?
     public var baseFileURL: URL?
@@ -36,6 +36,10 @@ public final class ThreeWayMergeViewModel {
     private let diffEngine: DiffEngineProtocol
     private var debounceTask: Task<Void, Never>?
 
+    public var hasFilesLoaded: Bool {
+        localFileURL != nil || baseFileURL != nil || remoteFileURL != nil || !localContent.isEmpty || !baseContent.isEmpty || !remoteContent.isEmpty
+    }
+
     public init(
         diffEngine: DiffEngineProtocol = DiffEngineService.shared,
         localURL: URL? = nil,
@@ -51,8 +55,6 @@ public final class ThreeWayMergeViewModel {
 
         if let l = localURL, let b = baseURL, let r = remoteURL {
             loadFiles(local: l, base: b, remote: r, output: outputURL)
-        } else {
-            loadSampleData()
         }
     }
 
@@ -73,12 +75,36 @@ public final class ThreeWayMergeViewModel {
         }
     }
 
+    public enum MergeFileType: Sendable {
+        case local, base, remote
+    }
+
+    public func loadSingleFile(from url: URL, type: MergeFileType) {
+        do {
+            let content = try diffEngine.loadFile(from: url, encoding: .utf8)
+            switch type {
+            case .local:
+                self.localFileURL = url
+                self.localContent = content
+                self.filePath = url.lastPathComponent
+            case .base:
+                self.baseFileURL = url
+                self.baseContent = content
+            case .remote:
+                self.remoteFileURL = url
+                self.remoteContent = content
+            }
+            Task { await recomputeMerge() }
+        } catch {
+            self.statusMessage = "Error loading \(url.lastPathComponent): \(error.localizedDescription)"
+        }
+    }
+
     public func openLocalFile() {
         let panel = NSOpenPanel()
         panel.title = "Select Local (Current Branch) File"
         if panel.runModal() == .OK, let url = panel.url {
-            localFileURL = url
-            localContent = (try? diffEngine.loadFile(from: url, encoding: .utf8)) ?? ""
+            loadSingleFile(from: url, type: .local)
         }
     }
 
@@ -86,8 +112,7 @@ public final class ThreeWayMergeViewModel {
         let panel = NSOpenPanel()
         panel.title = "Select Base (Common Ancestor) File"
         if panel.runModal() == .OK, let url = panel.url {
-            baseFileURL = url
-            baseContent = (try? diffEngine.loadFile(from: url, encoding: .utf8)) ?? ""
+            loadSingleFile(from: url, type: .base)
         }
     }
 
@@ -95,8 +120,7 @@ public final class ThreeWayMergeViewModel {
         let panel = NSOpenPanel()
         panel.title = "Select Remote (Incoming Branch) File"
         if panel.runModal() == .OK, let url = panel.url {
-            remoteFileURL = url
-            remoteContent = (try? diffEngine.loadFile(from: url, encoding: .utf8)) ?? ""
+            loadSingleFile(from: url, type: .remote)
         }
     }
 
@@ -110,6 +134,12 @@ public final class ThreeWayMergeViewModel {
     }
 
     public func recomputeMerge() async {
+        guard !localContent.isEmpty || !baseContent.isEmpty || !remoteContent.isEmpty else {
+            self.mergeResult = MergeResult()
+            self.totalConflicts = 0
+            return
+        }
+
         let res = await diffEngine.mergeThreeWay(
             local: localContent,
             base: baseContent,
@@ -220,68 +250,6 @@ public final class ThreeWayMergeViewModel {
             statusMessage = "Merged file successfully saved to \(url.lastPathComponent)!"
         } catch {
             statusMessage = "Save Error: \(error.localizedDescription)"
-        }
-    }
-
-    public func loadSampleData() {
-        self.localContent = """
-if self.continuts = null {
-    return false:
-}
-
-exsoit {mainVitenAction {
-    let greeting = mayMainView.swift)
-
-    let greeting = "Hello world!",
-    greeting = ""has = "",
-    let.setlefactor()
-}
-return {
-    .serenNoVviewItew {
-        application: neseIpreonoter()
-    }
-}
-"""
-
-        self.baseContent = """
-if self.continuts = null {
-    return false:
-}
-
-exsoit {mainVitenAction {
-    let greeting = mayMainView.swift)
-
-    let sezenNoViewView {
-
-}
-return {
-    .serenNoViiewIsew {
-        application: nessIpreemoter()
-    }
-}
-"""
-
-        self.remoteContent = """
-if self.continuts = null {
-    return false:
-}
-
-excuit {mainVitenAction {
-    let greeting = mayMainView.swift)
-
-    let greeting = "Hello world!",
-    greeting = ""
-    let.dettr(feature/new-design)
-}
-rettuzn {
-    .serenNoViiewview {
-        application: nessEpreamoter()
-    }
-}
-"""
-
-        Task {
-            await recomputeMerge()
         }
     }
 }

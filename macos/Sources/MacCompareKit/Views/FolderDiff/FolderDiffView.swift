@@ -1,7 +1,10 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 public struct FolderDiffView: View {
     @Bindable public var viewModel: FolderDiffViewModel
+    @State private var isLeftDropTargeted: Bool = false
+    @State private var isRightDropTargeted: Bool = false
 
     public init(viewModel: FolderDiffViewModel) {
         self.viewModel = viewModel
@@ -93,8 +96,13 @@ public struct FolderDiffView: View {
                     folderColumn(
                         title: viewModel.leftFolderName,
                         isLeft: true,
+                        hasFolder: viewModel.leftFolderURL != nil,
                         onChoose: { viewModel.chooseLeftFolder() }
                     )
+                    .background(isLeftDropTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
+                    .onDrop(of: [.fileURL], isTargeted: $isLeftDropTargeted) { providers in
+                        handleFolderDrop(providers: providers, isLeft: true)
+                    }
 
                     Divider()
 
@@ -102,8 +110,13 @@ public struct FolderDiffView: View {
                     folderColumn(
                         title: viewModel.rightFolderName,
                         isLeft: false,
+                        hasFolder: viewModel.rightFolderURL != nil,
                         onChoose: { viewModel.chooseRightFolder() }
                     )
+                    .background(isRightDropTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
+                    .onDrop(of: [.fileURL], isTargeted: $isRightDropTargeted) { providers in
+                        handleFolderDrop(providers: providers, isLeft: false)
+                    }
                 }
 
                 Divider()
@@ -114,6 +127,9 @@ public struct FolderDiffView: View {
                         ProgressView()
                             .controlSize(.small)
                         Text("Scanning directory tree...")
+                            .foregroundColor(.secondary)
+                    } else if !viewModel.hasFoldersLoaded {
+                        Text("Select two folders to begin comparison.")
                             .foregroundColor(.secondary)
                     } else {
                         Text("\(viewModel.totalScanned) items,")
@@ -145,6 +161,20 @@ public struct FolderDiffView: View {
         }
     }
 
+    private func handleFolderDrop(providers: [NSItemProvider], isLeft: Bool) -> Bool {
+        guard let provider = providers.first else { return false }
+        _ = provider.loadObject(ofClass: URL.self) { url, _ in
+            guard let folderURL = url else { return }
+            var isDir: ObjCBool = false
+            if FileManager.default.fileExists(atPath: folderURL.path, isDirectory: &isDir), isDir.boolValue {
+                DispatchQueue.main.async {
+                    self.viewModel.loadSingleFolder(from: folderURL, isLeft: isLeft)
+                }
+            }
+        }
+        return true
+    }
+
     private func folderToolbar() -> some View {
         HStack(spacing: 12) {
             Picker("", selection: $viewModel.selectedMode) {
@@ -165,6 +195,7 @@ public struct FolderDiffView: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
+            .disabled(!viewModel.hasFoldersLoaded)
             .help("Preview and sync all source files to target")
 
             Button {
@@ -175,6 +206,7 @@ public struct FolderDiffView: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
+            .disabled(!viewModel.hasFoldersLoaded)
             .help("Preview and sync all target files to source")
 
             Spacer()
@@ -187,6 +219,7 @@ public struct FolderDiffView: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
+            .disabled(!viewModel.hasFoldersLoaded)
 
             Button {
                 viewModel.syncLeftToRight()
@@ -196,6 +229,7 @@ public struct FolderDiffView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.small)
+            .disabled(!viewModel.hasFoldersLoaded)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 6)
@@ -205,6 +239,7 @@ public struct FolderDiffView: View {
     private func folderColumn(
         title: String,
         isLeft: Bool,
+        hasFolder: Bool,
         onChoose: @escaping () -> Void
     ) -> some View {
         VStack(spacing: 0) {
@@ -230,36 +265,64 @@ public struct FolderDiffView: View {
 
             Divider()
 
-            // Column Titles
-            HStack {
-                Text("Name").frame(maxWidth: .infinity, alignment: .leading)
-                if viewModel.selectedMode == .deepHash {
-                    Text("CRC32").frame(width: 80, alignment: .trailing)
+            if !hasFolder {
+                emptyFolderDropZone(isLeft: isLeft, onChoose: onChoose)
+            } else {
+                // Column Titles
+                HStack {
+                    Text("Name").frame(maxWidth: .infinity, alignment: .leading)
+                    if viewModel.selectedMode == .deepHash {
+                        Text("CRC32").frame(width: 80, alignment: .trailing)
+                    }
+                    Text("Size").frame(width: 70, alignment: .trailing)
+                    Text("Modified").frame(width: 140, alignment: .trailing)
                 }
-                Text("Size").frame(width: 70, alignment: .trailing)
-                Text("Modified").frame(width: 140, alignment: .trailing)
-            }
-            .font(.system(size: 11, weight: .medium))
-            .foregroundColor(.secondary)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 4)
-            .background(Color(nsColor: .windowBackgroundColor).opacity(0.3))
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(.secondary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 4)
+                .background(Color(nsColor: .windowBackgroundColor).opacity(0.3))
 
-            Divider()
+                Divider()
 
-            // Tree Rows
-            ScrollView {
-                VStack(spacing: 0) {
-                    ForEach(viewModel.entries) { entry in
-                        rowView(entry: entry, isLeft: isLeft)
-                            .onTapGesture(count: 2) {
-                                viewModel.handleRowDoubleClick(entry: entry)
-                            }
+                // Tree Rows
+                ScrollView {
+                    VStack(spacing: 0) {
+                        ForEach(viewModel.entries) { entry in
+                            rowView(entry: entry, isLeft: isLeft)
+                                .onTapGesture(count: 2) {
+                                    viewModel.handleRowDoubleClick(entry: entry)
+                                }
+                        }
                     }
                 }
             }
         }
         .frame(maxWidth: .infinity)
+    }
+
+    private func emptyFolderDropZone(isLeft: Bool, onChoose: @escaping () -> Void) -> some View {
+        VStack(spacing: 12) {
+            Image(systemName: isLeft ? "folder.badge.plus" : "folder.badge.gearshape")
+                .font(.system(size: 38))
+                .foregroundColor(.secondary.opacity(0.7))
+
+            Text(isLeft ? "No Source Folder Selected" : "No Target Folder Selected")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.primary)
+
+            Text("Drag & drop a directory here or click below to choose")
+                .font(.system(size: 12))
+                .foregroundColor(.secondary)
+
+            Button(isLeft ? "Choose Source Directory..." : "Choose Target Directory...") {
+                onChoose()
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(24)
     }
 
     private func rowView(entry: AlignedFolderRow, isLeft: Bool) -> some View {

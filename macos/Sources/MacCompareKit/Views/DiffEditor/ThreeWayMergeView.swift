@@ -1,7 +1,11 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 public struct ThreeWayMergeView: View {
     @Bindable public var viewModel: ThreeWayMergeViewModel
+    @State private var isLocalTargeted = false
+    @State private var isBaseTargeted = false
+    @State private var isRemoteTargeted = false
 
     public init(viewModel: ThreeWayMergeViewModel) {
         self.viewModel = viewModel
@@ -23,10 +27,15 @@ public struct ThreeWayMergeView: View {
                             title: "Local (Current Branch)",
                             branch: viewModel.localBranchName,
                             content: viewModel.localContent,
+                            hasFile: viewModel.localFileURL != nil || !viewModel.localContent.isEmpty,
                             accentColor: .orange,
                             isLeft: true,
                             onOpen: { viewModel.openLocalFile() }
                         )
+                        .background(isLocalTargeted ? Color.orange.opacity(0.1) : Color.clear)
+                        .onDrop(of: [.fileURL], isTargeted: $isLocalTargeted) { providers in
+                            handleDrop(providers: providers, type: .local)
+                        }
 
                         Divider()
 
@@ -35,10 +44,15 @@ public struct ThreeWayMergeView: View {
                             title: "Base (Common Ancestor)",
                             branch: viewModel.baseBranchName,
                             content: viewModel.baseContent,
+                            hasFile: viewModel.baseFileURL != nil || !viewModel.baseContent.isEmpty,
                             accentColor: .gray,
                             isBase: true,
                             onOpen: { viewModel.openBaseFile() }
                         )
+                        .background(isBaseTargeted ? Color.gray.opacity(0.1) : Color.clear)
+                        .onDrop(of: [.fileURL], isTargeted: $isBaseTargeted) { providers in
+                            handleDrop(providers: providers, type: .base)
+                        }
 
                         Divider()
 
@@ -47,10 +61,15 @@ public struct ThreeWayMergeView: View {
                             title: "Remote (Incoming Branch)",
                             branch: viewModel.remoteBranchName,
                             content: viewModel.remoteContent,
+                            hasFile: viewModel.remoteFileURL != nil || !viewModel.remoteContent.isEmpty,
                             accentColor: .green,
                             isRight: true,
                             onOpen: { viewModel.openRemoteFile() }
                         )
+                        .background(isRemoteTargeted ? Color.green.opacity(0.1) : Color.clear)
+                        .onDrop(of: [.fileURL], isTargeted: $isRemoteTargeted) { providers in
+                            handleDrop(providers: providers, type: .remote)
+                        }
                     }
                     .frame(height: geometry.size.height * 0.58)
 
@@ -63,6 +82,17 @@ public struct ThreeWayMergeView: View {
             }
         }
         .background(Color(nsColor: .textBackgroundColor))
+    }
+
+    private func handleDrop(providers: [NSItemProvider], type: ThreeWayMergeViewModel.MergeFileType) -> Bool {
+        guard let provider = providers.first else { return false }
+        _ = provider.loadObject(ofClass: URL.self) { url, _ in
+            guard let fileURL = url else { return }
+            DispatchQueue.main.async {
+                self.viewModel.loadSingleFile(from: fileURL, type: type)
+            }
+        }
+        return true
     }
 
     private func mergeHeaderBar() -> some View {
@@ -113,6 +143,7 @@ public struct ThreeWayMergeView: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
+            .disabled(!viewModel.hasFilesLoaded)
 
             Button {
                 viewModel.saveAndCompleteMerge()
@@ -122,6 +153,7 @@ public struct ThreeWayMergeView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.small)
+            .disabled(!viewModel.hasFilesLoaded)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 6)
@@ -132,6 +164,7 @@ public struct ThreeWayMergeView: View {
         title: String,
         branch: String,
         content: String,
+        hasFile: Bool,
         accentColor: Color,
         isLeft: Bool = false,
         isBase: Bool = false,
@@ -156,7 +189,7 @@ public struct ThreeWayMergeView: View {
                 }
                 Spacer()
 
-                Button("Open...") {
+                Button("Choose...") {
                     onOpen()
                 }
                 .buttonStyle(.bordered)
@@ -168,55 +201,68 @@ public struct ThreeWayMergeView: View {
 
             Divider()
 
-            // Conflict Action Overlay Bar (for Local & Remote)
-            if isLeft || isRight {
-                HStack(spacing: 8) {
-                    Button("Accept Local") { viewModel.acceptLocal() }
-                        .buttonStyle(.bordered)
-                        .tint(.orange)
-                        .controlSize(.mini)
-
-                    Button("Take Both") { viewModel.takeBoth() }
-                        .buttonStyle(.bordered)
-                        .tint(.purple)
-                        .controlSize(.mini)
-
-                    Button("Accept Remote") { viewModel.acceptRemote() }
-                        .buttonStyle(.bordered)
-                        .tint(.green)
-                        .controlSize(.mini)
-                }
-                .padding(.vertical, 4)
-                .background(Color(nsColor: .windowBackgroundColor).opacity(0.8))
-
-                Divider()
-            }
-
-            // Code Content
-            ScrollView {
-                VStack(alignment: .leading, spacing: 1) {
-                    ForEach(Array(content.components(separatedBy: .newlines).enumerated()), id: \.offset) { idx, line in
-                        HStack(spacing: 8) {
-                            Text("\(idx + 1)")
-                                .font(.system(size: 10, design: .monospaced))
-                                .foregroundColor(.secondary)
-                                .frame(width: 28, alignment: .trailing)
-
-                            Text(line)
-                                .font(.system(size: 11, design: .monospaced))
-                                .foregroundColor(.primary)
-
-                            Spacer()
-                        }
-                        .frame(height: 18)
-                        .background(
-                            (idx >= 5 && idx <= 8 && !isBase)
-                                ? (isLeft ? Color.orange.opacity(0.2) : Color.green.opacity(0.2))
-                                : Color.clear
-                        )
+            if !hasFile {
+                VStack(spacing: 8) {
+                    Image(systemName: "doc.badge.plus")
+                        .font(.system(size: 28))
+                        .foregroundColor(.secondary.opacity(0.7))
+                    Text("No File Loaded")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.secondary)
+                    Button("Choose...") {
+                        onOpen()
                     }
+                    .buttonStyle(.bordered)
+                    .controlSize(.mini)
                 }
-                .padding(.vertical, 4)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding()
+            } else {
+                // Conflict Action Overlay Bar (for Local & Remote)
+                if isLeft || isRight {
+                    HStack(spacing: 8) {
+                        Button("Accept Local") { viewModel.acceptLocal() }
+                            .buttonStyle(.bordered)
+                            .tint(.orange)
+                            .controlSize(.mini)
+
+                        Button("Take Both") { viewModel.takeBoth() }
+                            .buttonStyle(.bordered)
+                            .tint(.purple)
+                            .controlSize(.mini)
+
+                        Button("Accept Remote") { viewModel.acceptRemote() }
+                            .buttonStyle(.bordered)
+                            .tint(.green)
+                            .controlSize(.mini)
+                    }
+                    .padding(.vertical, 4)
+                    .background(Color(nsColor: .windowBackgroundColor).opacity(0.8))
+
+                    Divider()
+                }
+
+                // Code Content
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 1) {
+                        ForEach(Array(content.components(separatedBy: .newlines).enumerated()), id: \.offset) { idx, line in
+                            HStack(spacing: 8) {
+                                Text("\(idx + 1)")
+                                    .font(.system(size: 10, design: .monospaced))
+                                    .foregroundColor(.secondary)
+                                    .frame(width: 28, alignment: .trailing)
+
+                                Text(line)
+                                    .font(.system(size: 11, design: .monospaced))
+                                    .foregroundColor(.primary)
+
+                                Spacer()
+                            }
+                            .frame(height: 18)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
             }
         }
         .frame(maxWidth: .infinity)
@@ -249,6 +295,7 @@ public struct ThreeWayMergeView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
+                .disabled(!viewModel.hasFilesLoaded)
 
                 HStack(spacing: 4) {
                     if viewModel.totalConflicts > 0 {
@@ -257,7 +304,7 @@ public struct ThreeWayMergeView: View {
                         Text("\(viewModel.totalConflicts) Conflicts Remaining")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundColor(.orange)
-                    } else {
+                    } else if viewModel.hasFilesLoaded {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)
                         Text("All Conflicts Resolved")

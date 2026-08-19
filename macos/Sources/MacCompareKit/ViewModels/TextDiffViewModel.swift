@@ -5,8 +5,8 @@ import AppKit
 @MainActor
 @Observable
 public final class TextDiffViewModel {
-    public var leftTitle: String = "script.py (Original)"
-    public var rightTitle: String = "script.py (Modified)"
+    public var leftTitle: String = "Source File (Left)"
+    public var rightTitle: String = "Target File (Right)"
 
     public var leftFileURL: URL?
     public var rightFileURL: URL?
@@ -47,6 +47,10 @@ public final class TextDiffViewModel {
     private let diffEngine: DiffEngineProtocol
     private var debounceTask: Task<Void, Never>?
 
+    public var hasFilesLoaded: Bool {
+        leftFileURL != nil || rightFileURL != nil || !leftContent.isEmpty || !rightContent.isEmpty
+    }
+
     public init(
         diffEngine: DiffEngineProtocol = DiffEngineService.shared,
         leftURL: URL? = nil,
@@ -58,67 +62,65 @@ public final class TextDiffViewModel {
 
         if let l = leftURL, let r = rightURL {
             loadFiles(left: l, right: r)
-        } else {
-            loadSampleData()
+        } else if let l = leftURL {
+            loadSingleFile(from: l, isLeft: true)
+        } else if let r = rightURL {
+            loadSingleFile(from: r, isLeft: false)
         }
     }
 
-    // MARK: - File Loading & Saving
-
     public func loadFiles(left: URL, right: URL) {
-        self.leftFileURL = left
-        self.rightFileURL = right
-        self.leftTitle = left.lastPathComponent
-        self.rightTitle = right.lastPathComponent
+        loadSingleFile(from: left, isLeft: true)
+        loadSingleFile(from: right, isLeft: false)
+    }
 
+    public func loadSingleFile(from url: URL, isLeft: Bool) {
         do {
-            self.leftContent = try diffEngine.loadFile(from: left, encoding: selectedEncoding)
-            self.rightContent = try diffEngine.loadFile(from: right, encoding: selectedEncoding)
-            self.isLeftDirty = false
-            self.isRightDirty = false
-            self.statusMessage = "Loaded \(left.lastPathComponent) & \(right.lastPathComponent)"
+            let content = try diffEngine.loadFile(from: url, encoding: selectedEncoding)
+            if isLeft {
+                self.leftFileURL = url
+                self.leftTitle = url.lastPathComponent
+                self.leftContent = content
+                self.isLeftDirty = false
+            } else {
+                self.rightFileURL = url
+                self.rightTitle = url.lastPathComponent
+                self.rightContent = content
+                self.isRightDirty = false
+            }
+            Task { await recomputeDiff() }
         } catch {
-            self.statusMessage = "Error: \(error.localizedDescription)"
+            self.statusMessage = "Error loading \(url.lastPathComponent): \(error.localizedDescription)"
         }
     }
 
     public func openLeftFile() {
         let panel = NSOpenPanel()
-        panel.title = "Select Left (Original) File"
+        panel.title = "Select Left File"
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
 
         if panel.runModal() == .OK, let url = panel.url {
-            self.leftFileURL = url
-            self.leftTitle = url.lastPathComponent
-            if let content = try? diffEngine.loadFile(from: url, encoding: selectedEncoding) {
-                self.leftContent = content
-                self.isLeftDirty = false
-            }
+            loadSingleFile(from: url, isLeft: true)
         }
     }
 
     public func openRightFile() {
         let panel = NSOpenPanel()
-        panel.title = "Select Right (Modified) File"
+        panel.title = "Select Right File"
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
 
         if panel.runModal() == .OK, let url = panel.url {
-            self.rightFileURL = url
-            self.rightTitle = url.lastPathComponent
-            if let content = try? diffEngine.loadFile(from: url, encoding: selectedEncoding) {
-                self.rightContent = content
-                self.isRightDirty = false
-            }
+            loadSingleFile(from: url, isLeft: false)
         }
     }
 
     public func saveLeftFile() {
         guard let url = leftFileURL else {
-            promptSaveAs(isLeft: true)
+            promptSavePanel(isLeft: true)
             return
         }
         do {
@@ -132,7 +134,7 @@ public final class TextDiffViewModel {
 
     public func saveRightFile() {
         guard let url = rightFileURL else {
-            promptSaveAs(isLeft: false)
+            promptSavePanel(isLeft: false)
             return
         }
         do {
@@ -144,9 +146,9 @@ public final class TextDiffViewModel {
         }
     }
 
-    private func promptSaveAs(isLeft: Bool) {
+    private func promptSavePanel(isLeft: Bool) {
         let panel = NSSavePanel()
-        panel.title = isLeft ? "Save Left File" : "Save Right File"
+        panel.title = "Save \(isLeft ? "Left" : "Right") File"
         if panel.runModal() == .OK, let url = panel.url {
             if isLeft {
                 leftFileURL = url
@@ -160,38 +162,6 @@ public final class TextDiffViewModel {
         }
     }
 
-    private func reloadWithCurrentEncoding() {
-        if let l = leftFileURL, let content = try? diffEngine.loadFile(from: l, encoding: selectedEncoding) {
-            self.leftContent = content
-        }
-        if let r = rightFileURL, let content = try? diffEngine.loadFile(from: r, encoding: selectedEncoding) {
-            self.rightContent = content
-        }
-    }
-
-    // MARK: - Diff Computation & Hunk Operations
-
-    private func scheduleDiffComputation() {
-        debounceTask?.cancel()
-        debounceTask = Task {
-            try? await Task.sleep(nanoseconds: 200_000_000) // 200ms debounce
-            guard !Task.isCancelled else { return }
-            await recomputeDiff()
-        }
-    }
-
-    public func recomputeDiff() async {
-        isLoading = true
-        let res = await diffEngine.compareText(
-            left: leftContent,
-            right: rightContent,
-            ignoreWhitespace: ignoreWhitespace,
-            ignoreCase: ignoreCase
-        )
-        self.diffResult = res
-        self.isLoading = false
-    }
-
     public func previousDiff() {
         guard !diffResult.hunks.isEmpty else { return }
         if currentHunkIndex > 0 {
@@ -199,7 +169,7 @@ public final class TextDiffViewModel {
         } else {
             currentHunkIndex = diffResult.hunks.count - 1
         }
-        scrollToHunk(index: currentHunkIndex)
+        scrollToLineIndex = diffResult.hunks[currentHunkIndex].startLineIndex
     }
 
     public func nextDiff() {
@@ -209,126 +179,75 @@ public final class TextDiffViewModel {
         } else {
             currentHunkIndex = 0
         }
-        scrollToHunk(index: currentHunkIndex)
+        scrollToLineIndex = diffResult.hunks[currentHunkIndex].startLineIndex
     }
 
-    private func scrollToHunk(index: Int) {
-        guard index < diffResult.hunks.count else { return }
-        let hunk = diffResult.hunks[index]
-        self.scrollToLineIndex = hunk.startLineIndex
-    }
-
-    /// Take currently focused or specific left hunk and copy to right side
     public func takeLeft(hunkIndex: Int? = nil) {
-        let targetIndex = hunkIndex ?? currentHunkIndex
-        guard targetIndex < diffResult.hunks.count else { return }
-        let hunk = diffResult.hunks[targetIndex]
+        let idx = hunkIndex ?? currentHunkIndex
+        guard diffResult.hunks.indices.contains(idx) else { return }
+        let hunk = diffResult.hunks[idx]
 
-        let linesToCopy = (hunk.startLineIndex..<(hunk.startLineIndex + hunk.lineCount))
-            .compactMap { idx -> String? in
-                let line = diffResult.lines[idx]
-                return line.isPhantomLeft ? nil : line.contentLeft
-            }
+        var rightLines = rightContent.components(separatedBy: .newlines)
+        let leftLines = leftContent.components(separatedBy: .newlines)
 
-        // Reconstruct right buffer with left hunk replacement
-        var newRightLines = rightContent.components(separatedBy: .newlines)
-        let rightStart = diffResult.lines[hunk.startLineIndex].rightLineNumber.map { Int($0 - 1) } ?? 0
-        let rightCount = (hunk.startLineIndex..<(hunk.startLineIndex + hunk.lineCount))
-            .filter { !$0.isPhantomRight(in: diffResult.lines) }.count
+        let targetStart = min(hunk.startLineIndex, rightLines.count)
+        let targetEnd = min(targetStart + hunk.lineCount, rightLines.count)
+        let replacement = Array(leftLines[min(hunk.startLineIndex, leftLines.count)..<min(hunk.startLineIndex + hunk.lineCount, leftLines.count)])
 
-        if rightStart <= newRightLines.count {
-            let replaceRange = rightStart..<min(rightStart + rightCount, newRightLines.count)
-            newRightLines.replaceSubrange(replaceRange, with: linesToCopy)
-            self.rightContent = newRightLines.joined(separator: "\n")
+        if targetStart <= targetEnd {
+            rightLines.replaceSubrange(targetStart..<targetEnd, with: replacement)
+            self.rightContent = rightLines.joined(separator: "\n")
         }
     }
 
-    /// Take currently focused or specific right hunk and copy to left side
     public func takeRight(hunkIndex: Int? = nil) {
-        let targetIndex = hunkIndex ?? currentHunkIndex
-        guard targetIndex < diffResult.hunks.count else { return }
-        let hunk = diffResult.hunks[targetIndex]
+        let idx = hunkIndex ?? currentHunkIndex
+        guard diffResult.hunks.indices.contains(idx) else { return }
+        let hunk = diffResult.hunks[idx]
 
-        let linesToCopy = (hunk.startLineIndex..<(hunk.startLineIndex + hunk.lineCount))
-            .compactMap { idx -> String? in
-                let line = diffResult.lines[idx]
-                return line.isPhantomRight ? nil : line.contentRight
-            }
+        var leftLines = leftContent.components(separatedBy: .newlines)
+        let rightLines = rightContent.components(separatedBy: .newlines)
 
-        var newLeftLines = leftContent.components(separatedBy: .newlines)
-        let leftStart = diffResult.lines[hunk.startLineIndex].leftLineNumber.map { Int($0 - 1) } ?? 0
-        let leftCount = (hunk.startLineIndex..<(hunk.startLineIndex + hunk.lineCount))
-            .filter { !$0.isPhantomLeft(in: diffResult.lines) }.count
+        let targetStart = min(hunk.startLineIndex, leftLines.count)
+        let targetEnd = min(targetStart + hunk.lineCount, leftLines.count)
+        let replacement = Array(rightLines[min(hunk.startLineIndex, rightLines.count)..<min(hunk.startLineIndex + hunk.lineCount, rightLines.count)])
 
-        if leftStart <= newLeftLines.count {
-            let replaceRange = leftStart..<min(leftStart + leftCount, newLeftLines.count)
-            newLeftLines.replaceSubrange(replaceRange, with: linesToCopy)
-            self.leftContent = newLeftLines.joined(separator: "\n")
+        if targetStart <= targetEnd {
+            leftLines.replaceSubrange(targetStart..<targetEnd, with: replacement)
+            self.leftContent = leftLines.joined(separator: "\n")
         }
     }
 
-    public func loadSampleData() {
-        self.leftContent = """
-import synsc.sd
+    private func reloadWithCurrentEncoding() {
+        if let l = leftFileURL {
+            leftContent = (try? diffEngine.loadFile(from: l, encoding: selectedEncoding)) ?? leftContent
+        }
+        if let r = rightFileURL {
+            rightContent = (try? diffEngine.loadFile(from: r, encoding: selectedEncoding)) ?? rightContent
+        }
+    }
 
-def funbic(basen):
-    syntax = array[]
-    syntax = self.town_strings>
-
-
-def get_mith(atexs):
-    token = schanged(ittoarname)
-    return sensalion("scoze")
-
-# Ignore Tokens
-printult_io.recain("I The same necessarary $?")
-
-if out in punt:
-    # some punt = string[])
-    sodeon.tokens = decoded[]
-
-def autotname(selfI):
-    return sampilleArray(sonfig + 10)
-"""
-
-        self.rightContent = """
-import synsc.sd
-
-def funbic(basen):
-    syntax = array[]
-    syntax = self.town_strings>
-
-
-def get_mitt(atexs):
-    token = schanged(fatsenzname>)
-    return sensalion("score.1")
-
-# Ignore Tokens
-printult_io.recain("I The same necessarary $?")
-
-if out in punt:
-    # some punt = string[])
-    sodeon.tokens = abcoded[]
-    screen.claserining("$&ill")
-
-def autotname(selfI):
-    return sanoilleArray(sonfig + 10)
-"""
-        self.isLeftDirty = false
-        self.isRightDirty = false
-        Task {
+    private func scheduleDiffComputation() {
+        debounceTask?.cancel()
+        debounceTask = Task {
+            try? await Task.sleep(nanoseconds: 200_000_000)
+            guard !Task.isCancelled else { return }
             await recomputeDiff()
         }
     }
-}
 
-private extension Int {
-    func isPhantomLeft(in lines: [DiffLine]) -> Bool {
-        guard self < lines.count else { return false }
-        return lines[self].isPhantomLeft
-    }
-    func isPhantomRight(in lines: [DiffLine]) -> Bool {
-        guard self < lines.count else { return false }
-        return lines[self].isPhantomRight
+    public func recomputeDiff() async {
+        guard !leftContent.isEmpty || !rightContent.isEmpty else {
+            self.diffResult = TextDiffResult()
+            return
+        }
+
+        let res = await diffEngine.compareText(
+            left: leftContent,
+            right: rightContent,
+            ignoreWhitespace: ignoreWhitespace,
+            ignoreCase: ignoreCase
+        )
+        self.diffResult = res
     }
 }

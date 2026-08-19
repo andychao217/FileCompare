@@ -41,7 +41,7 @@ public final class TabManager {
     public var threeWayMergeViewModels: [UUID: ThreeWayMergeViewModel] = [:]
 
     public init() {
-        let initialTab = TabItem(title: "Compare: script.py", type: .textDiff)
+        let initialTab = TabItem(title: "New Text Compare", type: .textDiff)
         tabs.append(initialTab)
         selectedTabId = initialTab.id
         textDiffViewModels[initialTab.id] = TextDiffViewModel()

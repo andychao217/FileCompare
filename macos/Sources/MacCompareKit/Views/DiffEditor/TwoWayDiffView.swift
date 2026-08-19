@@ -1,7 +1,10 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 public struct TwoWayDiffView: View {
     @Bindable public var viewModel: TextDiffViewModel
+    @State private var isLeftDropTargeted: Bool = false
+    @State private var isRightDropTargeted: Bool = false
 
     public init(viewModel: TextDiffViewModel) {
         self.viewModel = viewModel
@@ -17,7 +20,7 @@ public struct TwoWayDiffView: View {
             // Main Diff Split View
             ScrollViewReader { proxy in
                 HStack(spacing: 0) {
-                    // Left Buffer (Original)
+                    // Left Buffer (Original / Source)
                     VStack(spacing: 0) {
                         fileHeader(
                             title: viewModel.leftTitle,
@@ -27,20 +30,29 @@ public struct TwoWayDiffView: View {
                             onSave: { viewModel.saveLeftFile() }
                         )
                         Divider()
-                        ScrollView {
-                            VStack(spacing: 0) {
-                                ForEach(Array(viewModel.diffResult.lines.enumerated()), id: \.offset) { idx, line in
-                                    leftLineRow(index: idx, line: line)
-                                        .id(idx)
+
+                        if viewModel.leftContent.isEmpty && viewModel.leftFileURL == nil {
+                            emptyDropZone(isLeft: true)
+                        } else {
+                            ScrollView {
+                                VStack(spacing: 0) {
+                                    ForEach(Array(viewModel.diffResult.lines.enumerated()), id: \.offset) { idx, line in
+                                        leftLineRow(index: idx, line: line)
+                                            .id(idx)
+                                    }
                                 }
                             }
                         }
                     }
                     .frame(maxWidth: .infinity)
+                    .background(isLeftDropTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
+                    .onDrop(of: [.fileURL], isTargeted: $isLeftDropTargeted) { providers in
+                        handleDrop(providers: providers, isLeft: true)
+                    }
 
                     Divider()
 
-                    // Right Buffer (Modified)
+                    // Right Buffer (Modified / Target)
                     VStack(spacing: 0) {
                         fileHeader(
                             title: viewModel.rightTitle,
@@ -50,16 +62,25 @@ public struct TwoWayDiffView: View {
                             onSave: { viewModel.saveRightFile() }
                         )
                         Divider()
-                        ScrollView {
-                            VStack(spacing: 0) {
-                                ForEach(Array(viewModel.diffResult.lines.enumerated()), id: \.offset) { idx, line in
-                                    rightLineRow(index: idx, line: line)
-                                        .id(idx)
+
+                        if viewModel.rightContent.isEmpty && viewModel.rightFileURL == nil {
+                            emptyDropZone(isLeft: false)
+                        } else {
+                            ScrollView {
+                                VStack(spacing: 0) {
+                                    ForEach(Array(viewModel.diffResult.lines.enumerated()), id: \.offset) { idx, line in
+                                        rightLineRow(index: idx, line: line)
+                                            .id(idx)
+                                    }
                                 }
                             }
                         }
                     }
                     .frame(maxWidth: .infinity)
+                    .background(isRightDropTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
+                    .onDrop(of: [.fileURL], isTargeted: $isRightDropTargeted) { providers in
+                        handleDrop(providers: providers, isLeft: false)
+                    }
 
                     Divider()
 
@@ -90,6 +111,45 @@ public struct TwoWayDiffView: View {
         .background(Color(nsColor: .textBackgroundColor))
     }
 
+    private func emptyDropZone(isLeft: Bool) -> some View {
+        VStack(spacing: 12) {
+            Image(systemName: isLeft ? "doc.badge.plus" : "arrow.triangle.swap")
+                .font(.system(size: 38))
+                .foregroundColor(.secondary.opacity(0.7))
+
+            Text("No File Selected")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.primary)
+
+            Text("Drag & drop a file here or choose from disk")
+                .font(.system(size: 12))
+                .foregroundColor(.secondary)
+
+            Button(isLeft ? "Choose Source File..." : "Choose Target File...") {
+                if isLeft {
+                    viewModel.openLeftFile()
+                } else {
+                    viewModel.openRightFile()
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(24)
+    }
+
+    private func handleDrop(providers: [NSItemProvider], isLeft: Bool) -> Bool {
+        guard let provider = providers.first else { return false }
+        _ = provider.loadObject(ofClass: URL.self) { url, _ in
+            guard let fileURL = url else { return }
+            DispatchQueue.main.async {
+                self.viewModel.loadSingleFile(from: fileURL, isLeft: isLeft)
+            }
+        }
+        return true
+    }
+
     private func fileHeader(
         title: String,
         icon: String,
@@ -116,7 +176,7 @@ public struct TwoWayDiffView: View {
 
             Spacer()
 
-            Button("Open...") {
+            Button("Choose...") {
                 onOpen()
             }
             .buttonStyle(.bordered)
