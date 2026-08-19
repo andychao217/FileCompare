@@ -55,6 +55,9 @@ public enum L10nKey: String, Sendable {
     case minimize
     case zoom
     case bringAllToFront
+    case moveTabToNewWindow
+    case mergeAllWindows
+    case newWindow
 
     // Menu Items - Custom Commands
     case general
@@ -390,6 +393,9 @@ public final class LanguageManager {
         .minimize: "Minimize",
         .zoom: "Zoom",
         .bringAllToFront: "Bring All to Front",
+        .moveTabToNewWindow: "Move Tab to New Window",
+        .mergeAllWindows: "Merge All Windows",
+        .newWindow: "New Window",
         .general: "General",
         .appearance: "Appearance",
         .language: "Language",
@@ -510,6 +516,9 @@ public final class LanguageManager {
         .minimize: "最小化",
         .zoom: "缩放",
         .bringAllToFront: "前置全部窗口",
+        .moveTabToNewWindow: "将标签页移到新窗口",
+        .mergeAllWindows: "合并所有窗口",
+        .newWindow: "新建窗口",
         .general: "常规",
         .appearance: "外观",
         .language: "语言",
@@ -630,6 +639,9 @@ public final class LanguageManager {
         .minimize: "最小化",
         .zoom: "拡大/縮小",
         .bringAllToFront: "すべてを手前に移動",
+        .moveTabToNewWindow: "タブを新しいウインドウに移動",
+        .mergeAllWindows: "すべてのウインドウを結合",
+        .newWindow: "新規ウインドウ",
         .general: "一般",
         .appearance: "外観",
         .language: "言語",

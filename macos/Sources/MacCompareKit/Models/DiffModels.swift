@@ -35,6 +35,9 @@ public extension Notification.Name {
     static let mcToggleIgnoreWhitespace = Notification.Name("MCToggleIgnoreWhitespace")
     static let mcToggleIgnoreCase = Notification.Name("MCToggleIgnoreCase")
     static let mcOpenSettings = Notification.Name("MCOpenSettings")
+    static let mcMoveTabToNewWindow = Notification.Name("MCMoveTabToNewWindow")
+    static let mcMergeAllWindows = Notification.Name("MCMergeAllWindows")
+    static let mcNewWindow = Notification.Name("MCNewWindow")
 }
 
 /// Type of change for line or token diff.

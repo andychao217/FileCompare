@@ -44,7 +44,8 @@ public struct TabItem: Identifiable, Equatable, Sendable {
 
 @MainActor
 @Observable
-public final class TabManager {
+public final class TabManager: Identifiable {
+    public let id = UUID()
     public var tabs: [TabItem] = []
     public var selectedTabId: UUID?
 
@@ -52,11 +53,21 @@ public final class TabManager {
     public var folderDiffViewModels: [UUID: FolderDiffViewModel] = [:]
     public var threeWayMergeViewModels: [UUID: ThreeWayMergeViewModel] = [:]
 
-    public init() {
-        let initialTab = TabItem(type: .textDiff)
-        tabs.append(initialTab)
-        selectedTabId = initialTab.id
-        textDiffViewModels[initialTab.id] = TextDiffViewModel()
+    public init(createInitialTab: Bool = true) {
+        TabTransferRegistry.shared.register(tabManager: self)
+        if createInitialTab {
+            let initialTab = TabItem(type: .textDiff)
+            tabs.append(initialTab)
+            selectedTabId = initialTab.id
+            textDiffViewModels[initialTab.id] = TextDiffViewModel()
+        }
+    }
+
+    deinit {
+        let managerId = id
+        Task { @MainActor in
+            TabTransferRegistry.shared.unregister(id: managerId)
+        }
     }
 
     public var activeTab: TabItem? {
@@ -96,6 +107,62 @@ public final class TabManager {
         case .threeWayMerge:
             threeWayMergeViewModels[newTab.id] = ThreeWayMergeViewModel()
         }
+    }
+
+    public func moveTab(from sourceIndex: Int, to destinationIndex: Int) {
+        guard tabs.indices.contains(sourceIndex), tabs.indices.contains(destinationIndex), sourceIndex != destinationIndex else { return }
+        let tab = tabs.remove(at: sourceIndex)
+        tabs.insert(tab, at: destinationIndex)
+    }
+
+    public func detachTabToNewManager(id: UUID) -> TabManager? {
+        guard let index = tabs.firstIndex(where: { $0.id == id }) else { return nil }
+        let tab = tabs.remove(at: index)
+        let textVM = textDiffViewModels.removeValue(forKey: id)
+        let folderVM = folderDiffViewModels.removeValue(forKey: id)
+        let mergeVM = threeWayMergeViewModels.removeValue(forKey: id)
+
+        if selectedTabId == id {
+            selectedTabId = tabs.indices.contains(index) ? tabs[index].id : tabs.last?.id
+        }
+
+        let newManager = TabManager(createInitialTab: false)
+        newManager.tabs.append(tab)
+        newManager.selectedTabId = tab.id
+
+        if let textVM { newManager.textDiffViewModels[tab.id] = textVM }
+        if let folderVM { newManager.folderDiffViewModels[tab.id] = folderVM }
+        if let mergeVM { newManager.threeWayMergeViewModels[tab.id] = mergeVM }
+
+        return newManager
+    }
+
+    public func transferTab(tabId: UUID, from sourceManager: TabManager, toIndex: Int? = nil) {
+        if sourceManager.id == self.id {
+            // Reorder within same manager
+            guard let srcIdx = tabs.firstIndex(where: { $0.id == tabId }) else { return }
+            let dstIdx = toIndex ?? (tabs.count - 1)
+            moveTab(from: srcIdx, to: dstIdx)
+            return
+        }
+
+        guard let srcIdx = sourceManager.tabs.firstIndex(where: { $0.id == tabId }) else { return }
+        let tab = sourceManager.tabs.remove(at: srcIdx)
+        let textVM = sourceManager.textDiffViewModels.removeValue(forKey: tabId)
+        let folderVM = sourceManager.folderDiffViewModels.removeValue(forKey: tabId)
+        let mergeVM = sourceManager.threeWayMergeViewModels.removeValue(forKey: tabId)
+
+        if sourceManager.selectedTabId == tabId {
+            sourceManager.selectedTabId = sourceManager.tabs.indices.contains(srcIdx) ? sourceManager.tabs[srcIdx].id : sourceManager.tabs.last?.id
+        }
+
+        let insertIdx = min(toIndex ?? tabs.count, tabs.count)
+        tabs.insert(tab, at: insertIdx)
+        selectedTabId = tab.id
+
+        if let textVM { textDiffViewModels[tab.id] = textVM }
+        if let folderVM { folderDiffViewModels[tab.id] = folderVM }
+        if let mergeVM { threeWayMergeViewModels[tab.id] = mergeVM }
     }
 
     public func openTextDiff(left: URL, right: URL) {

@@ -1,11 +1,13 @@
 import SwiftUI
 
 public struct MainWindowView: View {
-    @State private var tabManager = TabManager()
+    @Bindable public var tabManager: TabManager
     @State private var isSettingsSheetPresented: Bool = false
     @State private var languageManager = LanguageManager.shared
 
-    public init() {}
+    public init(tabManager: TabManager? = nil) {
+        self.tabManager = tabManager ?? TabManager()
+    }
 
     public var body: some View {
         VStack(spacing: 0) {
@@ -58,11 +60,14 @@ public struct MainWindowView: View {
                 tabManager.closeTab(id: activeId)
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .mcMoveTabToNewWindow)) { _ in
+            WindowManager.shared.moveActiveTabToNewWindow(from: tabManager)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .mcMergeAllWindows)) { _ in
+            WindowManager.shared.mergeAllWindows()
+        }
         .onReceive(NotificationCenter.default.publisher(for: .mcOpenFile)) { _ in
-            guard let activeTab = tabManager.activeTab else {
-                tabManager.addTab(type: .textDiff)
-                return
-            }
+            guard let activeTab = tabManager.activeTab else { return }
             switch activeTab.type {
             case .textDiff:
                 tabManager.textDiffViewModel(for: activeTab.id).openLeftFile()
@@ -90,10 +95,10 @@ public struct MainWindowView: View {
             switch activeTab.type {
             case .textDiff:
                 tabManager.textDiffViewModel(for: activeTab.id).nextDiff()
-            case .folderDiff:
-                break
             case .threeWayMerge:
                 tabManager.threeWayMergeViewModel(for: activeTab.id).nextConflict()
+            case .folderDiff:
+                break
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .mcPrevDiff)) { _ in
@@ -101,31 +106,25 @@ public struct MainWindowView: View {
             switch activeTab.type {
             case .textDiff:
                 tabManager.textDiffViewModel(for: activeTab.id).previousDiff()
-            case .folderDiff:
-                break
             case .threeWayMerge:
                 tabManager.threeWayMergeViewModel(for: activeTab.id).previousConflict()
+            case .folderDiff:
+                break
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .mcTakeLeft)) { _ in
             guard let activeTab = tabManager.activeTab else { return }
-            switch activeTab.type {
-            case .textDiff:
+            if activeTab.type == .textDiff {
                 tabManager.textDiffViewModel(for: activeTab.id).takeLeft()
-            case .folderDiff:
-                tabManager.folderDiffViewModel(for: activeTab.id).syncLeftToRight()
-            case .threeWayMerge:
+            } else if activeTab.type == .threeWayMerge {
                 tabManager.threeWayMergeViewModel(for: activeTab.id).acceptLocal()
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .mcTakeRight)) { _ in
             guard let activeTab = tabManager.activeTab else { return }
-            switch activeTab.type {
-            case .textDiff:
+            if activeTab.type == .textDiff {
                 tabManager.textDiffViewModel(for: activeTab.id).takeRight()
-            case .folderDiff:
-                tabManager.folderDiffViewModel(for: activeTab.id).syncRightToLeft()
-            case .threeWayMerge:
+            } else if activeTab.type == .threeWayMerge {
                 tabManager.threeWayMergeViewModel(for: activeTab.id).acceptRemote()
             }
         }
@@ -146,7 +145,7 @@ public struct MainWindowView: View {
             VStack(spacing: 0) {
                 HStack {
                     Spacer()
-                    Button("Done") {
+                    Button(languageManager.text(.done)) {
                         isSettingsSheetPresented = false
                     }
                     .buttonStyle(.borderedProminent)

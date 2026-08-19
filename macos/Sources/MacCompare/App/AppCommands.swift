@@ -46,6 +46,16 @@ public struct AppCommands: Commands {
             // Handled in newItem group
         }
 
+        CommandGroup(after: .windowList) {
+            Button(languageManager.text(.moveTabToNewWindow)) {
+                NotificationCenter.default.post(name: .mcMoveTabToNewWindow, object: nil)
+            }
+
+            Button(languageManager.text(.mergeAllWindows)) {
+                NotificationCenter.default.post(name: .mcMergeAllWindows, object: nil)
+            }
+        }
+
         CommandMenu(languageManager.text(.compare)) {
             Button(languageManager.text(.nextDiff)) {
                 NotificationCenter.default.post(name: .mcNextDiff, object: nil)

@@ -1,9 +1,12 @@
 import SwiftUI
+import UniformTypeIdentifiers
+import AppKit
 
 public struct CustomTabBarView: View {
     @Bindable public var tabManager: TabManager
     @State private var isSettingsPresented: Bool = false
     @State private var languageManager = LanguageManager.shared
+    @State private var draggingTabId: UUID?
 
     public init(tabManager: TabManager) {
         self.tabManager = tabManager
@@ -11,7 +14,7 @@ public struct CustomTabBarView: View {
 
     public var body: some View {
         HStack(spacing: 4) {
-            ForEach(tabManager.tabs) { tab in
+            ForEach(Array(tabManager.tabs.enumerated()), id: \.element.id) { index, tab in
                 let isSelected = tab.id == tabManager.selectedTabId
                 Button {
                     tabManager.selectTab(id: tab.id)
@@ -26,7 +29,7 @@ public struct CustomTabBarView: View {
                             .foregroundColor(isSelected ? .primary : .secondary)
                             .lineLimit(1)
 
-                        if isSelected {
+                        if isSelected && tabManager.tabs.count > 1 {
                             Button {
                                 tabManager.closeTab(id: tab.id)
                             } label: {
@@ -49,6 +52,35 @@ public struct CustomTabBarView: View {
                 }
                 .buttonStyle(.plain)
                 .focusEffectDisabled()
+                // Drag Support (Tear-off & Merge)
+                .onDrag {
+                    self.draggingTabId = tab.id
+                    let payload = "\(tabManager.id.uuidString):\(tab.id.uuidString)"
+                    return NSItemProvider(object: payload as NSString)
+                }
+                // Drop Destination for Re-ordering & Window Merging
+                .onDrop(of: [.text, .plainText], isTargeted: nil) { providers in
+                    handleTabDrop(providers: providers, targetIndex: index)
+                }
+                // Context Menu on Tab
+                .contextMenu {
+                    if tabManager.tabs.count > 1 {
+                        Button {
+                            guard let detachedManager = tabManager.detachTabToNewManager(id: tab.id) else { return }
+                            WindowManager.shared.openDetachedWindow(with: detachedManager)
+                        } label: {
+                            Label(languageManager.text(.moveTabToNewWindow), systemImage: "macwindow.badge.plus")
+                        }
+
+                        Divider()
+                    }
+
+                    Button {
+                        tabManager.closeTab(id: tab.id)
+                    } label: {
+                        Label(languageManager.text(.closeTab), systemImage: "xmark")
+                    }
+                }
             }
 
             Spacer()
@@ -104,5 +136,23 @@ public struct CustomTabBarView: View {
             }
             .frame(width: 520, height: 420)
         }
+    }
+
+    private func handleTabDrop(providers: [NSItemProvider], targetIndex: Int) -> Bool {
+        guard let provider = providers.first else { return false }
+        _ = provider.loadObject(ofClass: NSString.self) { item, _ in
+            guard let payload = item as? String else { return }
+            let parts = payload.components(separatedBy: ":")
+            guard parts.count == 2,
+                  let sourceManagerId = UUID(uuidString: parts[0]),
+                  let tabId = UUID(uuidString: parts[1]) else { return }
+
+            DispatchQueue.main.async {
+                if let sourceManager = TabTransferRegistry.shared.getTabManager(for: sourceManagerId) {
+                    self.tabManager.transferTab(tabId: tabId, from: sourceManager, toIndex: targetIndex)
+                }
+            }
+        }
+        return true
     }
 }
