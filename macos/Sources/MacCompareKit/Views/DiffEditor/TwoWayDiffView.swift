@@ -11,6 +11,10 @@ public struct TwoWayDiffView: View {
         self.viewModel = viewModel
     }
 
+    private var isBothEmpty: Bool {
+        viewModel.leftContent.isEmpty && viewModel.leftFileURL == nil && viewModel.rightContent.isEmpty && viewModel.rightFileURL == nil
+    }
+
     public var body: some View {
         VStack(spacing: 0) {
             // Top Toolbar
@@ -29,7 +33,7 @@ public struct TwoWayDiffView: View {
                 )
                 .frame(maxWidth: .infinity)
 
-                Divider()
+                Divider().frame(height: 28)
 
                 fileHeader(
                     title: viewModel.rightFileURL != nil ? viewModel.rightTitle : languageManager.text(.targetFile),
@@ -40,14 +44,18 @@ public struct TwoWayDiffView: View {
                 )
                 .frame(maxWidth: .infinity)
 
-                // Minimap Header Spacer
-                Spacer().frame(width: 58)
+                // Minimap Header Spacer (only visible when diff is active)
+                if !isBothEmpty {
+                    Divider().frame(height: 28)
+                    Spacer().frame(width: 58)
+                }
             }
+            .frame(height: 28)
 
             Divider()
 
             // Main Diff Split View
-            if viewModel.leftContent.isEmpty && viewModel.leftFileURL == nil && viewModel.rightContent.isEmpty && viewModel.rightFileURL == nil {
+            if isBothEmpty {
                 HStack(spacing: 0) {
                     emptyDropZone(isLeft: true)
                         .background(isLeftDropTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
@@ -63,6 +71,7 @@ public struct TwoWayDiffView: View {
                             handleDrop(providers: providers, isLeft: false)
                         }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollViewReader { proxy in
                     HStack(spacing: 0) {
@@ -74,11 +83,12 @@ public struct TwoWayDiffView: View {
                                         leftLineRow(index: idx, line: line)
                                             .frame(maxWidth: .infinity, alignment: .leading)
 
-                                        Divider()
+                                        Divider().frame(height: 20)
 
                                         rightLineRow(index: idx, line: line)
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                     }
+                                    .frame(height: 20)
                                     .id(idx)
                                 }
                             }
@@ -95,6 +105,7 @@ public struct TwoWayDiffView: View {
                             viewModel.scrollToLineIndex = targetLine
                         }
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .onChange(of: viewModel.scrollToLineIndex) { _, targetLine in
                         if let line = targetLine {
                             proxy.scrollTo(line, anchor: .center)
@@ -195,7 +206,8 @@ public struct TwoWayDiffView: View {
             .disabled(!isDirty)
         }
         .padding(.horizontal, 10)
-        .padding(.vertical, 5)
+        .padding(.vertical, 4)
+        .frame(height: 28)
         .background(Color(nsColor: .controlBackgroundColor).opacity(0.6))
     }
 
@@ -203,6 +215,7 @@ public struct TwoWayDiffView: View {
         HStack(spacing: 0) {
             if line.isPhantomLeft {
                 PhantomLineView()
+                    .frame(height: 20)
             } else {
                 // Line Number Gutter
                 HStack(spacing: 2) {
@@ -220,7 +233,7 @@ public struct TwoWayDiffView: View {
                         .font(.system(size: 11, design: .monospaced))
                         .foregroundColor(.secondary.opacity(0.8))
                 }
-                .frame(width: 48)
+                .frame(width: 48, height: 20)
                 .padding(.trailing, 6)
                 .background(Color(nsColor: .windowBackgroundColor).opacity(0.3))
 
@@ -236,12 +249,14 @@ public struct TwoWayDiffView: View {
                 .background(lineBackground(for: line.changeType, isLeft: true))
             }
         }
+        .frame(height: 20)
     }
 
     private func rightLineRow(index: Int, line: DiffLine) -> some View {
         HStack(spacing: 0) {
             if line.isPhantomRight {
                 PhantomLineView()
+                    .frame(height: 20)
             } else {
                 // Line Number Gutter
                 HStack(spacing: 2) {
@@ -259,7 +274,7 @@ public struct TwoWayDiffView: View {
                         .font(.system(size: 11, design: .monospaced))
                         .foregroundColor(.secondary.opacity(0.8))
                 }
-                .frame(width: 48)
+                .frame(width: 48, height: 20)
                 .padding(.trailing, 6)
                 .background(Color(nsColor: .windowBackgroundColor).opacity(0.3))
 
@@ -275,6 +290,7 @@ public struct TwoWayDiffView: View {
                 .background(lineBackground(for: line.changeType, isLeft: false))
             }
         }
+        .frame(height: 20)
     }
 
     private func lineBackground(for type: ChangeType, isLeft: Bool) -> Color {
