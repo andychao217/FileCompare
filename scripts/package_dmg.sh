@@ -30,13 +30,19 @@ echo "[1/4] Building Swift Release Binaries..."
 cd "${ROOT_DIR}/macos"
 ${SWIFT_BIN} build -c release
 
-RELEASE_BIN_DIR="${ROOT_DIR}/macos/.build/release"
-if [ ! -f "${RELEASE_BIN_DIR}/MacCompare" ]; then
-    # Fallback to arch-specific build dir
-    RELEASE_BIN_DIR="$(find "${ROOT_DIR}/macos/.build" -name "release" -type d -path "*/x86_64-apple-macosx/release" -o -path "*/arm64-apple-macosx/release" | head -n 1)"
+# Locate binary files
+MACCOMPARE_BIN="$(find "${ROOT_DIR}/macos/.build" -type f -name "MacCompare" -path "*/release/*" 2>/dev/null | head -n 1)"
+MCDIFF_BIN="$(find "${ROOT_DIR}/macos/.build" -type f -name "mcdiff" -path "*/release/*" 2>/dev/null | head -n 1)"
+
+if [ -z "${MACCOMPARE_BIN}" ] || [ ! -f "${MACCOMPARE_BIN}" ]; then
+    echo "Error: MacCompare executable not found in .build output!"
+    exit 1
 fi
 
-echo "Found release binaries at: ${RELEASE_BIN_DIR}"
+echo "Found MacCompare at: ${MACCOMPARE_BIN}"
+if [ -n "${MCDIFF_BIN}" ]; then
+    echo "Found mcdiff at: ${MCDIFF_BIN}"
+fi
 
 # 2. Prepare .app Bundle
 echo "[2/4] Constructing ${APP_NAME}.app bundle..."
@@ -44,10 +50,12 @@ rm -rf "${STAGE_DIR}"
 mkdir -p "${APP_BUNDLE}/Contents/MacOS"
 mkdir -p "${APP_BUNDLE}/Contents/Resources"
 
-cp "${RELEASE_BIN_DIR}/MacCompare" "${APP_BUNDLE}/Contents/MacOS/"
-cp "${RELEASE_BIN_DIR}/mcdiff" "${APP_BUNDLE}/Contents/MacOS/"
+cp "${MACCOMPARE_BIN}" "${APP_BUNDLE}/Contents/MacOS/MacCompare"
+if [ -n "${MCDIFF_BIN}" ] && [ -f "${MCDIFF_BIN}" ]; then
+    cp "${MCDIFF_BIN}" "${APP_BUNDLE}/Contents/MacOS/mcdiff"
+    chmod +x "${APP_BUNDLE}/Contents/MacOS/mcdiff"
+fi
 chmod +x "${APP_BUNDLE}/Contents/MacOS/MacCompare"
-chmod +x "${APP_BUNDLE}/Contents/MacOS/mcdiff"
 
 # Generate Info.plist
 cat <<EOF > "${APP_BUNDLE}/Contents/Info.plist"
