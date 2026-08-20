@@ -73,42 +73,49 @@ public struct TwoWayDiffView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ScrollViewReader { proxy in
-                    HStack(spacing: 0) {
-                        // Unified Synchronized Scroll View for Left and Right Buffers
-                        ScrollView([.vertical, .horizontal]) {
-                            LazyVStack(spacing: 0) {
-                                ForEach(Array(viewModel.diffResult.lines.enumerated()), id: \.offset) { idx, line in
-                                    HStack(spacing: 0) {
-                                        leftLineRow(index: idx, line: line)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
+                GeometryReader { geometry in
+                    let availableWidth = max(0, geometry.size.width - 59)
+                    let paneWidth = availableWidth / 2.0
 
-                                        Divider().frame(height: 20)
+                    ScrollViewReader { proxy in
+                        HStack(spacing: 0) {
+                            // Unified Synchronized Scroll View for Left and Right Buffers
+                            ScrollView(.vertical) {
+                                LazyVStack(spacing: 0) {
+                                    ForEach(Array(viewModel.diffResult.lines.enumerated()), id: \.offset) { idx, line in
+                                        HStack(spacing: 0) {
+                                            leftLineRow(index: idx, line: line)
+                                                .frame(width: paneWidth, height: 20, alignment: .leading)
 
-                                        rightLineRow(index: idx, line: line)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            Divider().frame(height: 20)
+
+                                            rightLineRow(index: idx, line: line)
+                                                .frame(width: paneWidth, height: 20, alignment: .leading)
+                                        }
+                                        .frame(width: availableWidth, height: 20, alignment: .leading)
+                                        .id(idx)
                                     }
-                                    .frame(height: 20)
-                                    .id(idx)
                                 }
                             }
-                        }
-                        .background(isLeftDropTargeted || isRightDropTargeted ? Color.accentColor.opacity(0.05) : Color.clear)
-                        .onDrop(of: [.fileURL], isTargeted: $isLeftDropTargeted) { providers in
-                            handleDrop(providers: providers, isLeft: true)
-                        }
+                            .frame(width: availableWidth, height: geometry.size.height)
+                            .background(isLeftDropTargeted || isRightDropTargeted ? Color.accentColor.opacity(0.05) : Color.clear)
+                            .onDrop(of: [.fileURL], isTargeted: $isLeftDropTargeted) { providers in
+                                handleDrop(providers: providers, isLeft: true)
+                            }
 
-                        Divider()
+                            Divider()
 
-                        // Minimap with Synchronous Real-time Drag & Click Jump
-                        MinimapView(lines: viewModel.diffResult.lines) { targetLine in
-                            viewModel.scrollToLineIndex = targetLine
+                            // Minimap with Synchronous Real-time Drag & Click Jump
+                            MinimapView(lines: viewModel.diffResult.lines) { targetLine in
+                                viewModel.scrollToLineIndex = targetLine
+                            }
+                            .frame(width: 58, height: geometry.size.height)
                         }
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .onChange(of: viewModel.scrollToLineIndex) { _, targetLine in
-                        if let line = targetLine {
-                            proxy.scrollTo(line, anchor: .center)
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .onChange(of: viewModel.scrollToLineIndex) { _, targetLine in
+                            if let line = targetLine {
+                                proxy.scrollTo(line, anchor: .center)
+                            }
                         }
                     }
                 }
@@ -215,7 +222,7 @@ public struct TwoWayDiffView: View {
         HStack(spacing: 0) {
             if line.isPhantomLeft {
                 PhantomLineView()
-                    .frame(height: 20)
+                    .frame(maxWidth: .infinity, maxHeight: 20)
             } else {
                 // Line Number Gutter
                 HStack(spacing: 2) {
@@ -242,21 +249,22 @@ public struct TwoWayDiffView: View {
                     Text(line.contentLeft)
                         .font(.system(size: 12, design: .monospaced))
                         .foregroundColor(.primary)
+                        .lineLimit(1)
                     Spacer()
                 }
                 .padding(.horizontal, 6)
-                .frame(height: 20)
+                .frame(maxWidth: .infinity, maxHeight: 20, alignment: .leading)
                 .background(lineBackground(for: line.changeType, isLeft: true))
             }
         }
-        .frame(height: 20)
+        .frame(maxWidth: .infinity, maxHeight: 20, alignment: .leading)
     }
 
     private func rightLineRow(index: Int, line: DiffLine) -> some View {
         HStack(spacing: 0) {
             if line.isPhantomRight {
                 PhantomLineView()
-                    .frame(height: 20)
+                    .frame(maxWidth: .infinity, maxHeight: 20)
             } else {
                 // Line Number Gutter
                 HStack(spacing: 2) {
@@ -283,14 +291,15 @@ public struct TwoWayDiffView: View {
                     Text(line.contentRight)
                         .font(.system(size: 12, design: .monospaced))
                         .foregroundColor(.primary)
+                        .lineLimit(1)
                     Spacer()
                 }
                 .padding(.horizontal, 6)
-                .frame(height: 20)
+                .frame(maxWidth: .infinity, maxHeight: 20, alignment: .leading)
                 .background(lineBackground(for: line.changeType, isLeft: false))
             }
         }
-        .frame(height: 20)
+        .frame(maxWidth: .infinity, maxHeight: 20, alignment: .leading)
     }
 
     private func lineBackground(for type: ChangeType, isLeft: Bool) -> Color {
