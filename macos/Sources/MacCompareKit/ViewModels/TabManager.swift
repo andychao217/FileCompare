@@ -63,6 +63,21 @@ public final class TabManager: Identifiable {
         }
     }
 
+    public init(initialTabType: TabContentType) {
+        TabTransferRegistry.shared.register(tabManager: self)
+        let initialTab = TabItem(type: initialTabType)
+        tabs.append(initialTab)
+        selectedTabId = initialTab.id
+        switch initialTabType {
+        case .textDiff:
+            textDiffViewModels[initialTab.id] = TextDiffViewModel()
+        case .folderDiff:
+            folderDiffViewModels[initialTab.id] = FolderDiffViewModel()
+        case .threeWayMerge:
+            threeWayMergeViewModels[initialTab.id] = ThreeWayMergeViewModel()
+        }
+    }
+
     deinit {
         let managerId = id
         Task { @MainActor in

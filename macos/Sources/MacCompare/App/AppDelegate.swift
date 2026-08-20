@@ -21,4 +21,61 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         true
     }
+
+    // MARK: - Dock Context Menu
+
+    func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
+        let menu = NSMenu()
+        let languageManager = LanguageManager.shared
+
+        let textItem = NSMenuItem(
+            title: languageManager.text(.newTextCompare),
+            action: #selector(newTextCompareFromDock),
+            keyEquivalent: ""
+        )
+        textItem.target = self
+        menu.addItem(textItem)
+
+        let folderItem = NSMenuItem(
+            title: languageManager.text(.newFolderCompare),
+            action: #selector(newFolderCompareFromDock),
+            keyEquivalent: ""
+        )
+        folderItem.target = self
+        menu.addItem(folderItem)
+
+        let threeWayItem = NSMenuItem(
+            title: languageManager.text(.newThreeWayMerge),
+            action: #selector(newThreeWayMergeFromDock),
+            keyEquivalent: ""
+        )
+        threeWayItem.target = self
+        menu.addItem(threeWayItem)
+
+        return menu
+    }
+
+    @objc private func newTextCompareFromDock() {
+        openOrAddTab(type: .textDiff)
+    }
+
+    @objc private func newFolderCompareFromDock() {
+        openOrAddTab(type: .folderDiff)
+    }
+
+    @objc private func newThreeWayMergeFromDock() {
+        openOrAddTab(type: .threeWayMerge)
+    }
+
+    private func openOrAddTab(type: TabContentType) {
+        NSApp.activate(ignoringOtherApps: true)
+        let registered = WindowTabRegistry.shared.getAllRegistered()
+        if let keyEntry = registered.first(where: { $0.window.isKeyWindow }) ?? registered.first {
+            keyEntry.manager.addTab(type: type)
+            keyEntry.window.makeKeyAndOrderFront(nil)
+        } else {
+            let newManager = TabManager(initialTabType: type)
+            WindowManager.shared.openDetachedWindow(with: newManager)
+        }
+    }
 }
