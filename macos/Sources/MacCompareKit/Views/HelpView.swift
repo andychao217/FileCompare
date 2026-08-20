@@ -70,6 +70,7 @@ public struct HelpView: View {
         }
         .frame(width: 720, height: 530)
         .background(Color(nsColor: .controlBackgroundColor))
+        .id("help-\(themeManager.themeRevision)-\(languageManager.effectiveLanguage.rawValue)")
         .preferredColorScheme(themeManager.effectiveColorScheme)
     }
 

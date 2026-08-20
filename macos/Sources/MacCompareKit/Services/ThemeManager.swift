@@ -41,19 +41,24 @@ public final class ThemeManager {
     public var currentTheme: AppTheme {
         didSet {
             UserDefaults.standard.set(currentTheme.rawValue, forKey: "app_appearance_theme")
-            updateEffectiveColorScheme()
-            applyAppearance()
+            applyTheme()
         }
     }
 
     public private(set) var effectiveColorScheme: ColorScheme = .dark
     public private(set) var themeRevision: Int = 0
 
+    public static var isSystemInDarkMode: Bool {
+        if let style = CFPreferencesCopyAppValue("AppleInterfaceStyle" as CFString, kCFPreferencesAnyApplication) as? String {
+            return style.caseInsensitiveCompare("Dark") == .orderedSame
+        }
+        return false
+    }
+
     private init() {
         let saved = UserDefaults.standard.string(forKey: "app_appearance_theme") ?? AppTheme.system.rawValue
         self.currentTheme = AppTheme(rawValue: saved) ?? .system
-        updateEffectiveColorScheme()
-        applyAppearance()
+        applyTheme()
 
         // Listen for macOS system-wide appearance changes (e.g. system dark/light toggle)
         DistributedNotificationCenter.default().addObserver(
@@ -69,31 +74,22 @@ public final class ThemeManager {
 
     public func systemAppearanceDidChange() {
         if currentTheme == .system {
-            updateEffectiveColorScheme()
-            applyAppearance()
+            applyTheme()
         }
     }
 
-    public func updateEffectiveColorScheme() {
+    public func applyTheme() {
+        // 1. Calculate the exact effective color scheme
         switch currentTheme {
         case .light:
             effectiveColorScheme = .light
         case .dark:
             effectiveColorScheme = .dark
         case .system:
-            // Check NSApp effective appearance or system defaults
-            if let appearance = NSApp?.effectiveAppearance {
-                let match = appearance.bestMatch(from: [.darkAqua, .aqua])
-                effectiveColorScheme = (match == .darkAqua) ? .dark : .light
-            } else {
-                let isDark = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark"
-                effectiveColorScheme = isDark ? .dark : .light
-            }
+            effectiveColorScheme = Self.isSystemInDarkMode ? .dark : .light
         }
-        themeRevision += 1
-    }
 
-    public func applyAppearance() {
+        // 2. Apply the matching NSAppearance to App and all Windows
         let targetAppearance: NSAppearance?
         switch currentTheme {
         case .system:
@@ -107,6 +103,10 @@ public final class ThemeManager {
         NSApp?.appearance = targetAppearance
         for window in NSApp?.windows ?? [] {
             window.appearance = targetAppearance
+            window.contentView?.needsDisplay = true
         }
+
+        // 3. Increment revision to force re-evaluation of SwiftUI view hierarchy
+        themeRevision += 1
     }
 }

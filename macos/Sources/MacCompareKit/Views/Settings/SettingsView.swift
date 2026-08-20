@@ -59,6 +59,7 @@ public struct SettingsView: View {
             .padding(.bottom, 16)
         }
         .frame(width: 500, height: 400)
+        .id("settings-\(themeManager.themeRevision)-\(languageManager.effectiveLanguage.rawValue)")
         .preferredColorScheme(themeManager.effectiveColorScheme)
     }
 

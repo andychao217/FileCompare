@@ -47,7 +47,7 @@ public struct MainWindowView: View {
                 .background(Color(nsColor: .windowBackgroundColor))
             }
         }
-        .id(languageManager.effectiveLanguage)
+        .id("main-\(themeManager.themeRevision)-\(languageManager.effectiveLanguage.rawValue)")
         .preferredColorScheme(themeManager.effectiveColorScheme)
         .frame(minWidth: 960, minHeight: 600)
         .background(
