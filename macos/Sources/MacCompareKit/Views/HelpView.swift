@@ -34,7 +34,7 @@ public struct HelpView: View {
                     Text(languageManager.text(.about)).tag(2)
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 270)
+                .frame(width: 280)
 
                 if let onDismiss {
                     Button(action: onDismiss) {
@@ -67,64 +67,113 @@ public struct HelpView: View {
                 .padding(24)
             }
         }
-        .frame(width: 680, height: 490)
+        .frame(width: 720, height: 530)
         .background(Color(nsColor: .controlBackgroundColor))
     }
 
-    // MARK: - Features Section
+    // MARK: - Features & User Guide Section
 
     private var featuresSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            featureRow(
+        VStack(alignment: .leading, spacing: 18) {
+            // 1. Text Diff Card
+            guideCard(
                 icon: "doc.text.magnifyingglass",
                 title: languageManager.text(.textDiff),
-                description: languageManager.text(.textDiffDesc)
+                summary: languageManager.text(.textDiffDesc),
+                detail: languageManager.text(.textDiffGuideDetail),
+                codeSnippet: nil
             )
 
-            featureRow(
+            // 2. Folder Diff Card
+            guideCard(
                 icon: "folder.badge.gearshape",
                 title: languageManager.text(.folderDiff),
-                description: languageManager.text(.folderDiffDesc)
+                summary: languageManager.text(.folderDiffDesc),
+                detail: languageManager.text(.folderDiffGuideDetail),
+                codeSnippet: nil
             )
 
-            featureRow(
+            // 3. Three-Way Merge Card (with Git mergetool configuration guide)
+            guideCard(
                 icon: "arrow.triangle.merge",
                 title: languageManager.text(.threeWayMerge),
-                description: languageManager.text(.threeWayMergeDesc)
+                summary: languageManager.text(.threeWayMergeDesc),
+                detail: languageManager.text(.threeWayMergeGuideDetail),
+                codeSnippet: "git config --global merge.tool maccompare\ngit config --global mergetool.maccompare.cmd 'mcdiff merge \"$LOCAL\" \"$BASE\" \"$REMOTE\" -o \"$MERGED\"'\ngit config --global mergetool.maccompare.trustExitCode true"
             )
 
-            featureRow(
+            // 4. Tab Drag & Window Merge Card
+            guideCard(
                 icon: "uiwindow.split.2x1",
                 title: languageManager.text(.tabDragMergeTitle),
-                description: languageManager.text(.tabDragMergeDesc)
+                summary: languageManager.text(.tabDragMergeDesc),
+                detail: nil,
+                codeSnippet: nil
             )
         }
     }
 
-    private func featureRow(icon: String, title: String, description: String) -> some View {
-        HStack(alignment: .top, spacing: 14) {
-            Image(systemName: icon)
-                .font(.system(size: 20))
-                .foregroundColor(.accentColor)
-                .frame(width: 28, height: 28)
-                .background(Color.accentColor.opacity(0.12))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+    private func guideCard(icon: String, title: String, summary: String, detail: String?, codeSnippet: String?) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.accentColor)
+                    .frame(width: 32, height: 32)
+                    .background(Color.accentColor.opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: 7))
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.primary)
-                Text(description)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.primary)
+                    Text(summary)
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+            }
+
+            if let detail {
+                Text(detail)
                     .font(.system(size: 12))
-                    .foregroundColor(.secondary)
-                    .lineSpacing(3)
+                    .foregroundColor(.primary.opacity(0.85))
+                    .lineSpacing(4)
+                    .padding(.top, 2)
+            }
+
+            if let codeSnippet {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(languageManager.text(.gitMergetoolConfigGuide))
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.secondary)
+
+                    Text(codeSnippet)
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(.accentColor)
+                        .padding(10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(nsColor: .textBackgroundColor).opacity(0.8))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(Color.secondary.opacity(0.15), lineWidth: 1)
+                        )
+                        .textSelection(.enabled)
+                }
+                .padding(.top, 4)
             }
         }
-        .padding(12)
+        .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 9)
                 .fill(Color(nsColor: .windowBackgroundColor).opacity(0.6))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 9)
+                .stroke(Color.secondary.opacity(0.12), lineWidth: 1)
         )
     }
 

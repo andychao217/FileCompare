@@ -85,6 +85,10 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case threeWayMergeDesc
     case tabDragMergeDesc
     case cancelTabDragDesc
+    case textDiffGuideDetail
+    case folderDiffGuideDetail
+    case threeWayMergeGuideDetail
+    case gitMergetoolConfigGuide
     case aboutFooter
 
     // Menu Items - Custom Commands
@@ -469,9 +473,13 @@ public final class LanguageManager {
         .coreFeatures: "Core Features",
         .helpSubtitle: "macOS Native Diff & Merge Suite",
         .tabDragMergeTitle: "Chrome-Style Tab Drag & Merge",
-        .textDiffDesc: "High-performance two-way diff with line highlighting, hunk merge actions (take left/right), character-level diffs, whitespace and case options.",
-        .folderDiffDesc: "Deep directory comparison and sync. Supports recursive tree scanning, CRC32 deep hashing, quick places navigation, and dry-run preview.",
-        .threeWayMergeDesc: "Interactive 3-way merge for Git conflicts (Local, Base, Remote). Auto-resolves non-conflicts and outputs clean merged files.",
+        .textDiffDesc: "High-performance two-way text diffing with line highlighting and hunk merging.",
+        .textDiffGuideDetail: "• Adding Files: Drag & drop two files from Finder into the left/right panes, or click 'Choose...'. Single file loads neutrally; both files trigger comparison.\n• Merge & Actions: Click 'Take Left/Right' to merge hunks and ⌘ S to save.\n• Options: Toggle 'Ignore Whitespace' / 'Ignore Case'; clear with safety confirmation; optionally enable '.bak' backups in Settings.",
+        .folderDiffDesc: "Deep directory comparison and two-way file tree synchronization.",
+        .folderDiffGuideDetail: "• Adding Folders: Drag & drop directories from Finder, or choose from sidebar quick places and recent history.\n• Comparison Modes: Choose 'Quick Mode' (file size & timestamp) or 'Deep Hash Mode' (CRC32 checksums).\n• Safe Sync: Click 'Dry-Run Preview' to inspect all planned file actions before applying physical synchronization.",
+        .threeWayMergeDesc: "Interactive 3-way conflict resolution based on a common Base ancestor.",
+        .threeWayMergeGuideDetail: "• Panes Overview: Top panels display Local Branch (Mine / Orange), Base Ancestor (Gray), and Remote Branch (Theirs / Green). Bottom panel displays Merged Output.\n• Standalone Manual Use: Drag 3 files or click 'Choose...' to merge offline configs or documents. Click 'Auto-Resolve Non-Conflicts' to merge clean changes automatically, only resolving true conflicts manually.\n• Git Mergetool Integration: Seamlessly resolves merge/rebase conflicts without manual file picking. Run 'git mergetool' to auto-populate files.",
+        .gitMergetoolConfigGuide: "Git mergetool Setup Commands (Run in Terminal):",
         .tabDragMergeDesc: "Drag tabs to reorder within window, drag outside to tear off into standalone window, and drag into another window's tab bar to merge seamlessly.",
         .cancelTabDragDesc: "Cancel ongoing tab dragging operation",
         .aboutFooter: "Built for macOS 14.0+ with Swift & SwiftUI.",
@@ -610,9 +618,13 @@ public final class LanguageManager {
         .coreFeatures: "核心功能说明",
         .helpSubtitle: "macOS 原生高效比对与合并套件",
         .tabDragMergeTitle: "Chrome 风格标签页拖拽与合并",
-        .textDiffDesc: "高性能双向文本比对，支持逐行差异高亮、一键采纳左侧/右侧差异、字符级高亮、忽略空白符与大小写。",
-        .folderDiffDesc: "深度目录比对与同步工具。支持递归树形扫描、CRC32 深度哈希比对、常用位置快捷跳转与 Dry-Run 预演同步。",
-        .threeWayMergeDesc: "支持 Git 冲突三向合并 (Local, Base, Remote)。智能自动解决非冲突块，支持一键保存合并产物。",
+        .textDiffDesc: "双向文本差异比对与逐行同步工具。",
+        .textDiffGuideDetail: "• 如何添加文件：直接从访达（Finder）将两份文件拖入左右面板，或点击右上角「选择...」按钮。单侧加载保持中性无色，双侧加载后自动高亮比对。\n• 差异采纳与保存：点击「← / → 采纳」可快速将当前差异块复制到对侧，按 ⌘ S 保存修改。\n• 过滤与安全防护：支持忽略空白符/大小写切换；支持一键清空重选（带二次确认）；可在设置中开启「保存时自动创建 .bak 备份」。",
+        .folderDiffDesc: "目录树结构深度对比与双向文件同步工具。",
+        .folderDiffGuideDetail: "• 如何添加文件夹：从访达拖入文件夹至左右区域，或在左侧边栏快速选取常用目录（文稿、下载、桌面等）及最近历史记录。\n• 比对模式切换：提供「快速比对」（基于文件大小与修改时间戳）与「深度哈希比对」（基于 CRC32 内容计算）。\n• 安全同步预演：在执行从左到右或从右到左物理同步前，可点击「演练预览 (Dry-Run)」查看所有文件变更计划，确认无误后再执行。",
+        .threeWayMergeDesc: "基于共同基准祖先（Base）的三向冲突合并工具。",
+        .threeWayMergeGuideDetail: "• 区域说明：顶部自左向右为「本地分支 (Local / 橙色)」、「基准祖先 (Base / 灰色)」、「远程分支 (Remote / 绿色)」，底部为「合并产物 (Merged)」。\n• 手动添加场景：从访达拖入三个文件或点击「选择...」，用于离线配置文件升级或多人版本整合。点击「自动解决无冲突项」可自动融合单侧修改，仅需手动点选冲突项。\n• Git 冲突自动联动 (git mergetool)：作为 Git 冲突解决工具使用时，无需手动选文件。当 git merge / rebase 发生冲突时在终端输入 git mergetool，MacCompare 会自动填充 Local、Base、Remote 并引导完成合并。",
+        .gitMergetoolConfigGuide: "Git mergetool 配置命令（在终端中运行）：",
         .tabDragMergeDesc: "支持在窗口内拖拽排序、按住标签拖出窗口拆分为独立新窗口、将标签拖入其他窗口顶部标签栏实现多窗口自由合并。",
         .cancelTabDragDesc: "取消当前正在进行的标签页拖拽",
         .aboutFooter: "专为 macOS 14.0+ 打造，采用 Swift 与 SwiftUI 纯原生实现。",
@@ -751,9 +763,13 @@ public final class LanguageManager {
         .coreFeatures: "主な機能",
         .helpSubtitle: "macOS ネイティブの差分比較・マージツール",
         .tabDragMergeTitle: "Chrome風タブドラッグ＆結合",
-        .textDiffDesc: "行ハイライト、差分マージ（左右採用）、文字単位の差分、空白・大文字小文字無視を備えた高速2方向テキスト比較。",
-        .folderDiffDesc: "詳細なディレクトリ比較と同期。再帰ツリースキャン、CRC32ハッシュ比較、よく使う場所への移動、Dry-Runプレビューに対応。",
-        .threeWayMergeDesc: "Git競合用3方向マージ (Local, Base, Remote)。非競合箇所の自動解決とマージファイルの保存に対応。",
+        .textDiffDesc: "双方向テキスト差分比較および行単位同期ツール。",
+        .textDiffGuideDetail: "• ファイルの追加方法：Finder から左右のパネルにファイルをドラッグ＆ドロップするか、「選択...」ボタンをクリックします。単側読み込みは中立表示され、両側読み込みで自動差分比較されます。\n• 差分マージと保存：「← / → 採用」をクリックしてハンクを反対側に素早くコピーし、⌘ S で保存します。\n• フィルタと安全性：空白/大文字小文字の無視切り替え、確認ダイアログ付きの一括クリア、設定での「.bak バックアップ自動作成」に対応しています。",
+        .folderDiffDesc: "ディレクトリ構造の差分比較および双方向ファイル同期ツール。",
+        .folderDiffGuideDetail: "• フォルダの追加方法：Finder から左右の領域にフォルダをドラッグ＆ドロップするか、サイドバーのショートカットや最近の履歴から選択します。\n• 比較モード：「簡易比較（サイズとタイムスタンプ）」と「ハッシュ比較（CRC32チェックサム）」を選択可能です。\n• 安全な同期プレビュー：同期を実行する前に、「ドライランプレビュー」でファイル変更予定一覧を確認できます。",
+        .threeWayMergeDesc: "共通祖先（Base）に基づく3方向コンフリクト解決ツール。",
+        .threeWayMergeGuideDetail: "• パネル構成：上部は左から「ローカル（Local / 橙）」、「共通祖先（Base / 灰）」、「リモート（Remote / 緑）」、下部は「マージ結果（Merged）」です。\n• 手動追加とオフライン統合：Finder から3つのファイルをドラッグまたは選択して設定ファイル等を統合。「競合なしを自動解決」で片側の変更を自動適用し、競合行のみを手動選択します。\n• Git 連携（git mergetool）：Git のマージツールとして設定すると、手動でファイルを選ぶ必要がなくなります。コンフリクト時に 'git mergetool' を実行するだけで自動入力され、スムーズに解決できます。",
+        .gitMergetoolConfigGuide: "Git mergetool 設定コマンド（ターミナルで実行）：",
         .tabDragMergeDesc: "ウインドウ内でのタブ並べ替え、ドラッグして独立ウインドウへ分離、他ウインドウのタブバーへドラッグしてシームレスに結合。",
         .cancelTabDragDesc: "進行中のタブドラッグ操作をキャンセル",
         .aboutFooter: "macOS 14.0+ 向けに Swift と SwiftUI で開発。",
