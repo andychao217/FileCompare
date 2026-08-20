@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MacCompare - Next-Gen File Comparison & 3-Way Merge for macOS</title>
+  <meta name="description" content="A high-performance macOS native file comparison and 3-way merge tool built with Rust and SwiftUI.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚖️</text></svg>">
+</head>
+<body>
+  <div class="ambient-glow-1"></div>
+  <div class="ambient-glow-2"></div>
+
+  <!-- Navigation -->
+  <header>
+    <nav class="navbar">
+      <a href="#" class="nav-brand">
+        <div class="app-badge-icon">⚖️</div>
+        <span>MacCompare</span>
+      </a>
+
+      <div class="nav-links">
+        <a href="#features" data-i18n="featuresTitle">核心特性</a>
+        <a href="#showcase" data-i18n="textDiffTab">界面预览</a>
+        <a href="#cli" data-i18n="cliTitle">Git 集成</a>
+        <a href="https://github.com/andychao217/FileCompare" target="_blank" rel="noopener">GitHub</a>
+      </div>
+
+      <div class="nav-controls">
+        <select id="lang-select" class="lang-select" aria-label="Language Selector">
+          <option value="zh" selected>🇨🇳 简体中文</option>
+          <option value="en">🇺🇸 English</option>
+          <option value="ja">🇯🇵 日本語</option>
+        </select>
+        <button id="theme-toggle-btn" class="theme-btn" title="Toggle Website Theme" aria-label="Toggle Website Theme">🌙</button>
+        <a href="https://github.com/andychao217/FileCompare/releases/latest" class="btn-nav-download" data-i18n="downloadBtn">下载 DMG</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="pill-badge" data-i18n="badge">
+        ⚡ macOS 原生架构 • Intel & Apple Silicon 通用二进制
+      </div>
+      <h1 class="hero-title" data-i18n="heroTitle">
+        下一代 macOS <span class="gradient-text">文件比对与合并套件</span>
+      </h1>
+      <p class="hero-subtitle" data-i18n="heroSubtitle">
+        基于 Rust 高性能差分引擎与原生 SwiftUI 深度构建。专为 macOS 开发者和专业用户打造的极致比对工具。
+      </p>
+
+      <div class="hero-actions">
+        <a href="https://github.com/andychao217/FileCompare/releases/latest" class="btn-primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 1.01-2.85-.9.04-1.98.6-2.62 1.34-.56.64-1.05 1.68-.92 2.71.99.08 2.01-.52 2.53-1.2"/></svg>
+          <span data-i18n="downloadBtn">免费下载 DMG (v0.1.1)</span>
+        </a>
+        <a href="https://github.com/andychao217/FileCompare" target="_blank" rel="noopener" class="btn-secondary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+          <span data-i18n="githubBtn">GitHub 源代码</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Interactive Showcase Section -->
+    <section id="showcase" class="showcase-container">
+      <div class="showcase-header">
+        <div class="showcase-tabs">
+          <button class="showcase-tab active" data-mode="text" data-i18n="textDiffTab">文本对比</button>
+          <button class="showcase-tab" data-mode="folder" data-i18n="folderDiffTab">文件夹对比</button>
+          <button class="showcase-tab" data-mode="merge" data-i18n="threeWayMergeTab">三向合并</button>
+        </div>
+
+        <div class="theme-preview-toggle">
+          <button class="theme-opt-btn active" data-theme-opt="dark" data-i18n="themeDark">深色界面</button>
+          <button class="theme-opt-btn" data-theme-opt="light" data-i18n="themeLight">浅色界面</button>
+        </div>
+      </div>
+
+      <div class="window-frame">
+        <div class="window-topbar">
+          <div class="window-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="window-title">MacCompare — High Precision Diff</span>
+        </div>
+        <div class="showcase-image-wrapper">
+          <img id="showcase-img" src="assets/text_diff_ui.jpg" alt="MacCompare UI Interface Preview">
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+      <div class="section-header">
+        <h2 class="section-title" data-i18n="featuresTitle">为极速与优雅而生</h2>
+        <p class="section-subtitle" data-i18n="featuresSubtitle">原生级响应速度，兼顾直观的视觉反馈与强大的生产力工具。</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🏎️</div>
+          <h3 class="feature-title" data-i18n="feat1Title">Rust 差分内核</h3>
+          <p class="feature-desc" data-i18n="feat1Desc">基于 Myers 算法与 SIMD 加速哈希，瞬间完成百万行文本及大型目录树的精准对比。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">👻</div>
+          <h3 class="feature-title" data-i18n="feat2Title">对齐幻影行 (Phantom Lines)</h3>
+          <p class="feature-desc" data-i18n="feat2Desc">直观的空白对齐与字符级高亮，差异块一目了然，支持左右双向差异合并采纳。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📁</div>
+          <h3 class="feature-title" data-i18n="feat3Title">双向目录同步</h3>
+          <p class="feature-desc" data-i18n="feat3Desc">支持深度 Hash 与元数据比对模式，带预演 (Dry-Run) 安全机制的一键目录双向同步。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🔀</div>
+          <h3 class="feature-title" data-i18n="feat4Title">Git 三向合并 (3-Way Merge)</h3>
+          <p class="feature-desc" data-i18n="feat4Desc">无缝衔接 Local、Base、Remote 冲突分支，智能自动解决非冲突项，提供完整 Git CLI 支持。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📑</div>
+          <h3 class="feature-title" data-i18n="feat5Title">多标签与多窗口拖拽</h3>
+          <p class="feature-desc" data-i18n="feat5Desc">支持像 Safari 一样自由拖拽合并与分离标签页，多任务比对井井有条。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🌓</div>
+          <h3 class="feature-title" data-i18n="feat6Title">原生多语言与深浅外观</h3>
+          <p class="feature-desc" data-i18n="feat6Desc">内置中文、英文、日文支持，完美适配 macOS 全局系统主题自适应与快捷切换。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CLI Section -->
+    <section id="cli" class="cli-section">
+      <div class="section-header">
+        <h2 class="section-title" data-i18n="cliTitle">终端命令行与 Git 工具集成</h2>
+        <p class="section-subtitle" data-i18n="cliSubtitle">一键配置为 Git 默认合并与比对工具，在终端中随时唤起。</p>
+      </div>
+
+      <div class="terminal-box">
+        <div class="terminal-header">
+          <div class="window-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <button id="copy-btn" class="copy-btn" onclick="copyCli()">Copy</button>
+        </div>
+        <pre class="terminal-content" id="cli-code"><code><span class="terminal-comment"># 1. 文本对比</span>
+<span class="terminal-prompt">$</span> mcdiff file_a.txt file_b.txt
+
+<span class="terminal-comment"># 2. 配置为 Git 默认合并工具</span>
+<span class="terminal-prompt">$</span> git config --global merge.tool maccompare
+<span class="terminal-prompt">$</span> git config --global mergetool.maccompare.cmd 'mcdiff "$LOCAL" "$REMOTE" -b "$BASE" -m "$MERGED"'
+<span class="terminal-prompt">$</span> git config --global mergetool.maccompare.trustExitCode true</code></pre>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+      <h2 class="cta-title" data-i18n="ctaTitle">即刻体验极致流畅的比对体验</h2>
+      <p class="cta-subtitle" data-i18n="ctaSubtitle">支持 macOS 14.0 Sonoma 及以上版本，开源免费。</p>
+      <a href="https://github.com/andychao217/FileCompare/releases/latest" class="btn-primary">
+        <span data-i18n="downloadBtn">免费下载 DMG (v0.1.1)</span>
+      </a>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-links">
+      <a href="https://github.com/andychao217/FileCompare" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/andychao217/FileCompare/releases" target="_blank" rel="noopener">Releases</a>
+      <a href="https://github.com/andychao217/FileCompare/blob/main/LICENSE" target="_blank" rel="noopener">License (MIT / Apache)</a>
+    </div>
+    <p data-i18n="footerDesc">基于 MIT / Apache-2.0 许可证开源。</p>
+    <p style="margin-top: 6px; font-size: 0.8rem; color: var(--text-muted);">© 2026 MacCompare Team. Built with Swift, SwiftUI & Rust.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
