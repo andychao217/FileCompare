@@ -48,7 +48,7 @@ public struct MainWindowView: View {
             }
         }
         .id(languageManager.effectiveLanguage)
-        .preferredColorScheme(themeManager.colorScheme)
+        .preferredColorScheme(themeManager.effectiveColorScheme)
         .frame(minWidth: 960, minHeight: 600)
         .background(
             WindowAccessor { window in

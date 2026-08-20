@@ -9,14 +9,6 @@ public enum AppTheme: String, CaseIterable, Identifiable, Sendable {
 
     public var id: String { rawValue }
 
-    public var colorScheme: ColorScheme? {
-        switch self {
-        case .system: return nil
-        case .light: return .light
-        case .dark: return .dark
-        }
-    }
-
     public func localizedName(for language: AppLanguage) -> String {
         switch self {
         case .system:
@@ -49,28 +41,72 @@ public final class ThemeManager {
     public var currentTheme: AppTheme {
         didSet {
             UserDefaults.standard.set(currentTheme.rawValue, forKey: "app_appearance_theme")
+            updateEffectiveColorScheme()
             applyAppearance()
         }
     }
 
-    public var colorScheme: ColorScheme? {
-        currentTheme.colorScheme
-    }
+    public private(set) var effectiveColorScheme: ColorScheme = .dark
+    public private(set) var themeRevision: Int = 0
 
     private init() {
         let saved = UserDefaults.standard.string(forKey: "app_appearance_theme") ?? AppTheme.system.rawValue
         self.currentTheme = AppTheme(rawValue: saved) ?? .system
+        updateEffectiveColorScheme()
         applyAppearance()
+
+        // Listen for macOS system-wide appearance changes (e.g. system dark/light toggle)
+        DistributedNotificationCenter.default().addObserver(
+            forName: NSNotification.Name("AppleInterfaceThemeChangedNotification"),
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.systemAppearanceDidChange()
+            }
+        }
+    }
+
+    public func systemAppearanceDidChange() {
+        if currentTheme == .system {
+            updateEffectiveColorScheme()
+            applyAppearance()
+        }
+    }
+
+    public func updateEffectiveColorScheme() {
+        switch currentTheme {
+        case .light:
+            effectiveColorScheme = .light
+        case .dark:
+            effectiveColorScheme = .dark
+        case .system:
+            // Check NSApp effective appearance or system defaults
+            if let appearance = NSApp?.effectiveAppearance {
+                let match = appearance.bestMatch(from: [.darkAqua, .aqua])
+                effectiveColorScheme = (match == .darkAqua) ? .dark : .light
+            } else {
+                let isDark = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark"
+                effectiveColorScheme = isDark ? .dark : .light
+            }
+        }
+        themeRevision += 1
     }
 
     public func applyAppearance() {
-        switch self.currentTheme {
+        let targetAppearance: NSAppearance?
+        switch currentTheme {
         case .system:
-            NSApp?.appearance = nil
+            targetAppearance = nil
         case .light:
-            NSApp?.appearance = NSAppearance(named: .aqua)
+            targetAppearance = NSAppearance(named: .aqua)
         case .dark:
-            NSApp?.appearance = NSAppearance(named: .darkAqua)
+            targetAppearance = NSAppearance(named: .darkAqua)
+        }
+
+        NSApp?.appearance = targetAppearance
+        for window in NSApp?.windows ?? [] {
+            window.appearance = targetAppearance
         }
     }
 }

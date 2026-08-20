@@ -70,7 +70,7 @@ public struct HelpView: View {
         }
         .frame(width: 720, height: 530)
         .background(Color(nsColor: .controlBackgroundColor))
-        .preferredColorScheme(themeManager.colorScheme)
+        .preferredColorScheme(themeManager.effectiveColorScheme)
     }
 
     // MARK: - Features & User Guide Section
