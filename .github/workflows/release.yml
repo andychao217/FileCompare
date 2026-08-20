@@ -15,7 +15,9 @@ jobs:
     runs-on: macos-15
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        run: |
+          REF="${GITHUB_REF_NAME:-main}"
+          git clone --depth 1 --branch "$REF" "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" .
 
       - name: Select Xcode Version
         run: |
