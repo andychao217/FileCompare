@@ -212,75 +212,169 @@ public final class FolderDiffViewModel {
         setFolders(left: l, right: r)
     }
 
+    private func scanSingleDirectory(url: URL, isLeft: Bool) async -> [AlignedFolderRow] {
+        let fileManager = FileManager.default
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMM d, yyyy 'at' HH:mm"
+
+        guard let enumerator = fileManager.enumerator(
+            at: url,
+            includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey],
+            options: [.skipsHiddenFiles]
+        ) else { return [] }
+
+        var results: [AlignedFolderRow] = []
+
+        while let fileURL = enumerator.nextObject() as? URL {
+            let relativePath = fileURL.path.replacingOccurrences(of: url.path, with: "").trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            if relativePath.isEmpty { continue }
+
+            // Check exclude patterns
+            if excludePatterns.contains(where: { pattern in
+                let pat = pattern.trimmingCharacters(in: .whitespaces)
+                return !pat.isEmpty && (relativePath == pat || relativePath.hasPrefix(pat + "/") || relativePath.hasSuffix("/" + pat))
+            }) {
+                continue
+            }
+
+            guard let resourceValues = try? fileURL.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey]) else {
+                continue
+            }
+
+            let isDir = resourceValues.isDirectory ?? false
+            let size = isDir ? nil : UInt64(resourceValues.fileSize ?? 0)
+            let modDate = resourceValues.contentModificationDate
+            let sizeStr = size.map { formatByteCount($0) } ?? "---"
+            let dateStr = modDate.map { dateFormatter.string(from: $0) } ?? "---"
+
+            var hashStr: String? = nil
+            if selectedMode == .deepHash && !isDir {
+                if let data = try? Data(contentsOf: fileURL, options: .mappedIfSafe) {
+                    hashStr = String(format: "%08X", data.withUnsafeBytes { ptr in
+                        var crc: UInt32 = 0xFFFFFFFF
+                        for byte in ptr {
+                            crc ^= UInt32(byte)
+                            for _ in 0..<8 {
+                                crc = (crc & 1 != 0) ? (crc >> 1) ^ 0xEDB88320 : (crc >> 1)
+                            }
+                        }
+                        return ~crc
+                    })
+                }
+            }
+
+            let row = AlignedFolderRow(
+                relativePath: relativePath,
+                name: fileURL.lastPathComponent,
+                isDirectory: isDir,
+                status: isLeft ? .leftOnly : .rightOnly,
+                leftSizeFormatted: isLeft ? sizeStr : "---",
+                leftModifiedFormatted: isLeft ? dateStr : "---",
+                rightSizeFormatted: isLeft ? "---" : sizeStr,
+                rightModifiedFormatted: isLeft ? "---" : dateStr,
+                leftHash: isLeft ? hashStr : nil,
+                rightHash: isLeft ? nil : hashStr,
+                leftURL: isLeft ? fileURL : nil,
+                rightURL: isLeft ? nil : fileURL
+            )
+            results.append(row)
+        }
+
+        return results.sorted { (r1: AlignedFolderRow, r2: AlignedFolderRow) in
+            if r1.isDirectory != r2.isDirectory {
+                return r1.isDirectory
+            }
+            return r1.relativePath.localizedStandardCompare(r2.relativePath) == .orderedAscending
+        }
+    }
+
     public func scanDirectories() async {
-        guard let left = leftFolderURL, let right = rightFolderURL else {
+        if let left = leftFolderURL, let right = rightFolderURL {
+            isScanning = true
+            let rawEntries = await diffEngine.compareFolders(
+                leftPath: left.path,
+                rightPath: right.path,
+                mode: selectedMode == .deepHash ? 1 : 0,
+                excludePatterns: excludePatterns
+            )
+
+            var mod = 0
+            var add = 0
+            var del = 0
+
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "MMM d, yyyy 'at' HH:mm"
+
+            let mapped = rawEntries.map { entry -> AlignedFolderRow in
+                switch entry.status {
+                case .contentDifferent, .metadataDifferent:
+                    mod += 1
+                case .rightOnly:
+                    add += 1
+                case .leftOnly:
+                    del += 1
+                case .equal:
+                    break
+                }
+
+                let lSizeStr = entry.leftSize.map { formatByteCount($0) } ?? "---"
+                let rSizeStr = entry.rightSize.map { formatByteCount($0) } ?? "---"
+
+                let lDateStr = entry.leftModifiedTimestamp.map {
+                    dateFormatter.string(from: Date(timeIntervalSince1970: Double($0)))
+                } ?? "---"
+                let rDateStr = entry.rightModifiedTimestamp.map {
+                    dateFormatter.string(from: Date(timeIntervalSince1970: Double($0)))
+                } ?? "---"
+
+                return AlignedFolderRow(
+                    relativePath: entry.relativePath,
+                    name: URL(fileURLWithPath: entry.relativePath).lastPathComponent,
+                    isDirectory: entry.isDirectory,
+                    status: entry.status,
+                    leftSizeFormatted: lSizeStr,
+                    leftModifiedFormatted: lDateStr,
+                    rightSizeFormatted: rSizeStr,
+                    rightModifiedFormatted: rDateStr,
+                    leftHash: entry.leftHash,
+                    rightHash: entry.rightHash,
+                    leftURL: entry.leftURL,
+                    rightURL: entry.rightURL
+                )
+            }
+
+            self.entries = mapped
+            self.totalScanned = mapped.count
+            self.modifiedCount = mod
+            self.addedCount = add
+            self.deletedCount = del
+            self.isScanning = false
+        } else if let left = leftFolderURL {
+            isScanning = true
+            let mapped = await scanSingleDirectory(url: left, isLeft: true)
+            self.entries = mapped
+            self.totalScanned = mapped.count
+            self.modifiedCount = 0
+            self.addedCount = 0
+            self.deletedCount = mapped.count
+            self.isScanning = false
+        } else if let right = rightFolderURL {
+            isScanning = true
+            let mapped = await scanSingleDirectory(url: right, isLeft: false)
+            self.entries = mapped
+            self.totalScanned = mapped.count
+            self.modifiedCount = 0
+            self.addedCount = mapped.count
+            self.deletedCount = 0
+            self.isScanning = false
+        } else {
             self.entries = []
             self.totalScanned = 0
             self.modifiedCount = 0
             self.addedCount = 0
             self.deletedCount = 0
-            return
+            self.isScanning = false
         }
-
-        isScanning = true
-        let rawEntries = await diffEngine.compareFolders(
-            leftPath: left.path,
-            rightPath: right.path,
-            mode: selectedMode == .deepHash ? 1 : 0,
-            excludePatterns: excludePatterns
-        )
-
-        var mod = 0
-        var add = 0
-        var del = 0
-
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMM d, yyyy 'at' HH:mm"
-
-        let mapped = rawEntries.map { entry -> AlignedFolderRow in
-            switch entry.status {
-            case .contentDifferent, .metadataDifferent:
-                mod += 1
-            case .rightOnly:
-                add += 1
-            case .leftOnly:
-                del += 1
-            case .equal:
-                break
-            }
-
-            let lSizeStr = entry.leftSize.map { formatByteCount($0) } ?? "---"
-            let rSizeStr = entry.rightSize.map { formatByteCount($0) } ?? "---"
-
-            let lDateStr = entry.leftModifiedTimestamp.map {
-                dateFormatter.string(from: Date(timeIntervalSince1970: Double($0)))
-            } ?? "---"
-            let rDateStr = entry.rightModifiedTimestamp.map {
-                dateFormatter.string(from: Date(timeIntervalSince1970: Double($0)))
-            } ?? "---"
-
-            return AlignedFolderRow(
-                relativePath: entry.relativePath,
-                name: URL(fileURLWithPath: entry.relativePath).lastPathComponent,
-                isDirectory: entry.isDirectory,
-                status: entry.status,
-                leftSizeFormatted: lSizeStr,
-                leftModifiedFormatted: lDateStr,
-                rightSizeFormatted: rSizeStr,
-                rightModifiedFormatted: rDateStr,
-                leftHash: entry.leftHash,
-                rightHash: entry.rightHash,
-                leftURL: entry.leftURL,
-                rightURL: entry.rightURL
-            )
-        }
-
-        self.entries = mapped
-        self.totalScanned = mapped.count
-        self.modifiedCount = mod
-        self.addedCount = add
-        self.deletedCount = del
-        self.isScanning = false
     }
 
     public func handleRowDoubleClick(entry: AlignedFolderRow) {

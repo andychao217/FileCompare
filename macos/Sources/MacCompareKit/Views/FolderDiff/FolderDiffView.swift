@@ -140,6 +140,9 @@ public struct FolderDiffView: View {
                     } else if !viewModel.hasFoldersLoaded {
                         Text(languageManager.text(.selectTwoFoldersPrompt))
                             .foregroundColor(.secondary)
+                    } else if viewModel.leftFolderURL == nil || viewModel.rightFolderURL == nil {
+                        Text("\(viewModel.totalScanned) \(languageManager.text(.itemsCount))")
+                            .foregroundColor(.secondary)
                     } else {
                         Text("\(viewModel.totalScanned) \(languageManager.text(.itemsCount)),")
                             .foregroundColor(.secondary)
@@ -394,6 +397,10 @@ public struct FolderDiffView: View {
     }
 
     private func rowBackground(for status: FolderItemStatus, isLeft: Bool) -> Color {
+        guard viewModel.leftFolderURL != nil && viewModel.rightFolderURL != nil else {
+            return Color.clear
+        }
+
         switch status {
         case .equal:
             return Color.clear
