@@ -6,6 +6,7 @@ public struct SettingsView: View {
     @AppStorage("default_folder_mode") private var defaultFolderMode: String = "Quick"
     @AppStorage("default_ignore_whitespace") private var defaultIgnoreWhitespace: Bool = false
     @AppStorage("default_ignore_case") private var defaultIgnoreCase: Bool = false
+    @AppStorage("create_bak_backup_on_save") private var createBakBackupOnSave: Bool = false
 
     public init() {}
 
@@ -26,7 +27,7 @@ public struct SettingsView: View {
                     Label(languageManager.text(.about), systemImage: "info.circle")
                 }
         }
-        .frame(width: 480, height: 320)
+        .frame(width: 500, height: 360)
         .padding(16)
     }
 
@@ -51,6 +52,15 @@ public struct SettingsView: View {
             Section(header: Text(languageManager.text(.defaultDiffSettings)).font(.caption).foregroundColor(.secondary)) {
                 Toggle(languageManager.text(.ignoreWhitespace), isOn: $defaultIgnoreWhitespace)
                 Toggle(languageManager.text(.ignoreCase), isOn: $defaultIgnoreCase)
+                Toggle(isOn: $createBakBackupOnSave) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(languageManager.text(.createBakBackupTitle))
+                            .font(.system(size: 13))
+                        Text(languageManager.text(.createBakBackupDesc))
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
         }
         .formStyle(.grouped)

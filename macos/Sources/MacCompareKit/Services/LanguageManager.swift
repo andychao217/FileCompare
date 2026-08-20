@@ -109,6 +109,8 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case defaultCompareMode
     case defaultExcludedPatterns
     case defaultDiffSettings
+    case createBakBackupTitle
+    case createBakBackupDesc
 
     // Text Diff
     case sourceFile
@@ -490,6 +492,8 @@ public final class LanguageManager {
         .defaultCompareMode: "Default Compare Mode",
         .defaultExcludedPatterns: "Default Excluded Patterns",
         .defaultDiffSettings: "Default Diff Settings",
+        .createBakBackupTitle: "Create .bak backup files when saving",
+        .createBakBackupDesc: "Automatically duplicate original files as .bak before overwriting to prevent accidental data loss.",
         .sourceFile: "Source File (Left)",
         .targetFile: "Target File (Right)",
         .noFileSelected: "No File Selected",
@@ -627,6 +631,8 @@ public final class LanguageManager {
         .defaultCompareMode: "默认比对模式",
         .defaultExcludedPatterns: "默认排除过滤规则",
         .defaultDiffSettings: "默认比对配置",
+        .createBakBackupTitle: "保存时自动创建 .bak 备份文件",
+        .createBakBackupDesc: "在覆盖保存原文件前自动生成 .bak 副本，防止误操作丢失旧版本内容。",
         .sourceFile: "源文件 (左侧)",
         .targetFile: "目标文件 (右侧)",
         .noFileSelected: "未选择文件",
@@ -764,6 +770,8 @@ public final class LanguageManager {
         .defaultCompareMode: "デフォルト比較モード",
         .defaultExcludedPatterns: "デフォルト除外パターン",
         .defaultDiffSettings: "デフォルト比較設定",
+        .createBakBackupTitle: "保存時に .bak バックアップファイルを作成する",
+        .createBakBackupDesc: "上書き保存する前に元のファイルの .bak コピーを自動作成し、誤操作によるデータ損失を防ぎます。",
         .sourceFile: "ソースファイル (左)",
         .targetFile: "ターゲットファイル (右)",
         .noFileSelected: "ファイルが選択されていません",

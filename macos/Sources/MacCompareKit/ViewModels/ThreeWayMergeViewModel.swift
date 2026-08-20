@@ -261,8 +261,9 @@ public final class ThreeWayMergeViewModel {
             return
         }
 
+        let createBackup = UserDefaults.standard.bool(forKey: "create_bak_backup_on_save")
         do {
-            try diffEngine.saveFile(to: url, content: mergeResult.mergedText, encoding: .utf8, createBackup: false)
+            try diffEngine.saveFile(to: url, content: mergeResult.mergedText, encoding: .utf8, createBackup: createBackup)
             statusMessage = "Merged file successfully saved to \(url.lastPathComponent)!"
         } catch {
             statusMessage = "Save Error: \(error.localizedDescription)"

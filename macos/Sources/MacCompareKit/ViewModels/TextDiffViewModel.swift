@@ -138,8 +138,9 @@ public final class TextDiffViewModel {
             promptSavePanel(isLeft: true)
             return
         }
+        let createBackup = UserDefaults.standard.bool(forKey: "create_bak_backup_on_save")
         do {
-            try diffEngine.saveFile(to: url, content: leftContent, encoding: selectedEncoding, createBackup: false)
+            try diffEngine.saveFile(to: url, content: leftContent, encoding: selectedEncoding, createBackup: createBackup)
             isLeftDirty = false
             statusMessage = "Saved \(url.lastPathComponent)"
         } catch {
@@ -152,8 +153,9 @@ public final class TextDiffViewModel {
             promptSavePanel(isLeft: false)
             return
         }
+        let createBackup = UserDefaults.standard.bool(forKey: "create_bak_backup_on_save")
         do {
-            try diffEngine.saveFile(to: url, content: rightContent, encoding: selectedEncoding, createBackup: false)
+            try diffEngine.saveFile(to: url, content: rightContent, encoding: selectedEncoding, createBackup: createBackup)
             isRightDirty = false
             statusMessage = "Saved \(url.lastPathComponent)"
         } catch {
