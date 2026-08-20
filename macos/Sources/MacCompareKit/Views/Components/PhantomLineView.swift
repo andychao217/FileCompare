@@ -18,9 +18,9 @@ public struct PhantomLineView: View {
 
     public var body: some View {
         ZStack {
-            Color.black.opacity(0.18)
+            Color(nsColor: .separatorColor).opacity(0.12)
             PhantomHatchShape()
-                .stroke(Color.white.opacity(0.08), lineWidth: 1.5)
+                .stroke(Color.secondary.opacity(0.2), lineWidth: 1.2)
                 .clipped()
         }
         .frame(height: 20)

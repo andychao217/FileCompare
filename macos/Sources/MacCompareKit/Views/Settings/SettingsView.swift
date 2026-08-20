@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct SettingsView: View {
     @State private var languageManager = LanguageManager.shared
+    @State private var themeManager = ThemeManager.shared
     @AppStorage("default_file_encoding") private var defaultEncoding: String = "UTF-8"
     @AppStorage("default_folder_mode") private var defaultFolderMode: String = "Quick"
     @AppStorage("default_ignore_whitespace") private var defaultIgnoreWhitespace: Bool = false
@@ -57,12 +58,20 @@ public struct SettingsView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 16)
         }
-        .frame(width: 500, height: 380)
+        .frame(width: 500, height: 400)
+        .preferredColorScheme(themeManager.colorScheme)
     }
 
     private var generalTab: some View {
         Form {
             Section {
+                Picker(languageManager.text(.appearance), selection: $themeManager.currentTheme) {
+                    ForEach(AppTheme.allCases) { theme in
+                        Text(theme.localizedName(for: languageManager.effectiveLanguage)).tag(theme)
+                    }
+                }
+                .pickerStyle(.menu)
+
                 Picker(languageManager.text(.selectLanguage), selection: $languageManager.currentLanguage) {
                     ForEach(AppLanguage.allCases) { lang in
                         Text(lang.localizedName(for: languageManager.effectiveLanguage)).tag(lang)

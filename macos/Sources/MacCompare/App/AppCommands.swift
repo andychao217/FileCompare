@@ -92,6 +92,18 @@ public struct AppCommands: Commands {
             .keyboardShortcut("c", modifiers: [.command, .option])
         }
 
+        CommandMenu(languageManager.text(.appearance)) {
+            Button(AppTheme.system.localizedName(for: languageManager.effectiveLanguage)) {
+                ThemeManager.shared.currentTheme = .system
+            }
+            Button(AppTheme.light.localizedName(for: languageManager.effectiveLanguage)) {
+                ThemeManager.shared.currentTheme = .light
+            }
+            Button(AppTheme.dark.localizedName(for: languageManager.effectiveLanguage)) {
+                ThemeManager.shared.currentTheme = .dark
+            }
+        }
+
         CommandGroup(replacing: .help) {
             Button(languageManager.text(.help)) {
                 NotificationCenter.default.post(name: .mcOpenHelp, object: nil)

@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct HelpView: View {
     @State private var languageManager = LanguageManager.shared
+    @State private var themeManager = ThemeManager.shared
     @State private var selectedTab: Int = 0
     public var onDismiss: (() -> Void)?
 
@@ -69,6 +70,7 @@ public struct HelpView: View {
         }
         .frame(width: 720, height: 530)
         .background(Color(nsColor: .controlBackgroundColor))
+        .preferredColorScheme(themeManager.colorScheme)
     }
 
     // MARK: - Features & User Guide Section

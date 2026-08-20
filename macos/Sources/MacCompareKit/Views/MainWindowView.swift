@@ -5,6 +5,7 @@ public struct MainWindowView: View {
     @State private var isSettingsSheetPresented: Bool = false
     @State private var isHelpSheetPresented: Bool = false
     @State private var languageManager = LanguageManager.shared
+    @State private var themeManager = ThemeManager.shared
 
     public var currentTabManager: TabManager { tabManager }
 
@@ -47,6 +48,7 @@ public struct MainWindowView: View {
             }
         }
         .id(languageManager.effectiveLanguage)
+        .preferredColorScheme(themeManager.colorScheme)
         .frame(minWidth: 960, minHeight: 600)
         .background(
             WindowAccessor { window in
