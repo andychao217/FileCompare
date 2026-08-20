@@ -139,7 +139,7 @@ public final class TextDiffViewModel {
             return
         }
         do {
-            try diffEngine.saveFile(to: url, content: leftContent, encoding: selectedEncoding, createBackup: true)
+            try diffEngine.saveFile(to: url, content: leftContent, encoding: selectedEncoding, createBackup: false)
             isLeftDirty = false
             statusMessage = "Saved \(url.lastPathComponent)"
         } catch {
@@ -153,7 +153,7 @@ public final class TextDiffViewModel {
             return
         }
         do {
-            try diffEngine.saveFile(to: url, content: rightContent, encoding: selectedEncoding, createBackup: true)
+            try diffEngine.saveFile(to: url, content: rightContent, encoding: selectedEncoding, createBackup: false)
             isRightDirty = false
             statusMessage = "Saved \(url.lastPathComponent)"
         } catch {

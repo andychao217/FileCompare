@@ -33,7 +33,7 @@ public final class DiffEngineService: DiffEngineProtocol, @unchecked Sendable {
         throw NSError(domain: "MacCompareError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Unable to decode file with encoding \(encoding.rawValue)"])
     }
 
-    public func saveFile(to url: URL, content: String, encoding: FileEncoding = .utf8, createBackup: Bool = true) throws {
+    public func saveFile(to url: URL, content: String, encoding: FileEncoding = .utf8, createBackup: Bool = false) throws {
         let resolvedURL = url.resolvingSymlinksInPath()
         let fileManager = FileManager.default
 

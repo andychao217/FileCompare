@@ -262,7 +262,7 @@ public final class ThreeWayMergeViewModel {
         }
 
         do {
-            try diffEngine.saveFile(to: url, content: mergeResult.mergedText, encoding: .utf8, createBackup: true)
+            try diffEngine.saveFile(to: url, content: mergeResult.mergedText, encoding: .utf8, createBackup: false)
             statusMessage = "Merged file successfully saved to \(url.lastPathComponent)!"
         } catch {
             statusMessage = "Save Error: \(error.localizedDescription)"
