@@ -20,6 +20,7 @@ public struct DiffToolbarView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+                .disabled(!viewModel.hasBothFiles)
                 .help("Jump to previous difference hunk")
 
                 Button {
@@ -30,6 +31,7 @@ public struct DiffToolbarView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+                .disabled(!viewModel.hasBothFiles)
                 .help("Jump to next difference hunk")
             }
 
@@ -42,6 +44,7 @@ public struct DiffToolbarView: View {
             }
             .toggleStyle(.switch)
             .controlSize(.mini)
+            .disabled(!viewModel.hasBothFiles)
 
             Toggle(isOn: $viewModel.ignoreCase) {
                 Text(languageManager.text(.ignoreCase))
@@ -49,6 +52,7 @@ public struct DiffToolbarView: View {
             }
             .toggleStyle(.switch)
             .controlSize(.mini)
+            .disabled(!viewModel.hasBothFiles)
 
             Spacer()
 
@@ -62,6 +66,7 @@ public struct DiffToolbarView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+                .disabled(!viewModel.hasBothFiles)
                 .help("Copy current diff hunk from left to right")
 
                 Button {
@@ -72,6 +77,7 @@ public struct DiffToolbarView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+                .disabled(!viewModel.hasBothFiles)
                 .help("Copy current diff hunk from right to left")
             }
 
@@ -86,6 +92,7 @@ public struct DiffToolbarView: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
+            .disabled(!viewModel.hasLeftFile && !viewModel.hasRightFile)
             .help(languageManager.text(.clearAll))
 
             Divider().frame(height: 16)

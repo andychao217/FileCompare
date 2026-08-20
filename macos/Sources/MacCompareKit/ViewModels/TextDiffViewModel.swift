@@ -242,6 +242,18 @@ public final class TextDiffViewModel {
         }
     }
 
+    public var hasBothFiles: Bool {
+        (leftFileURL != nil || !leftContent.isEmpty) && (rightFileURL != nil || !rightContent.isEmpty)
+    }
+
+    public var hasLeftFile: Bool {
+        leftFileURL != nil || !leftContent.isEmpty
+    }
+
+    public var hasRightFile: Bool {
+        rightFileURL != nil || !rightContent.isEmpty
+    }
+
     private func scheduleDiffComputation() {
         debounceTask?.cancel()
         debounceTask = Task {
@@ -257,12 +269,50 @@ public final class TextDiffViewModel {
             return
         }
 
-        let res = await diffEngine.compareText(
-            left: leftContent,
-            right: rightContent,
-            ignoreWhitespace: ignoreWhitespace,
-            ignoreCase: ignoreCase
-        )
-        self.diffResult = res
+        if hasBothFiles {
+            let res = await diffEngine.compareText(
+                left: leftContent,
+                right: rightContent,
+                ignoreWhitespace: ignoreWhitespace,
+                ignoreCase: ignoreCase
+            )
+            self.diffResult = res
+        } else if hasLeftFile {
+            let lines = leftContent.components(separatedBy: .newlines)
+            let diffLines = lines.enumerated().map { idx, line in
+                DiffLine(
+                    leftLineNumber: UInt32(idx + 1),
+                    rightLineNumber: nil,
+                    contentLeft: line,
+                    contentRight: "",
+                    changeType: .unchanged
+                )
+            }
+            self.diffResult = TextDiffResult(
+                lines: diffLines,
+                totalAdditions: 0,
+                totalDeletions: 0,
+                totalModifications: 0,
+                hunks: []
+            )
+        } else if hasRightFile {
+            let lines = rightContent.components(separatedBy: .newlines)
+            let diffLines = lines.enumerated().map { idx, line in
+                DiffLine(
+                    leftLineNumber: nil,
+                    rightLineNumber: UInt32(idx + 1),
+                    contentLeft: "",
+                    contentRight: line,
+                    changeType: .unchanged
+                )
+            }
+            self.diffResult = TextDiffResult(
+                lines: diffLines,
+                totalAdditions: 0,
+                totalDeletions: 0,
+                totalModifications: 0,
+                hunks: []
+            )
+        }
     }
 }

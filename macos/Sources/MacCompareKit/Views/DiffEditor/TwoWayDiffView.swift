@@ -12,7 +12,7 @@ public struct TwoWayDiffView: View {
     }
 
     private var isBothEmpty: Bool {
-        viewModel.leftContent.isEmpty && viewModel.leftFileURL == nil && viewModel.rightContent.isEmpty && viewModel.rightFileURL == nil
+        !viewModel.hasLeftFile && !viewModel.hasRightFile
     }
 
     public var body: some View {
@@ -44,8 +44,8 @@ public struct TwoWayDiffView: View {
                 )
                 .frame(maxWidth: .infinity)
 
-                // Minimap Header Spacer (only visible when diff is active)
-                if !isBothEmpty {
+                // Minimap Header Spacer (only visible when diff is active across both files)
+                if viewModel.hasBothFiles {
                     Divider().frame(height: 28)
                     Spacer().frame(width: 58)
                 }
@@ -54,7 +54,7 @@ public struct TwoWayDiffView: View {
 
             Divider()
 
-            // Main Diff Split View
+            // Main Diff / Editor View
             if isBothEmpty {
                 HStack(spacing: 0) {
                     emptyDropZone(isLeft: true)
@@ -72,7 +72,36 @@ public struct TwoWayDiffView: View {
                         }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if !viewModel.hasBothFiles {
+                // Single File Mode: One side shows text with neutral background, the other side shows drop zone
+                HStack(spacing: 0) {
+                    if viewModel.hasLeftFile {
+                        singleEditorView(isLeft: true)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        emptyDropZone(isLeft: true)
+                            .background(isLeftDropTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
+                            .onDrop(of: [.fileURL], isTargeted: $isLeftDropTargeted) { providers in
+                                handleDrop(providers: providers, isLeft: true)
+                            }
+                    }
+
+                    Divider()
+
+                    if viewModel.hasRightFile {
+                        singleEditorView(isLeft: false)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        emptyDropZone(isLeft: false)
+                            .background(isRightDropTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
+                            .onDrop(of: [.fileURL], isTargeted: $isRightDropTargeted) { providers in
+                                handleDrop(providers: providers, isLeft: false)
+                            }
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
+                // Dual Diff Mode: Both sides loaded, synchronized scrolling and Minimap active
                 GeometryReader { geometry in
                     let availableWidth = max(0, geometry.size.width - 59)
                     let paneWidth = availableWidth / 2.0
@@ -124,14 +153,56 @@ public struct TwoWayDiffView: View {
             Divider()
 
             // Status Bar
+            let diffStatsText: String = {
+                if !viewModel.hasBothFiles {
+                    let count = viewModel.diffResult.lines.count
+                    return "\(count) \(languageManager.text(.itemsCount))"
+                } else {
+                    return "\(viewModel.diffResult.totalModifications + viewModel.diffResult.totalAdditions + viewModel.diffResult.totalDeletions) \(languageManager.text(.totalChanges)), \(viewModel.diffResult.totalAdditions) \(languageManager.text(.additions)), \(viewModel.diffResult.totalDeletions) \(languageManager.text(.deletions))"
+                }
+            }()
+
             StatusBarView(
                 cursorInfo: viewModel.cursorPosition,
-                diffStats: "\(viewModel.diffResult.totalModifications + viewModel.diffResult.totalAdditions + viewModel.diffResult.totalDeletions) \(languageManager.text(.totalChanges)), \(viewModel.diffResult.totalAdditions) \(languageManager.text(.additions)), \(viewModel.diffResult.totalDeletions) \(languageManager.text(.deletions))",
+                diffStats: diffStatsText,
                 encoding: viewModel.selectedEncoding.rawValue,
                 statusMessage: viewModel.statusMessage
             )
         }
         .background(Color(nsColor: .textBackgroundColor))
+    }
+
+    private func singleEditorView(isLeft: Bool) -> some View {
+        ScrollView(.vertical) {
+            LazyVStack(spacing: 0) {
+                ForEach(Array(viewModel.diffResult.lines.enumerated()), id: \.offset) { idx, line in
+                    HStack(spacing: 0) {
+                        // Line number gutter
+                        HStack {
+                            Spacer()
+                            Text("\(idx + 1)")
+                                .font(.system(size: 11, design: .monospaced))
+                                .foregroundColor(.secondary.opacity(0.8))
+                        }
+                        .frame(width: 48, height: 20)
+                        .padding(.trailing, 6)
+                        .background(Color(nsColor: .windowBackgroundColor).opacity(0.3))
+
+                        // Text content with clean neutral background
+                        HStack {
+                            Text(isLeft ? line.contentLeft : line.contentRight)
+                                .font(.system(size: 12, design: .monospaced))
+                                .foregroundColor(.primary)
+                                .lineLimit(1)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 6)
+                        .frame(maxWidth: .infinity, maxHeight: 20, alignment: .leading)
+                    }
+                    .frame(height: 20)
+                }
+            }
+        }
     }
 
     private func emptyDropZone(isLeft: Bool) -> some View {
