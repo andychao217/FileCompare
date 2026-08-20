@@ -37,11 +37,13 @@ public struct HelpView: View {
                 .frame(width: 270)
 
                 if let onDismiss {
-                    Button(languageManager.text(.done)) {
-                        onDismiss()
+                    Button(action: onDismiss) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(.secondary.opacity(0.8))
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
+                    .buttonStyle(.plain)
+                    .help(languageManager.text(.close))
                 }
             }
             .padding(.horizontal, 20)

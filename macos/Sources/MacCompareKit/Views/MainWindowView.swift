@@ -153,19 +153,9 @@ public struct MainWindowView: View {
             isHelpSheetPresented = true
         }
         .sheet(isPresented: $isSettingsSheetPresented) {
-            VStack(spacing: 0) {
-                HStack {
-                    Spacer()
-                    Button(languageManager.text(.done)) {
-                        isSettingsSheetPresented = false
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                    .padding(12)
-                }
-                SettingsView()
+            SettingsView {
+                isSettingsSheetPresented = false
             }
-            .frame(width: 520, height: 420)
         }
         .sheet(isPresented: $isHelpSheetPresented) {
             HelpView {

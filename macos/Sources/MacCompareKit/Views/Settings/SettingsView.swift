@@ -7,28 +7,56 @@ public struct SettingsView: View {
     @AppStorage("default_ignore_whitespace") private var defaultIgnoreWhitespace: Bool = false
     @AppStorage("default_ignore_case") private var defaultIgnoreCase: Bool = false
     @AppStorage("create_bak_backup_on_save") private var createBakBackupOnSave: Bool = false
+    public var onDismiss: (() -> Void)?
 
-    public init() {}
+    public init(onDismiss: (() -> Void)? = nil) {
+        self.onDismiss = onDismiss
+    }
 
     public var body: some View {
-        TabView {
-            generalTab
-                .tabItem {
-                    Label(languageManager.text(.general), systemImage: "gearshape")
-                }
+        VStack(spacing: 0) {
+            // Header with title and circular close button
+            HStack(alignment: .center) {
+                Text(languageManager.text(.settings))
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.primary)
 
-            folderDiffTab
-                .tabItem {
-                    Label(languageManager.text(.folderDiff), systemImage: "folder")
-                }
+                Spacer()
 
-            aboutTab
-                .tabItem {
-                    Label(languageManager.text(.about), systemImage: "info.circle")
+                if let onDismiss {
+                    Button(action: onDismiss) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(.secondary.opacity(0.8))
+                    }
+                    .buttonStyle(.plain)
+                    .help(languageManager.text(.close))
                 }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .padding(.bottom, 8)
+
+            TabView {
+                generalTab
+                    .tabItem {
+                        Label(languageManager.text(.general), systemImage: "gearshape")
+                    }
+
+                folderDiffTab
+                    .tabItem {
+                        Label(languageManager.text(.folderDiff), systemImage: "folder")
+                    }
+
+                aboutTab
+                    .tabItem {
+                        Label(languageManager.text(.about), systemImage: "info.circle")
+                    }
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
         }
-        .frame(width: 500, height: 360)
-        .padding(16)
+        .frame(width: 500, height: 380)
     }
 
     private var generalTab: some View {
