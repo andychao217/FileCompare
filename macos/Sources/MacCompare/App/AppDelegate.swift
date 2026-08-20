@@ -11,6 +11,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             name: NSWindow.didBecomeKeyNotification,
             object: nil
         )
+
+        // Automatic background update check on startup
+        if UpdateCheckerService.shared.isAutoCheckEnabled {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                UpdateCheckerService.shared.checkForUpdates(isUserInitiated: false)
+            }
+        }
     }
 
     @objc private func windowDidBecomeKey(_ notification: Notification) {

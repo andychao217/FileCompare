@@ -104,11 +104,23 @@ public struct AppCommands: Commands {
             }
         }
 
+        CommandGroup(after: .appInfo) {
+            Button(languageManager.text(.checkForUpdates)) {
+                NotificationCenter.default.post(name: .mcCheckForUpdates, object: nil)
+            }
+        }
+
         CommandGroup(replacing: .help) {
             Button(languageManager.text(.help)) {
                 NotificationCenter.default.post(name: .mcOpenHelp, object: nil)
             }
             .keyboardShortcut("?", modifiers: .command)
+
+            Divider()
+
+            Button(languageManager.text(.checkForUpdates)) {
+                NotificationCenter.default.post(name: .mcCheckForUpdates, object: nil)
+            }
 
             Divider()
 

@@ -194,6 +194,22 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case conflictsRemaining
     case allConflictsResolved
     case noFilesSelected
+
+    // Update Checker
+    case checkForUpdates
+    case checkingForUpdates
+    case upToDateTitle
+    case upToDateMessage
+    case newVersionAvailableTitle
+    case newVersionAvailableMessage
+    case downloadUpdate
+    case releaseNotes
+    case noReleaseNotes
+    case currentVersion
+    case later
+    case autoCheckUpdatesOnLaunch
+    case lastChecked
+    case checkFailed
 }
 
 @MainActor
@@ -574,7 +590,21 @@ public final class LanguageManager {
         .mergedOutputResult: "Merged Output Result",
         .conflictsRemaining: "Conflicts Remaining",
         .allConflictsResolved: "All Conflicts Resolved",
-        .noFilesSelected: "No Files Selected"
+        .noFilesSelected: "No Files Selected",
+        .checkForUpdates: "Check for Updates...",
+        .checkingForUpdates: "Checking for Updates...",
+        .upToDateTitle: "You're Up to Date",
+        .upToDateMessage: "MacCompare is currently at the latest version.",
+        .newVersionAvailableTitle: "New Version Available",
+        .newVersionAvailableMessage: "A new version of MacCompare is available for download.",
+        .downloadUpdate: "Download Update",
+        .releaseNotes: "Release Notes",
+        .noReleaseNotes: "No release notes provided for this release.",
+        .currentVersion: "Current Version",
+        .later: "Later",
+        .autoCheckUpdatesOnLaunch: "Automatically check for updates on launch",
+        .lastChecked: "Last checked",
+        .checkFailed: "Failed to check for updates. Please check your network connection."
     ]
 
     private let zhHansDictionary: [L10nKey: String] = [
@@ -719,7 +749,21 @@ public final class LanguageManager {
         .mergedOutputResult: "合并结果预览",
         .conflictsRemaining: "处冲突待解决",
         .allConflictsResolved: "所有冲突已解决",
-        .noFilesSelected: "未选择合并文件"
+        .noFilesSelected: "未选择合并文件",
+        .checkForUpdates: "检查更新...",
+        .checkingForUpdates: "正在检查更新...",
+        .upToDateTitle: "已是最新版本",
+        .upToDateMessage: "MacCompare 当前已经是最新版本，无需更新。",
+        .newVersionAvailableTitle: "发现新版本",
+        .newVersionAvailableMessage: "MacCompare 有新版本可供下载更新。",
+        .downloadUpdate: "立即下载更新",
+        .releaseNotes: "版本更新说明",
+        .noReleaseNotes: "此版本暂无更新说明。",
+        .currentVersion: "当前版本",
+        .later: "稍后提醒",
+        .autoCheckUpdatesOnLaunch: "启动时自动检查更新",
+        .lastChecked: "上次检查时间",
+        .checkFailed: "检查更新失败，请检查您的网络连接。"
     ]
 
     private let jaDictionary: [L10nKey: String] = [
@@ -864,6 +908,20 @@ public final class LanguageManager {
         .mergedOutputResult: "マージ結果プレビュー",
         .conflictsRemaining: "箇所の未解決の競合",
         .allConflictsResolved: "すべての競合が解決されました",
-        .noFilesSelected: "マージファイルが選択されていません"
+        .noFilesSelected: "マージファイルが選択されていません",
+        .checkForUpdates: "アップデートを確認...",
+        .checkingForUpdates: "アップデートを確認中...",
+        .upToDateTitle: "最新バージョンです",
+        .upToDateMessage: "MacCompare は現在最新バージョンです。",
+        .newVersionAvailableTitle: "新しいバージョンがあります",
+        .newVersionAvailableMessage: "MacCompare の新しいバージョンが利用可能です。",
+        .downloadUpdate: "今すぐアップデートをダウンロード",
+        .releaseNotes: "リリースノート",
+        .noReleaseNotes: "このリリースの詳細情報はありません。",
+        .currentVersion: "現在のバージョン",
+        .later: "後で通知",
+        .autoCheckUpdatesOnLaunch: "起動時に自動的にアップデートを確認",
+        .lastChecked: "最終確認日時",
+        .checkFailed: "アップデートの確認に失敗しました。ネットワーク接続を確認してください。"
     ]
 }

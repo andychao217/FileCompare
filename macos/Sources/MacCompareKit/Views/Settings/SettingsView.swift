@@ -3,6 +3,7 @@ import SwiftUI
 public struct SettingsView: View {
     @State private var languageManager = LanguageManager.shared
     @State private var themeManager = ThemeManager.shared
+    @State private var updateChecker = UpdateCheckerService.shared
     @AppStorage("default_file_encoding") private var defaultEncoding: String = "UTF-8"
     @AppStorage("default_folder_mode") private var defaultFolderMode: String = "Quick"
     @AppStorage("default_ignore_whitespace") private var defaultIgnoreWhitespace: Bool = false
@@ -58,9 +59,19 @@ public struct SettingsView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 16)
         }
-        .frame(width: 500, height: 400)
+        .frame(width: 500, height: 430)
         .id("settings-\(themeManager.themeRevision)-\(languageManager.effectiveLanguage.rawValue)")
         .preferredColorScheme(themeManager.effectiveColorScheme)
+        .sheet(isPresented: $updateChecker.showUpdateSheet) {
+            UpdateAvailableSheetView {
+                updateChecker.showUpdateSheet = false
+            }
+        }
+        .alert(languageManager.text(.upToDateTitle), isPresented: $updateChecker.showUpToDateAlert) {
+            Button(languageManager.text(.done), role: .cancel) {}
+        } message: {
+            Text(languageManager.text(.upToDateMessage))
+        }
     }
 
     private var generalTab: some View {
@@ -100,6 +111,7 @@ public struct SettingsView: View {
                             .foregroundColor(.secondary)
                     }
                 }
+                Toggle(languageManager.text(.autoCheckUpdatesOnLaunch), isOn: $updateChecker.isAutoCheckEnabled)
             }
         }
         .formStyle(.grouped)
@@ -128,12 +140,12 @@ public struct SettingsView: View {
         VStack(spacing: 12) {
             Image(nsImage: NSApp.applicationIconImage)
                 .resizable()
-                .frame(width: 64, height: 64)
+                .frame(width: 56, height: 56)
 
-            VStack(spacing: 3) {
+            VStack(spacing: 2) {
                 Text("MacCompare")
-                    .font(.title2.bold())
-                Text("\(languageManager.text(.version)) 0.1.0")
+                    .font(.title3.bold())
+                Text("\(languageManager.text(.version)) \(updateChecker.currentVersion)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -145,11 +157,45 @@ public struct SettingsView: View {
                 .background(Capsule().fill(Color.accentColor.opacity(0.15)))
                 .foregroundColor(.accentColor)
 
-            Divider().padding(.vertical, 4)
+            Divider().padding(.vertical, 2)
+
+            // Check for Updates button
+            Button(action: {
+                updateChecker.checkForUpdates(isUserInitiated: true)
+            }) {
+                HStack(spacing: 6) {
+                    if updateChecker.status == .checking {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text(languageManager.text(.checkingForUpdates))
+                    } else {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                        Text(languageManager.text(.checkForUpdates))
+                    }
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.regular)
+            .disabled(updateChecker.status == .checking)
+
+            if let date = updateChecker.lastCheckedDate {
+                Text("\(languageManager.text(.lastChecked)): \(formattedDate(date))")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
 
             Link(languageManager.text(.gitHubRepo), destination: URL(string: "https://github.com/andychao217/FileCompare")!)
                 .font(.caption)
+                .padding(.top, 2)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.vertical, 8)
+    }
+
+    private func formattedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
     }
 }

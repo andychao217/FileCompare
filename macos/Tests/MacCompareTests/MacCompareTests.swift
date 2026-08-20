@@ -110,4 +110,14 @@ final class MacCompareTests: XCTestCase {
         XCTAssertEqual(syncResult.errorCount, 0)
         XCTAssertTrue(FileManager.default.fileExists(atPath: dirB.appendingPathComponent("left_only.txt").path))
     }
+
+    @MainActor
+    func testVersionComparison() {
+        let checker = UpdateCheckerService.shared
+        XCTAssertTrue(checker.isNewerVersion(latest: "0.2.0", current: "0.1.0"))
+        XCTAssertTrue(checker.isNewerVersion(latest: "0.1.1", current: "0.1.0"))
+        XCTAssertTrue(checker.isNewerVersion(latest: "1.0.0", current: "0.9.9"))
+        XCTAssertFalse(checker.isNewerVersion(latest: "0.1.0", current: "0.1.0"))
+        XCTAssertFalse(checker.isNewerVersion(latest: "0.0.9", current: "0.1.0"))
+    }
 }

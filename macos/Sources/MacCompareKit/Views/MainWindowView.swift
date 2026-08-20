@@ -6,6 +6,7 @@ public struct MainWindowView: View {
     @State private var isHelpSheetPresented: Bool = false
     @State private var languageManager = LanguageManager.shared
     @State private var themeManager = ThemeManager.shared
+    @State private var updateChecker = UpdateCheckerService.shared
 
     public var currentTabManager: TabManager { tabManager }
 
@@ -14,13 +15,36 @@ public struct MainWindowView: View {
     }
 
     public var body: some View {
-        VStack(spacing: 0) {
-            // Tab Bar
-            CustomTabBarView(tabManager: tabManager)
+        mainContent
+            .id("main-\(themeManager.themeRevision)-\(languageManager.effectiveLanguage.rawValue)")
+            .preferredColorScheme(themeManager.effectiveColorScheme)
+            .frame(minWidth: 960, minHeight: 600)
+            .background(
+                WindowAccessor { window in
+                    WindowTabRegistry.shared.register(manager: tabManager, window: window)
+                }
+            )
+            .modifier(MainWindowSheetsModifier(
+                isSettingsPresented: $isSettingsSheetPresented,
+                isHelpPresented: $isHelpSheetPresented,
+                updateChecker: updateChecker,
+                languageManager: languageManager
+            ))
+            .modifier(TabCreationCommands(tabManager: tabManager))
+            .modifier(DiffActionCommands(tabManager: tabManager))
+            .modifier(WindowAndSheetCommands(
+                isSettingsPresented: $isSettingsSheetPresented,
+                isHelpPresented: $isHelpSheetPresented,
+                updateChecker: updateChecker
+            ))
+    }
 
+    @ViewBuilder
+    private var mainContent: some View {
+        VStack(spacing: 0) {
+            CustomTabBarView(tabManager: tabManager)
             Divider()
 
-            // Dynamic Active View
             if let activeTab = tabManager.activeTab {
                 switch activeTab.type {
                 case .textDiff:
@@ -31,138 +55,219 @@ public struct MainWindowView: View {
                     ThreeWayMergeView(viewModel: tabManager.threeWayMergeViewModel(for: activeTab.id))
                 }
             } else {
-                VStack(spacing: 12) {
-                    Image(systemName: "square.stack.3d.up.slash")
-                        .font(.system(size: 36))
-                        .foregroundColor(.secondary)
-                    Text(languageManager.text(.noFileSelected))
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    Button(languageManager.text(.newTextCompare)) {
-                        tabManager.addTab(type: .textDiff)
-                    }
-                    .buttonStyle(.borderedProminent)
+                emptyPlaceholder
+            }
+        }
+    }
+
+    private var emptyPlaceholder: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "square.stack.3d.up.slash")
+                .font(.system(size: 36))
+                .foregroundColor(.secondary)
+            Text(languageManager.text(.noFileSelected))
+                .font(.headline)
+                .foregroundColor(.secondary)
+            Button(languageManager.text(.newTextCompare)) {
+                tabManager.addTab(type: .textDiff)
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(nsColor: .windowBackgroundColor))
+    }
+}
+
+// MARK: - Sheets & Alerts Modifier
+
+private struct MainWindowSheetsModifier: ViewModifier {
+    @Binding var isSettingsPresented: Bool
+    @Binding var isHelpPresented: Bool
+    var updateChecker: UpdateCheckerService
+    var languageManager: LanguageManager
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(isPresented: $isSettingsPresented) {
+                SettingsView {
+                    isSettingsPresented = false
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color(nsColor: .windowBackgroundColor))
             }
-        }
-        .id("main-\(themeManager.themeRevision)-\(languageManager.effectiveLanguage.rawValue)")
-        .preferredColorScheme(themeManager.effectiveColorScheme)
-        .frame(minWidth: 960, minHeight: 600)
-        .background(
-            WindowAccessor { window in
-                WindowTabRegistry.shared.register(manager: tabManager, window: window)
+            .sheet(isPresented: $isHelpPresented) {
+                HelpView {
+                    isHelpPresented = false
+                }
             }
-        )
-        // MARK: - Menu Command Notification Listeners
-        .onReceive(NotificationCenter.default.publisher(for: .mcNewTextCompare)) { _ in
-            tabManager.addTab(type: .textDiff)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .mcNewFolderCompare)) { _ in
-            tabManager.addTab(type: .folderDiff)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .mcNewThreeWayMerge)) { _ in
-            tabManager.addTab(type: .threeWayMerge)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .mcCloseActiveTab)) { _ in
-            if let activeId = tabManager.selectedTabId {
-                tabManager.closeTab(id: activeId)
+            .sheet(isPresented: Binding(
+                get: { updateChecker.showUpdateSheet },
+                set: { updateChecker.showUpdateSheet = $0 }
+            )) {
+                UpdateAvailableSheetView {
+                    updateChecker.showUpdateSheet = false
+                }
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .mcMoveTabToNewWindow)) { _ in
-            WindowManager.shared.moveActiveTabToNewWindow(from: tabManager)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .mcMergeAllWindows)) { _ in
-            WindowManager.shared.mergeAllWindows()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .mcOpenFile)) { _ in
-            guard let activeTab = tabManager.activeTab else { return }
-            switch activeTab.type {
-            case .textDiff:
-                tabManager.textDiffViewModel(for: activeTab.id).openLeftFile()
-            case .folderDiff:
-                tabManager.folderDiffViewModel(for: activeTab.id).chooseLeftFolder()
-            case .threeWayMerge:
-                tabManager.threeWayMergeViewModel(for: activeTab.id).openLocalFile()
+            .alert(languageManager.text(.upToDateTitle), isPresented: Binding(
+                get: { updateChecker.showUpToDateAlert },
+                set: { updateChecker.showUpToDateAlert = $0 }
+            )) {
+                Button(languageManager.text(.done), role: .cancel) {}
+            } message: {
+                Text(languageManager.text(.upToDateMessage))
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .mcSaveActive)) { _ in
-            guard let activeTab = tabManager.activeTab else { return }
-            switch activeTab.type {
-            case .textDiff:
-                let vm = tabManager.textDiffViewModel(for: activeTab.id)
-                if vm.isLeftDirty { vm.saveLeftFile() }
-                if vm.isRightDirty { vm.saveRightFile() }
-            case .folderDiff:
-                break
-            case .threeWayMerge:
-                tabManager.threeWayMergeViewModel(for: activeTab.id).saveAndCompleteMerge()
+    }
+}
+
+// MARK: - Tab Creation Commands
+
+private struct TabCreationCommands: ViewModifier {
+    var tabManager: TabManager
+
+    func body(content: Content) -> some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: .mcNewTextCompare)) { _ in
+                tabManager.addTab(type: .textDiff)
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .mcNextDiff)) { _ in
-            guard let activeTab = tabManager.activeTab else { return }
-            switch activeTab.type {
-            case .textDiff:
-                tabManager.textDiffViewModel(for: activeTab.id).nextDiff()
-            case .threeWayMerge:
-                tabManager.threeWayMergeViewModel(for: activeTab.id).nextConflict()
-            case .folderDiff:
-                break
+            .onReceive(NotificationCenter.default.publisher(for: .mcNewFolderCompare)) { _ in
+                tabManager.addTab(type: .folderDiff)
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .mcPrevDiff)) { _ in
-            guard let activeTab = tabManager.activeTab else { return }
-            switch activeTab.type {
-            case .textDiff:
-                tabManager.textDiffViewModel(for: activeTab.id).previousDiff()
-            case .threeWayMerge:
-                tabManager.threeWayMergeViewModel(for: activeTab.id).previousConflict()
-            case .folderDiff:
-                break
+            .onReceive(NotificationCenter.default.publisher(for: .mcNewThreeWayMerge)) { _ in
+                tabManager.addTab(type: .threeWayMerge)
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .mcTakeLeft)) { _ in
-            guard let activeTab = tabManager.activeTab else { return }
-            if activeTab.type == .textDiff {
-                tabManager.textDiffViewModel(for: activeTab.id).takeLeft()
-            } else if activeTab.type == .threeWayMerge {
-                tabManager.threeWayMergeViewModel(for: activeTab.id).acceptLocal()
+            .onReceive(NotificationCenter.default.publisher(for: .mcCloseActiveTab)) { _ in
+                if let activeId = tabManager.selectedTabId {
+                    tabManager.closeTab(id: activeId)
+                }
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .mcTakeRight)) { _ in
-            guard let activeTab = tabManager.activeTab else { return }
-            if activeTab.type == .textDiff {
-                tabManager.textDiffViewModel(for: activeTab.id).takeRight()
-            } else if activeTab.type == .threeWayMerge {
-                tabManager.threeWayMergeViewModel(for: activeTab.id).acceptRemote()
+    }
+}
+
+// MARK: - Diff & Merge Action Commands
+
+private struct DiffActionCommands: ViewModifier {
+    var tabManager: TabManager
+
+    func body(content: Content) -> some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: .mcOpenFile)) { _ in
+                handleOpenFile()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .mcSaveActive)) { _ in
+                handleSaveActive()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .mcNextDiff)) { _ in
+                handleNextDiff()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .mcPrevDiff)) { _ in
+                handlePrevDiff()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .mcTakeLeft)) { _ in
+                handleTakeLeft()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .mcTakeRight)) { _ in
+                handleTakeRight()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .mcToggleIgnoreWhitespace)) { _ in
+                guard let activeTab = tabManager.activeTab, activeTab.type == .textDiff else { return }
+                tabManager.textDiffViewModel(for: activeTab.id).ignoreWhitespace.toggle()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .mcToggleIgnoreCase)) { _ in
+                guard let activeTab = tabManager.activeTab, activeTab.type == .textDiff else { return }
+                tabManager.textDiffViewModel(for: activeTab.id).ignoreCase.toggle()
+            }
+    }
+
+    private func handleOpenFile() {
+        guard let activeTab = tabManager.activeTab else { return }
+        switch activeTab.type {
+        case .textDiff:
+            tabManager.textDiffViewModel(for: activeTab.id).openLeftFile()
+        case .folderDiff:
+            tabManager.folderDiffViewModel(for: activeTab.id).chooseLeftFolder()
+        case .threeWayMerge:
+            tabManager.threeWayMergeViewModel(for: activeTab.id).openLocalFile()
         }
-        .onReceive(NotificationCenter.default.publisher(for: .mcToggleIgnoreWhitespace)) { _ in
-            guard let activeTab = tabManager.activeTab, activeTab.type == .textDiff else { return }
+    }
+
+    private func handleSaveActive() {
+        guard let activeTab = tabManager.activeTab else { return }
+        switch activeTab.type {
+        case .textDiff:
             let vm = tabManager.textDiffViewModel(for: activeTab.id)
-            vm.ignoreWhitespace.toggle()
+            if vm.isLeftDirty { vm.saveLeftFile() }
+            if vm.isRightDirty { vm.saveRightFile() }
+        case .folderDiff:
+            break
+        case .threeWayMerge:
+            tabManager.threeWayMergeViewModel(for: activeTab.id).saveAndCompleteMerge()
         }
-        .onReceive(NotificationCenter.default.publisher(for: .mcToggleIgnoreCase)) { _ in
-            guard let activeTab = tabManager.activeTab, activeTab.type == .textDiff else { return }
-            let vm = tabManager.textDiffViewModel(for: activeTab.id)
-            vm.ignoreCase.toggle()
+    }
+
+    private func handleNextDiff() {
+        guard let activeTab = tabManager.activeTab else { return }
+        switch activeTab.type {
+        case .textDiff:
+            tabManager.textDiffViewModel(for: activeTab.id).nextDiff()
+        case .threeWayMerge:
+            tabManager.threeWayMergeViewModel(for: activeTab.id).nextConflict()
+        case .folderDiff:
+            break
         }
-        .onReceive(NotificationCenter.default.publisher(for: .mcOpenSettings)) { _ in
-            isSettingsSheetPresented = true
+    }
+
+    private func handlePrevDiff() {
+        guard let activeTab = tabManager.activeTab else { return }
+        switch activeTab.type {
+        case .textDiff:
+            tabManager.textDiffViewModel(for: activeTab.id).previousDiff()
+        case .threeWayMerge:
+            tabManager.threeWayMergeViewModel(for: activeTab.id).previousConflict()
+        case .folderDiff:
+            break
         }
-        .onReceive(NotificationCenter.default.publisher(for: .mcOpenHelp)) { _ in
-            isHelpSheetPresented = true
+    }
+
+    private func handleTakeLeft() {
+        guard let activeTab = tabManager.activeTab else { return }
+        if activeTab.type == .textDiff {
+            tabManager.textDiffViewModel(for: activeTab.id).takeLeft()
+        } else if activeTab.type == .threeWayMerge {
+            tabManager.threeWayMergeViewModel(for: activeTab.id).acceptLocal()
         }
-        .sheet(isPresented: $isSettingsSheetPresented) {
-            SettingsView {
-                isSettingsSheetPresented = false
+    }
+
+    private func handleTakeRight() {
+        guard let activeTab = tabManager.activeTab else { return }
+        if activeTab.type == .textDiff {
+            tabManager.textDiffViewModel(for: activeTab.id).takeRight()
+        } else if activeTab.type == .threeWayMerge {
+            tabManager.threeWayMergeViewModel(for: activeTab.id).acceptRemote()
+        }
+    }
+}
+
+// MARK: - Window & Help/Update Commands
+
+private struct WindowAndSheetCommands: ViewModifier {
+    @Binding var isSettingsPresented: Bool
+    @Binding var isHelpPresented: Bool
+    var updateChecker: UpdateCheckerService
+
+    func body(content: Content) -> some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: .mcMoveTabToNewWindow)) { _ in
+                WindowManager.shared.moveActiveTabToNewWindow()
             }
-        }
-        .sheet(isPresented: $isHelpSheetPresented) {
-            HelpView {
-                isHelpSheetPresented = false
+            .onReceive(NotificationCenter.default.publisher(for: .mcMergeAllWindows)) { _ in
+                WindowManager.shared.mergeAllWindows()
             }
-        }
+            .onReceive(NotificationCenter.default.publisher(for: .mcOpenSettings)) { _ in
+                isSettingsPresented = true
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .mcOpenHelp)) { _ in
+                isHelpPresented = true
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .mcCheckForUpdates)) { _ in
+                updateChecker.checkForUpdates(isUserInitiated: true)
+            }
     }
 }
