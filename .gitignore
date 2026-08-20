@@ -36,4 +36,5 @@ macos/Sources/MacCompare/Generated/lib/
 *.bak
 .cache/
 dist/
+/slides_xml
 
