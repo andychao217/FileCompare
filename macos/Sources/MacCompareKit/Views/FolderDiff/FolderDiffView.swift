@@ -5,6 +5,7 @@ public struct FolderDiffView: View {
     @Bindable public var viewModel: FolderDiffViewModel
     @State private var isLeftDropTargeted: Bool = false
     @State private var isRightDropTargeted: Bool = false
+    @State private var showClearConfirmation: Bool = false
     @State private var languageManager = LanguageManager.shared
 
     public init(viewModel: FolderDiffViewModel) {
@@ -61,7 +62,7 @@ public struct FolderDiffView: View {
                     .buttonStyle(.plain)
 
                     Button {
-                        viewModel.clearFolders()
+                        showClearConfirmation = true
                     } label: {
                         Label(languageManager.text(.clearAll), systemImage: "trash")
                     }
@@ -233,7 +234,7 @@ public struct FolderDiffView: View {
             .disabled(!viewModel.hasFoldersLoaded)
 
             Button {
-                viewModel.clearFolders()
+                showClearConfirmation = true
             } label: {
                 Label(languageManager.text(.clearAll), systemImage: "trash")
                     .font(.system(size: 11))
@@ -242,6 +243,14 @@ public struct FolderDiffView: View {
             .controlSize(.small)
             .disabled(!viewModel.hasFoldersLoaded)
             .help(languageManager.text(.clearAll))
+            .alert(languageManager.text(.confirmClearTitle), isPresented: $showClearConfirmation) {
+                Button(languageManager.text(.clear), role: .destructive) {
+                    viewModel.clearFolders()
+                }
+                Button(languageManager.text(.cancel), role: .cancel) {}
+            } message: {
+                Text(languageManager.text(.confirmClearMessage))
+            }
 
             Button {
                 viewModel.syncLeftToRight()

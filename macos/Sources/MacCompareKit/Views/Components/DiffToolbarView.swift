@@ -3,6 +3,7 @@ import SwiftUI
 public struct DiffToolbarView: View {
     @Bindable public var viewModel: TextDiffViewModel
     @State private var languageManager = LanguageManager.shared
+    @State private var showClearConfirmation = false
 
     public init(viewModel: TextDiffViewModel) {
         self.viewModel = viewModel
@@ -85,7 +86,7 @@ public struct DiffToolbarView: View {
 
             // Clear All Button
             Button {
-                viewModel.clearAll()
+                showClearConfirmation = true
             } label: {
                 Label(languageManager.text(.clearAll), systemImage: "trash")
                     .font(.system(size: 11))
@@ -94,6 +95,14 @@ public struct DiffToolbarView: View {
             .controlSize(.small)
             .disabled(!viewModel.hasLeftFile && !viewModel.hasRightFile)
             .help(languageManager.text(.clearAll))
+            .alert(languageManager.text(.confirmClearTitle), isPresented: $showClearConfirmation) {
+                Button(languageManager.text(.clear), role: .destructive) {
+                    viewModel.clearAll()
+                }
+                Button(languageManager.text(.cancel), role: .cancel) {}
+            } message: {
+                Text(languageManager.text(.confirmClearMessage))
+            }
 
             Divider().frame(height: 16)
 

@@ -6,6 +6,7 @@ public struct ThreeWayMergeView: View {
     @State private var isLocalTargeted = false
     @State private var isBaseTargeted = false
     @State private var isRemoteTargeted = false
+    @State private var showClearConfirmation = false
     @State private var languageManager = LanguageManager.shared
 
     public init(viewModel: ThreeWayMergeViewModel) {
@@ -147,7 +148,7 @@ public struct ThreeWayMergeView: View {
             .disabled(!viewModel.hasFilesLoaded)
 
             Button {
-                viewModel.clearAll()
+                showClearConfirmation = true
             } label: {
                 Label(languageManager.text(.clearAll), systemImage: "trash")
                     .font(.system(size: 11))
@@ -156,6 +157,14 @@ public struct ThreeWayMergeView: View {
             .controlSize(.small)
             .disabled(!viewModel.hasFilesLoaded)
             .help(languageManager.text(.clearAll))
+            .alert(languageManager.text(.confirmClearTitle), isPresented: $showClearConfirmation) {
+                Button(languageManager.text(.clear), role: .destructive) {
+                    viewModel.clearAll()
+                }
+                Button(languageManager.text(.cancel), role: .cancel) {}
+            } message: {
+                Text(languageManager.text(.confirmClearMessage))
+            }
 
             Button {
                 viewModel.saveAndCompleteMerge()

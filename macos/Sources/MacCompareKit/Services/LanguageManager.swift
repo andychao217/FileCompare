@@ -36,6 +36,8 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case cancel
     case clear
     case clearAll
+    case confirmClearTitle
+    case confirmClearMessage
 
     // Menu Headers
     case fileMenu
@@ -431,6 +433,8 @@ public final class LanguageManager {
         .cancel: "Cancel",
         .clear: "Clear",
         .clearAll: "Clear All",
+        .confirmClearTitle: "Clear All Content?",
+        .confirmClearMessage: "This will unload all loaded files/folders and reset comparison state in this tab. Unsaved changes will be lost.",
         .fileMenu: "File",
         .editMenu: "Edit",
         .viewMenu: "View",
@@ -570,6 +574,8 @@ public final class LanguageManager {
         .cancel: "取消",
         .clear: "清空",
         .clearAll: "一键清空",
+        .confirmClearTitle: "确认清空全部内容？",
+        .confirmClearMessage: "此操作将卸载当前标签页中已加载的所有文件/文件夹并重置对比状态，未保存的修改将会丢失。",
         .fileMenu: "文件",
         .editMenu: "编辑",
         .viewMenu: "显示",
@@ -709,6 +715,8 @@ public final class LanguageManager {
         .cancel: "キャンセル",
         .clear: "クリア",
         .clearAll: "すべてクリア",
+        .confirmClearTitle: "すべての内容をクリアしますか？",
+        .confirmClearMessage: "このタブで読み込まれたすべてのファイル/フォルダをクリアし、比較状態をリセットします。未保存の変更は失われます。",
         .fileMenu: "ファイル",
         .editMenu: "編集",
         .viewMenu: "表示",
