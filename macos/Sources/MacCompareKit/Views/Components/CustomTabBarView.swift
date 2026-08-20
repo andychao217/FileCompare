@@ -141,19 +141,9 @@ public struct CustomTabBarView: View {
         .padding(.vertical, 4)
         .background(Color(nsColor: .windowBackgroundColor).opacity(0.6))
         .sheet(isPresented: $isSettingsPresented) {
-            VStack(spacing: 0) {
-                HStack {
-                    Spacer()
-                    Button(languageManager.text(.done)) {
-                        isSettingsPresented = false
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                    .padding(12)
-                }
-                SettingsView()
+            SettingsView {
+                isSettingsPresented = false
             }
-            .frame(width: 520, height: 420)
         }
     }
 }
