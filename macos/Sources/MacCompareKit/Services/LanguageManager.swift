@@ -10,13 +10,23 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
 
     public var id: String { rawValue }
 
-    public var displayName: String {
+    public func localizedName(for language: AppLanguage) -> String {
         switch self {
-        case .system: return "Auto (System) / 跟随系统 / システム設定"
-        case .zhHans: return "简体中文 (Chinese)"
+        case .system:
+            switch language {
+            case .zhHans: return "跟随系统 (Auto)"
+            case .ja: return "システム設定 (Auto)"
+            default: return "Auto (System)"
+            }
+        case .zhHans: return "简体中文"
         case .en: return "English"
-        case .ja: return "日本語 (Japanese)"
+        case .ja: return "日本語"
         }
+    }
+
+    @MainActor
+    public var displayName: String {
+        localizedName(for: LanguageManager.shared.effectiveLanguage)
     }
 }
 

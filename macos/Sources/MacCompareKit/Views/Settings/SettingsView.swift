@@ -64,7 +64,7 @@ public struct SettingsView: View {
             Section {
                 Picker(languageManager.text(.selectLanguage), selection: $languageManager.currentLanguage) {
                     ForEach(AppLanguage.allCases) { lang in
-                        Text(lang.displayName).tag(lang)
+                        Text(lang.localizedName(for: languageManager.effectiveLanguage)).tag(lang)
                     }
                 }
                 .pickerStyle(.menu)
