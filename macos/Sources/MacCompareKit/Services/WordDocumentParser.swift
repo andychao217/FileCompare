@@ -618,33 +618,40 @@ public final class WordDocumentParser: Sendable {
     }
 
     private func parseDocxSequentialBlocks(bundle: DocxXMLBundle, attrStrParagraphs: [WordParagraph]) -> (paragraphs: [WordParagraph], tables: [WordTable]) {
-        guard let bodyRange = bundle.documentXML.range(of: "<w:body>") else {
+        guard let xmlDoc = try? XMLDocument(xmlString: bundle.documentXML, options: []) else {
             return ([], [])
         }
 
-        let bodyXML = String(bundle.documentXML[bodyRange.upperBound...])
-        let blockPattern = "(?s)(<w:tbl(?: [^>]*)?>.*?</w:tbl>|<w:p(?: [^>]*)?>.*?</w:p>)"
-        guard let regex = try? NSRegularExpression(pattern: blockPattern) else {
+        guard let bodyElement = try? xmlDoc.nodes(forXPath: "//*[local-name()='body']").first as? XMLElement else {
             return ([], [])
         }
 
-        let matches = regex.matches(in: bodyXML, range: NSRange(bodyXML.startIndex..., in: bodyXML))
         var orderedParagraphs: [WordParagraph] = []
         var extractedTables: [WordTable] = []
         var pIndex = 1
         var tblIndex = 1
 
-        let extentRegex = try? NSRegularExpression(pattern: "<wp:extent[^>]*cx=\"([0-9]+)\"[^>]*cy=\"([0-9]+)\"")
-        let blipRegex = try? NSRegularExpression(pattern: "<a:blip[^>]*r:embed=\"([^\"]+)\"")
-        let vmlRegex = try? NSRegularExpression(pattern: "<v:imagedata[^>]*r:id=\"([^\"]+)\"")
-        let shapeRegex = try? NSRegularExpression(pattern: "(?s)<(?:wps:wsp|v:rect|v:shape)(?: [^>]*)?>.*?</(?:wps:wsp|v:rect|v:shape)>")
+        for childNode in bodyElement.children ?? [] {
+            guard let elem = childNode as? XMLElement else { continue }
+            let localName = elem.localName ?? elem.name ?? ""
 
-        for match in matches {
-            guard let blockRange = Range(match.range, in: bodyXML) else { continue }
-            let blockContent = String(bodyXML[blockRange])
+            if localName == "tbl" {
+                // Table
+                var rows: [WordTableRow] = []
+                let trNodes = (try? elem.nodes(forXPath: "./*[local-name()='tr']")) ?? []
+                for (rIdx, trNode) in trNodes.enumerated() {
+                    var cells: [WordTableCell] = []
+                    let tcNodes = (try? trNode.nodes(forXPath: "./*[local-name()='tc']")) ?? []
+                    for (cIdx, tcNode) in tcNodes.enumerated() {
+                        let tNodes = (try? tcNode.nodes(forXPath: ".//*[local-name()='t']")) ?? []
+                        let cellText = tNodes.compactMap { $0.stringValue }.joined()
+                        cells.append(WordTableCell(rowIndex: rIdx, columnIndex: cIdx, text: cellText))
+                    }
+                    rows.append(WordTableRow(rowIndex: rIdx, cells: cells, isHeader: rIdx == 0))
+                }
 
-            if blockContent.hasPrefix("<w:tbl") {
-                if let tbl = parseSingleDocxTable(blockContent, tableIndex: tblIndex) {
+                if !rows.isEmpty {
+                    let tbl = WordTable(tableIndex: tblIndex, rows: rows)
                     extractedTables.append(tbl)
                     let summary = "表格 (\(tbl.rows.count)行 × \(tbl.columnCount)列)"
                     let tablePara = WordParagraph(
@@ -657,41 +664,78 @@ public final class WordDocumentParser: Sendable {
                     pIndex += 1
                     tblIndex += 1
                 }
-            } else if blockContent.hasPrefix("<w:p") {
+            } else if localName == "p" {
+                // Paragraph
+                var runs: [WordTextRun] = []
                 var mediaItems: [WordMediaItem] = []
-                let text = extractTextFromXML(blockContent)
 
+                // 1. Text Runs
+                let rNodes = (try? elem.nodes(forXPath: "./*[local-name()='r']")) ?? []
+                var fullText = ""
+                for rNode in rNodes {
+                    guard let rElem = rNode as? XMLElement else { continue }
+                    let tNodes = (try? rElem.nodes(forXPath: ".//*[local-name()='t']")) ?? []
+                    let rText = tNodes.compactMap { $0.stringValue }.joined()
+                    if rText.isEmpty { continue }
+
+                    let isBold = (try? rElem.nodes(forXPath: ".//*[local-name()='b']").first) != nil
+                    let isItalic = (try? rElem.nodes(forXPath: ".//*[local-name()='i']").first) != nil
+                    let isUnderline = (try? rElem.nodes(forXPath: ".//*[local-name()='u']").first) != nil
+                    let isStrike = (try? rElem.nodes(forXPath: ".//*[local-name()='strike']").first) != nil
+
+                    var colorHex: String? = nil
+                    if let colorElem = try? rElem.nodes(forXPath: ".//*[local-name()='color']/@*[local-name()='val']").first {
+                        if let val = colorElem.stringValue {
+                            colorHex = "#" + val
+                        }
+                    }
+
+                    var szPt: CGFloat? = nil
+                    if let szElem = try? rElem.nodes(forXPath: ".//*[local-name()='sz']/@*[local-name()='val']").first,
+                       let val = szElem.stringValue,
+                       let halfPts = Double(val) {
+                        szPt = CGFloat(halfPts / 2.0)
+                    }
+
+                    runs.append(WordTextRun(
+                        text: rText,
+                        isBold: isBold,
+                        isItalic: isItalic,
+                        isUnderline: isUnderline,
+                        isStrikethrough: isStrike,
+                        fontSize: szPt,
+                        fontColorHex: colorHex
+                    ))
+                    fullText += rText
+                }
+
+                // If runs are empty, fallback to all w:t inside paragraph
+                if fullText.isEmpty {
+                    let tNodes = (try? elem.nodes(forXPath: ".//*[local-name()='t']")) ?? []
+                    fullText = tNodes.compactMap { $0.stringValue }.joined()
+                    if !fullText.isEmpty {
+                        runs = [WordTextRun(text: fullText)]
+                    }
+                }
+
+                // Extents
                 var widthPt: CGFloat? = nil
                 var heightPt: CGFloat? = nil
-                if let extentMatch = extentRegex?.firstMatch(in: blockContent, range: NSRange(blockContent.startIndex..., in: blockContent)) {
-                    if let cxRange = Range(extentMatch.range(at: 1), in: blockContent),
-                       let cyRange = Range(extentMatch.range(at: 2), in: blockContent),
-                       let cx = Double(blockContent[cxRange]),
-                       let cy = Double(blockContent[cyRange]) {
-                        widthPt = CGFloat(cx / 12700.0)
-                        heightPt = CGFloat(cy / 12700.0)
-                    }
+                if let cxElem = try? elem.nodes(forXPath: ".//*[local-name()='extent']/@*[local-name()='cx']").first,
+                   let cyElem = try? elem.nodes(forXPath: ".//*[local-name()='extent']/@*[local-name()='cy']").first,
+                   let cxVal = cxElem.stringValue,
+                   let cyVal = cyElem.stringValue,
+                   let cx = Double(cxVal),
+                   let cy = Double(cyVal) {
+                    widthPt = CGFloat(cx / 12700.0)
+                    heightPt = CGFloat(cy / 12700.0)
                 }
 
-                // Bitmaps
-                var rIds: [String] = []
-                if let blipMatches = blipRegex?.matches(in: blockContent, range: NSRange(blockContent.startIndex..., in: blockContent)) {
-                    for bm in blipMatches {
-                        if let rRange = Range(bm.range(at: 1), in: blockContent) {
-                            rIds.append(String(blockContent[rRange]))
-                        }
-                    }
-                }
-                if let vmlMatches = vmlRegex?.matches(in: blockContent, range: NSRange(blockContent.startIndex..., in: blockContent)) {
-                    for vm in vmlMatches {
-                        if let rRange = Range(vm.range(at: 1), in: blockContent) {
-                            rIds.append(String(blockContent[rRange]))
-                        }
-                    }
-                }
-
-                for rId in rIds {
-                    guard let targetPath = bundle.relationships[rId] else { continue }
+                // 2. Images (a:blip)
+                let blipEmbeds = (try? elem.nodes(forXPath: ".//*[local-name()='blip']/@*[local-name()='embed']")) ?? []
+                for bElem in blipEmbeds {
+                    guard let rId = bElem.stringValue,
+                          let targetPath = bundle.relationships[rId] else { continue }
                     let cleanTarget = targetPath.replacingOccurrences(of: "../", with: "")
                     guard let data = bundle.mediaDataMap[cleanTarget] else { continue }
 
@@ -700,7 +744,7 @@ public final class WordDocumentParser: Sendable {
                     let hash = computeSHA256Hex(data: data)
                     let mediaType = determineMediaType(forExtension: fileExt)
 
-                    let mediaItem = WordMediaItem(
+                    mediaItems.append(WordMediaItem(
                         mediaType: mediaType,
                         fileName: fileName,
                         fileExtension: fileExt,
@@ -711,74 +755,55 @@ public final class WordDocumentParser: Sendable {
                         heightPoints: heightPt,
                         relationshipId: rId,
                         paragraphIndex: pIndex
-                    )
-                    mediaItems.append(mediaItem)
+                    ))
                 }
 
-                // Shapes
-                if let shapeMatches = shapeRegex?.matches(in: blockContent, range: NSRange(blockContent.startIndex..., in: blockContent)) {
-                    for sm in shapeMatches {
-                        guard let sRange = Range(sm.range, in: blockContent) else { continue }
-                        let shapeContent = String(blockContent[sRange])
-
-                        var shapeType = "rect"
-                        if let geomMatch = try? NSRegularExpression(pattern: "prst=\"([a-zA-Z0-9]+)\"").firstMatch(in: shapeContent, range: NSRange(shapeContent.startIndex..., in: shapeContent)),
-                           let gRange = Range(geomMatch.range(at: 1), in: shapeContent) {
-                            shapeType = String(shapeContent[gRange])
-                        }
-
-                        var fillColor = "#5B9BD5"
-                        if let srgbMatch = try? NSRegularExpression(pattern: "(?:srgbClr val|fillcolor)=\"?#?([0-9A-Fa-f]{6})").firstMatch(in: shapeContent, range: NSRange(shapeContent.startIndex..., in: shapeContent)),
-                           let cRange = Range(srgbMatch.range(at: 1), in: shapeContent) {
-                            fillColor = "#" + String(shapeContent[cRange])
-                        } else if shapeContent.contains("schemeClr val=\"accent1\"") {
-                            fillColor = "#5B9BD5"
-                        } else if shapeContent.contains("schemeClr val=\"accent2\"") {
-                            fillColor = "#ED7D31"
-                        } else if shapeContent.contains("schemeClr val=\"accent3\"") {
-                            fillColor = "#A5A5A5"
-                        } else if shapeContent.contains("schemeClr val=\"accent4\"") {
-                            fillColor = "#FFC000"
-                        } else if shapeContent.contains("schemeClr val=\"accent5\"") {
-                            fillColor = "#4472C4"
-                        } else if shapeContent.contains("schemeClr val=\"accent6\"") {
-                            fillColor = "#70AD47"
-                        }
-
-                        var strokeColor: String? = nil
-                        if let strokeMatch = try? NSRegularExpression(pattern: "(?:color|stroke color)=\"?#?([0-9A-Fa-f]{6})").firstMatch(in: shapeContent, range: NSRange(shapeContent.startIndex..., in: shapeContent)),
-                           let stRange = Range(strokeMatch.range(at: 1), in: shapeContent) {
-                            strokeColor = "#" + String(shapeContent[stRange])
-                        }
-
-                        let shapeHash = computeSHA256Hex(data: "\(shapeType)-\(fillColor)-\(widthPt ?? 60)-\(heightPt ?? 24)".data(using: .utf8)!)
-                        let shapeMedia = WordMediaItem(
-                            mediaType: .shape,
-                            fileName: "shape_\(shapeType).vector",
-                            fileExtension: "shape",
-                            fileSize: 1024,
-                            hashSHA256: shapeHash,
-                            widthPoints: widthPt ?? 60,
-                            heightPoints: heightPt ?? 24,
-                            paragraphIndex: pIndex,
-                            shapeType: shapeType,
-                            fillColorHex: fillColor,
-                            strokeColorHex: strokeColor
-                        )
-                        mediaItems.append(shapeMedia)
+                // 3. Modern Vector Shapes (wps:wsp in Choice or direct wsp)
+                let shapeNodes = (try? elem.nodes(forXPath: ".//*[local-name()='Choice']//*[local-name()='wsp']")) ?? []
+                let finalShapeNodes = shapeNodes.isEmpty ? ((try? elem.nodes(forXPath: ".//*[local-name()='wsp']")) ?? []) : shapeNodes
+                for sNode in finalShapeNodes {
+                    guard let sElem = sNode as? XMLElement else { continue }
+                    var shapeType = "rect"
+                    if let geomElem = try? sElem.nodes(forXPath: ".//*[local-name()='prstGeom']/@*[local-name()='prst']").first,
+                       let val = geomElem.stringValue {
+                        shapeType = val
                     }
+
+                    var fillColor = "#5B9BD5"
+                    if let srgbElem = try? sElem.nodes(forXPath: ".//*[local-name()='srgbClr']/@*[local-name()='val']").first,
+                       let val = srgbElem.stringValue {
+                        fillColor = "#" + val
+                    }
+
+                    var strokeColor: String? = nil
+                    if let strokeElem = try? sElem.nodes(forXPath: ".//*[local-name()='ln']//*[local-name()='srgbClr']/@*[local-name()='val']").first,
+                       let val = strokeElem.stringValue {
+                        strokeColor = "#" + val
+                    }
+
+                    let shapeHash = computeSHA256Hex(data: "\(shapeType)-\(fillColor)-\(widthPt ?? 60)-\(heightPt ?? 24)".data(using: .utf8)!)
+                    mediaItems.append(WordMediaItem(
+                        mediaType: .shape,
+                        fileName: "shape_\(shapeType).vector",
+                        fileExtension: "shape",
+                        fileSize: 1024,
+                        hashSHA256: shapeHash,
+                        widthPoints: widthPt ?? 60,
+                        heightPoints: heightPt ?? 24,
+                        paragraphIndex: pIndex,
+                        shapeType: shapeType,
+                        fillColorHex: fillColor,
+                        strokeColorHex: strokeColor
+                    ))
                 }
 
-                if !text.isEmpty || !mediaItems.isEmpty {
-                    // Try to extract rich text runs from block
-                    let runs = parseDocxParagraphRunsFromXML(blockContent)
-                    let para = WordParagraph(
+                if !fullText.isEmpty || !mediaItems.isEmpty {
+                    orderedParagraphs.append(WordParagraph(
                         index: pIndex,
-                        text: text,
-                        runs: runs.isEmpty ? [WordTextRun(text: text)] : runs,
+                        text: fullText,
+                        runs: runs,
                         mediaItems: mediaItems
-                    )
-                    orderedParagraphs.append(para)
+                    ))
                     pIndex += 1
                 }
             }
