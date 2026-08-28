@@ -157,4 +157,33 @@ final class WordDiffTests: XCTestCase {
         XCTAssertTrue(htmlReport.contains("First paragraph"))
         XCTAssertTrue(htmlReport.contains("First modified paragraph"))
     }
+
+    func testRealAssetsDocxDiff() async throws {
+        let u1 = URL(fileURLWithPath: "/Users/andychao217/Works/FileCompare/macos/Assets/工作日报.docx")
+        let u2 = URL(fileURLWithPath: "/Users/andychao217/Works/FileCompare/macos/Assets/工作日报1.docx")
+
+        guard FileManager.default.fileExists(atPath: u1.path),
+              FileManager.default.fileExists(atPath: u2.path) else {
+            return
+        }
+
+        let d1 = try await WordDocumentParser.shared.parseDocument(from: u1)
+        let d2 = try await WordDocumentParser.shared.parseDocument(from: u2)
+
+        print("\n==== D1 Paragraphs count: \(d1.paragraphs.count) ====")
+        for (i, p) in d1.paragraphs.enumerated() {
+            print("[\(i+1)] \(p.text)")
+        }
+
+        print("\n==== D2 Paragraphs count: \(d2.paragraphs.count) ====")
+        for (i, p) in d2.paragraphs.enumerated() {
+            print("[\(i+1)] \(p.text)")
+        }
+
+        let diff = await WordDiffEngine.shared.compareDocuments(left: d1, right: d2)
+        print("\n==== Diff Result (\(diff.blocks.count) blocks) ====")
+        for b in diff.blocks {
+            print("[\(b.changeType.rawValue)] L: '\(b.leftParagraph?.text ?? "")' | R: '\(b.rightParagraph?.text ?? "")'")
+        }
+    }
 }

@@ -20,7 +20,11 @@ public struct WordDiffView: View {
             // Main Content Area (Sidebar + Canvas)
             HStack(spacing: 0) {
                 if showOutlineSidebar && viewModel.viewMode == .structuredContent {
-                    WordOutlineSidebarView(viewModel: viewModel)
+                    WordOutlineSidebarView(viewModel: viewModel) {
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            showOutlineSidebar = false
+                        }
+                    }
                     Divider()
                 }
 
@@ -84,37 +88,43 @@ public struct WordDiffView: View {
 
             Divider().frame(height: 12)
 
-            // Diff Statistics Badges
-            HStack(spacing: 12) {
-                HStack(spacing: 4) {
-                    Circle().fill(Color.green).frame(width: 6, height: 6)
-                    Text("+\(viewModel.diffResult.totalAdditions) \(LanguageManager.shared.text(.added))")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.secondary)
-                }
-
-                HStack(spacing: 4) {
-                    Circle().fill(Color.red).frame(width: 6, height: 6)
-                    Text("-\(viewModel.diffResult.totalDeletions) \(LanguageManager.shared.text(.deleted))")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.secondary)
-                }
-
-                HStack(spacing: 4) {
-                    Circle().fill(Color.orange).frame(width: 6, height: 6)
-                    Text("~\(viewModel.diffResult.totalModifications) \(LanguageManager.shared.text(.modified))")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.secondary)
-                }
-
-                if viewModel.diffResult.totalFormatChanges > 0 {
+            // Diff Statistics Badges (Only shown when comparing two documents)
+            if viewModel.leftDocument != nil && viewModel.rightDocument != nil {
+                HStack(spacing: 12) {
                     HStack(spacing: 4) {
-                        Circle().fill(Color.purple).frame(width: 6, height: 6)
-                        Text("*\(viewModel.diffResult.totalFormatChanges) \(LanguageManager.shared.text(.formatChanged))")
+                        Circle().fill(Color.green).frame(width: 6, height: 6)
+                        Text("+\(viewModel.diffResult.totalAdditions) \(LanguageManager.shared.text(.added))")
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.purple)
+                            .foregroundColor(.secondary)
+                    }
+
+                    HStack(spacing: 4) {
+                        Circle().fill(Color.red).frame(width: 6, height: 6)
+                        Text("-\(viewModel.diffResult.totalDeletions) \(LanguageManager.shared.text(.deleted))")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+
+                    HStack(spacing: 4) {
+                        Circle().fill(Color.orange).frame(width: 6, height: 6)
+                        Text("~\(viewModel.diffResult.totalModifications) \(LanguageManager.shared.text(.modified))")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+
+                    if viewModel.diffResult.totalFormatChanges > 0 {
+                        HStack(spacing: 4) {
+                            Circle().fill(Color.purple).frame(width: 6, height: 6)
+                            Text("*\(viewModel.diffResult.totalFormatChanges) \(LanguageManager.shared.text(.formatChanged))")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(.purple)
+                        }
                     }
                 }
+            } else if let doc = viewModel.leftDocument ?? viewModel.rightDocument {
+                Text("\(doc.fileName) (\(doc.metadata.fileSizeFormatted) • \(doc.metadata.wordCount) words)")
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
             }
 
             Spacer()

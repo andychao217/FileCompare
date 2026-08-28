@@ -11,8 +11,8 @@ public struct WordDiffToolbarView: View {
     }
 
     public var body: some View {
-        HStack(spacing: 12) {
-            // View Mode Picker
+        HStack(spacing: 10) {
+            // View Mode Picker (Adaptive & Compact)
             Picker("", selection: $viewModel.viewMode) {
                 ForEach(WordViewMode.allCases) { mode in
                     Label(modeLocalizedTitle(mode), systemImage: mode.iconName)
@@ -20,54 +20,59 @@ public struct WordDiffToolbarView: View {
                 }
             }
             .pickerStyle(.segmented)
-            .frame(width: 380)
+            .fixedSize(horizontal: true, vertical: false)
 
-            Divider().frame(height: 18)
+            Divider().frame(height: 16)
 
-            // Difference Navigation
-            HStack(spacing: 4) {
-                Button {
-                    viewModel.prevDiff()
-                } label: {
-                    Image(systemName: "chevron.up")
-                        .font(.system(size: 11, weight: .semibold))
+            // Difference Navigation (Only active when both sides are loaded)
+            if viewModel.leftDocument != nil && viewModel.rightDocument != nil {
+                HStack(spacing: 4) {
+                    Button {
+                        viewModel.prevDiff()
+                    } label: {
+                        Image(systemName: "chevron.up")
+                            .font(.system(size: 11, weight: .semibold))
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .disabled(viewModel.activeDifferencesBlocks.isEmpty)
+                    .help(LanguageManager.shared.text(.prevDiff))
+
+                    Button {
+                        viewModel.nextDiff()
+                    } label: {
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 11, weight: .semibold))
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .disabled(viewModel.activeDifferencesBlocks.isEmpty)
+                    .help(LanguageManager.shared.text(.nextDiff))
+
+                    Text(diffCountText)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 4)
+                        .fixedSize()
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .disabled(viewModel.activeDifferencesBlocks.isEmpty)
-                .help(LanguageManager.shared.text(.prevDiff))
 
-                Button {
-                    viewModel.nextDiff()
+                Divider().frame(height: 16)
+
+                // Filter & Ignore Options
+                Menu {
+                    Toggle(LanguageManager.shared.text(.ignoreWhitespace), isOn: $viewModel.ignoreWhitespace)
+                    Toggle(LanguageManager.shared.text(.ignoreFormatting), isOn: $viewModel.ignoreFormatting)
                 } label: {
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 11, weight: .semibold))
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 11))
+                    Text(LanguageManager.shared.text(.diffOptions))
+                        .font(.system(size: 11))
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .disabled(viewModel.activeDifferencesBlocks.isEmpty)
-                .help(LanguageManager.shared.text(.nextDiff))
+                .menuStyle(.borderlessButton)
+                .fixedSize()
 
-                Text(diffCountText)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal, 4)
+                Divider().frame(height: 16)
             }
-
-            Divider().frame(height: 18)
-
-            // Filter & Ignore Options
-            Menu {
-                Toggle(LanguageManager.shared.text(.ignoreWhitespace), isOn: $viewModel.ignoreWhitespace)
-                Toggle(LanguageManager.shared.text(.ignoreFormatting), isOn: $viewModel.ignoreFormatting)
-            } label: {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 11))
-                Text(LanguageManager.shared.text(.diffOptions))
-                    .font(.system(size: 11))
-            }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
 
             // Search / Filter Text Box
             HStack(spacing: 4) {
@@ -95,7 +100,7 @@ public struct WordDiffToolbarView: View {
                     .fill(Color(nsColor: .textBackgroundColor).opacity(0.6))
                     .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.secondary.opacity(0.2), lineWidth: 0.5))
             )
-            .frame(width: 140)
+            .frame(minWidth: 100, maxWidth: 160)
 
             Spacer()
 
@@ -109,6 +114,7 @@ public struct WordDiffToolbarView: View {
             .buttonStyle(.bordered)
             .controlSize(.small)
             .disabled(!viewModel.hasDocumentsLoaded)
+            .fixedSize()
 
             // Clear Button
             Button {

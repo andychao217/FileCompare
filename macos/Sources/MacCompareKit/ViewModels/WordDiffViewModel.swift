@@ -136,17 +136,19 @@ public final class WordDiffViewModel {
     private func performDiff() async {
         guard let left = leftDocument, let right = rightDocument else {
             if let left = leftDocument {
-                // Left only presentation
+                // Left only preview mode (no diff errors or deletion badges)
                 let blocks = left.paragraphs.enumerated().map { index, p in
-                    WordDiffBlock(blockIndex: index, leftParagraph: p, rightParagraph: nil, changeType: .deleted)
+                    WordDiffBlock(blockIndex: index, leftParagraph: p, rightParagraph: nil, changeType: .unchanged)
                 }
-                diffResult = WordDiffResult(blocks: blocks, totalDeletions: blocks.count)
+                diffResult = WordDiffResult(blocks: blocks)
             } else if let right = rightDocument {
-                // Right only presentation
+                // Right only preview mode (no diff errors or addition badges)
                 let blocks = right.paragraphs.enumerated().map { index, p in
-                    WordDiffBlock(blockIndex: index, leftParagraph: nil, rightParagraph: p, changeType: .added)
+                    WordDiffBlock(blockIndex: index, leftParagraph: nil, rightParagraph: p, changeType: .unchanged)
                 }
-                diffResult = WordDiffResult(blocks: blocks, totalAdditions: blocks.count)
+                diffResult = WordDiffResult(blocks: blocks)
+            } else {
+                diffResult = WordDiffResult()
             }
             return
         }

@@ -491,7 +491,7 @@ public final class WordDiffEngine: Sendable {
                 }
             }
 
-            // Pair deletes and inserts based on maximum similarity (threshold >= 0.25)
+            // Pair deletes and inserts based on maximum LCS similarity (threshold >= 0.55)
             var remainingDels = dels
             var remainingInss = inss
             var matchedPairs: [(d: Int, i: Int)] = []
@@ -500,7 +500,7 @@ public final class WordDiffEngine: Sendable {
             for _ in 0..<pairCount {
                 var bestDIdx: Int? = nil
                 var bestIIdx: Int? = nil
-                var bestScore = 0.25
+                var bestScore = 0.55
 
                 for (di, d) in remainingDels.enumerated() {
                     for (ii, ins) in remainingInss.enumerated() {
@@ -542,14 +542,34 @@ public final class WordDiffEngine: Sendable {
     }
 
     private func computeSimilarity(_ s1: String, _ s2: String) -> Double {
-        if s1 == s2 { return 1.0 }
-        let c1 = Set(s1.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty })
-        let c2 = Set(s2.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty })
-        if c1.isEmpty && c2.isEmpty { return 1.0 }
-        if c1.isEmpty || c2.isEmpty { return 0.0 }
-        let intersection = c1.intersection(c2).count
-        let union = c1.union(c2).count
-        return Double(intersection) / Double(union)
+        let t1 = s1.trimmingCharacters(in: .whitespacesAndNewlines)
+        let t2 = s2.trimmingCharacters(in: .whitespacesAndNewlines)
+        if t1 == t2 { return 1.0 }
+        if t1.isEmpty && t2.isEmpty { return 1.0 }
+        if t1.isEmpty || t2.isEmpty { return 0.0 }
+
+        let c1 = Array(t1)
+        let c2 = Array(t2)
+        let n = c1.count
+        let m = c2.count
+
+        // Dynamic programming for exact LCS length
+        var prev = [Int](repeating: 0, count: m + 1)
+        var curr = [Int](repeating: 0, count: m + 1)
+
+        for i in 1...n {
+            for j in 1...m {
+                if c1[i - 1] == c2[j - 1] {
+                    curr[j] = prev[j - 1] + 1
+                } else {
+                    curr[j] = max(prev[j], curr[j - 1])
+                }
+            }
+            prev = curr
+        }
+
+        let lcsLen = Double(curr[m])
+        return (2.0 * lcsLen) / Double(n + m)
     }
 
     private func sanitizeText(_ text: String, ignoreWhitespace: Bool) -> String {

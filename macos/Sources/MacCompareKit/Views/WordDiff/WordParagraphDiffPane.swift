@@ -30,55 +30,147 @@ public struct WordParagraphDiffPane: View {
 
             Divider()
 
-            // Main Diff Canvas with Synchronized Scroll
-            if viewModel.diffResult.blocks.isEmpty && !viewModel.isLoading {
-                emptyCanvasPlaceholder
-            } else {
-                ScrollViewReader { proxy in
-                    ScrollView([.vertical]) {
-                        LazyVStack(spacing: 0) {
-                            ForEach(viewModel.filteredBlocks) { block in
-                                let isSelected = viewModel.selectedBlockIndex == block.blockIndex
+            // Main Diff Canvas Area
+            mainContentCanvas
+        }
+    }
 
-                                HStack(spacing: 0) {
-                                    // Left Pane
-                                    paragraphCell(
-                                        paragraph: block.leftParagraph,
-                                        changeType: block.changeType,
-                                        tokens: block.tokensLeft,
-                                        isLeft: true,
-                                        isSelected: isSelected
-                                    )
+    // MARK: - Main Canvas Switching
 
-                                    // Center Gutter / Marker
-                                    centerGutter(for: block)
+    @ViewBuilder
+    private var mainContentCanvas: some View {
+        if viewModel.leftDocument == nil && viewModel.rightDocument == nil {
+            // Both empty: Dual-pane empty drop zones with a distinct vertical divider
+            HStack(spacing: 0) {
+                emptyDropZone(isLeft: true)
+                Divider()
+                emptyDropZone(isLeft: false)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if viewModel.leftDocument != nil && viewModel.rightDocument == nil {
+            // Left loaded, Right empty
+            HStack(spacing: 0) {
+                singleSideDocumentList(isLeft: true)
+                Divider()
+                emptyDropZone(isLeft: false)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if viewModel.leftDocument == nil && viewModel.rightDocument != nil {
+            // Left empty, Right loaded
+            HStack(spacing: 0) {
+                emptyDropZone(isLeft: true)
+                Divider()
+                singleSideDocumentList(isLeft: false)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            // Both loaded: Synchronized Diff Canvas
+            diffSynchronizedCanvas
+        }
+    }
 
-                                    // Right Pane
-                                    paragraphCell(
-                                        paragraph: block.rightParagraph,
-                                        changeType: block.changeType,
-                                        tokens: block.tokensRight,
-                                        isLeft: false,
-                                        isSelected: isSelected,
-                                        formatDifferences: block.formatDifferences
-                                    )
-                                }
-                                .id(block.blockIndex)
-                                .background(rowBackground(for: block.changeType, isSelected: isSelected))
-                                Divider()
-                            }
+    // MARK: - Synchronized Diff Canvas
+
+    private var diffSynchronizedCanvas: some View {
+        ScrollViewReader { proxy in
+            ScrollView([.vertical]) {
+                LazyVStack(spacing: 0) {
+                    ForEach(viewModel.filteredBlocks) { block in
+                        let isSelected = viewModel.selectedBlockIndex == block.blockIndex
+
+                        HStack(spacing: 0) {
+                            // Left Pane
+                            paragraphCell(
+                                paragraph: block.leftParagraph,
+                                changeType: block.changeType,
+                                tokens: block.tokensLeft,
+                                isLeft: true,
+                                isSelected: isSelected
+                            )
+
+                            // Center Gutter / Marker
+                            centerGutter(for: block)
+
+                            // Right Pane
+                            paragraphCell(
+                                paragraph: block.rightParagraph,
+                                changeType: block.changeType,
+                                tokens: block.tokensRight,
+                                isLeft: false,
+                                isSelected: isSelected,
+                                formatDifferences: block.formatDifferences
+                            )
                         }
+                        .id(block.blockIndex)
+                        .background(rowBackground(for: block.changeType, isSelected: isSelected))
+                        Divider()
                     }
-                    .onChange(of: viewModel.selectedBlockIndex) { _, newIndex in
-                        if let idx = newIndex {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                proxy.scrollTo(idx, anchor: .center)
-                            }
-                        }
+                }
+            }
+            .onChange(of: viewModel.selectedBlockIndex) { _, newIndex in
+                if let idx = newIndex {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        proxy.scrollTo(idx, anchor: .center)
                     }
                 }
             }
         }
+    }
+
+    // MARK: - Single-Side Document List Preview
+
+    private func singleSideDocumentList(isLeft: Bool) -> some View {
+        let paragraphs = isLeft ? (viewModel.leftDocument?.paragraphs ?? []) : (viewModel.rightDocument?.paragraphs ?? [])
+
+        return ScrollView([.vertical]) {
+            LazyVStack(spacing: 0) {
+                ForEach(paragraphs) { p in
+                    HStack(alignment: .top, spacing: 8) {
+                        Text("\(p.index)")
+                            .font(.system(size: 10, weight: .regular, design: .monospaced))
+                            .foregroundColor(.secondary.opacity(0.7))
+                            .frame(width: 28, alignment: .trailing)
+
+                        renderedRunsText(runs: p.runs, baseText: p.text, headingLevel: p.headingLevel)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    Divider()
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - Empty Drop Zone
+
+    private func emptyDropZone(isLeft: Bool) -> some View {
+        VStack(spacing: 14) {
+            Spacer()
+            Image(systemName: isLeft ? "doc.badge.arrow.up" : "doc.badge.plus")
+                .font(.system(size: 40))
+                .foregroundColor(.secondary.opacity(0.5))
+
+            Text(isLeft ? LanguageManager.shared.text(.noSourceFolder) : LanguageManager.shared.text(.noTargetFolder))
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.primary)
+
+            Text(LanguageManager.shared.text(.dropWordPrompt))
+                .font(.system(size: 11))
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
+
+            Button(isLeft ? LanguageManager.shared.text(.chooseSourceFile) : LanguageManager.shared.text(.chooseTargetFile)) {
+                chooseFile(isLeft: isLeft)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(nsColor: .windowBackgroundColor).opacity(0.3))
     }
 
     // MARK: - File Header
@@ -330,21 +422,6 @@ public struct WordParagraphDiffPane: View {
         case .modified: return Color.orange.opacity(0.08)
         case .unchanged: return Color.clear
         }
-    }
-
-    private var emptyCanvasPlaceholder: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "doc.badge.plus")
-                .font(.system(size: 36))
-                .foregroundColor(.secondary.opacity(0.6))
-            Text(LanguageManager.shared.text(.noFileSelected))
-                .font(.headline)
-                .foregroundColor(.secondary)
-            Text(LanguageManager.shared.text(.dropWordPrompt))
-                .font(.caption)
-                .foregroundColor(.secondary.opacity(0.8))
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func colorFromHex(_ hex: String?) -> Color? {

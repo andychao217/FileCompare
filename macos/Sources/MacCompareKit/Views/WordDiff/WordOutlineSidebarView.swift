@@ -2,9 +2,11 @@ import SwiftUI
 
 public struct WordOutlineSidebarView: View {
     @Bindable public var viewModel: WordDiffViewModel
+    public var onDismiss: (() -> Void)? = nil
 
-    public init(viewModel: WordDiffViewModel) {
+    public init(viewModel: WordDiffViewModel, onDismiss: (() -> Void)? = nil) {
         self.viewModel = viewModel
+        self.onDismiss = onDismiss
     }
 
     public var body: some View {
@@ -12,7 +14,8 @@ public struct WordOutlineSidebarView: View {
             // Header
             HStack {
                 Image(systemName: "list.bullet.indent")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.accentColor)
+                    .font(.system(size: 12))
                 Text(LanguageManager.shared.text(.documentOutline))
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.primary)
@@ -23,6 +26,16 @@ public struct WordOutlineSidebarView: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(Capsule().fill(Color.secondary.opacity(0.15)))
+
+                if let onDismiss {
+                    Button(action: onDismiss) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.leading, 4)
+                }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -32,14 +45,19 @@ public struct WordOutlineSidebarView: View {
 
             // Headings List
             if combinedHeadings.isEmpty {
-                VStack(spacing: 8) {
+                VStack(spacing: 12) {
                     Spacer()
-                    Image(systemName: "text.alignleft")
-                        .font(.system(size: 24))
-                        .foregroundColor(.secondary.opacity(0.6))
+                    Image(systemName: "list.bullet.rectangle.portrait")
+                        .font(.system(size: 32))
+                        .foregroundColor(.secondary.opacity(0.4))
                     Text(LanguageManager.shared.text(.noHeadingsDetected))
-                        .font(.caption)
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.secondary)
+                    Text("Word 标题样式（H1~H6）将自动在此提取为章节大纲")
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary.opacity(0.7))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 16)
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
