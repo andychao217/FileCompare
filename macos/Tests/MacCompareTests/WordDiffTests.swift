@@ -170,21 +170,23 @@ final class WordDiffTests: XCTestCase {
         let d1 = try await WordDocumentParser.shared.parseDocument(from: u1)
         let d2 = try await WordDocumentParser.shared.parseDocument(from: u2)
 
-        print("\n==== D1 Paragraphs count: \(d1.paragraphs.count) ====")
-        for (i, p) in d1.paragraphs.enumerated() {
-            print("[\(i+1)] \(p.text)")
-        }
-
-        print("\n==== D2 Paragraphs count: \(d2.paragraphs.count) ====")
-        for (i, p) in d2.paragraphs.enumerated() {
-            print("[\(i+1)] \(p.text)")
-        }
-
         let diff = await WordDiffEngine.shared.compareDocuments(left: d1, right: d2)
-        print("\n==== Diff Result (\(diff.blocks.count) blocks) ====")
-        for b in diff.blocks {
-            print("[\(b.changeType.rawValue)] L: '\(b.leftParagraph?.text ?? "")' | R: '\(b.rightParagraph?.text ?? "")'")
-        }
+
+        XCTAssertEqual(diff.blocks.count, 20)
+        XCTAssertEqual(diff.totalModifications, 3)
+        XCTAssertEqual(diff.totalAdditions, 0)
+        XCTAssertEqual(diff.totalDeletions, 0)
+
+        // Line 1: '工作日报' vs '工作日报是' -> Modified
+        XCTAssertEqual(diff.blocks[0].changeType, .modified)
+        XCTAssertEqual(diff.blocks[0].leftParagraph?.text, "工作日报")
+        XCTAssertEqual(diff.blocks[0].rightParagraph?.text, "工作日报是")
+
+        // Line 4: '事项 1...' vs '事项 12...' -> Modified
+        XCTAssertEqual(diff.blocks[3].changeType, .modified)
+
+        // Line 2: '要获得事业的成功...' -> Unchanged
+        XCTAssertEqual(diff.blocks[1].changeType, .unchanged)
     }
 
     func testMediaDiffDetectionAndImageHash() async {

@@ -497,7 +497,8 @@ public struct MetadataDiffItem: Identifiable, Sendable {
     }
 }
 
-public struct WordDiffResult: Sendable {
+public struct WordDiffResult: Identifiable, Sendable {
+    public let id: UUID
     public var blocks: [WordDiffBlock]
     public var tableDiffs: [WordTableDiffResult]
     public var metadataDiffs: [MetadataDiffItem]
@@ -512,6 +513,7 @@ public struct WordDiffResult: Sendable {
     }
 
     public init(
+        id: UUID = UUID(),
         blocks: [WordDiffBlock] = [],
         tableDiffs: [WordTableDiffResult] = [],
         metadataDiffs: [MetadataDiffItem] = [],
@@ -521,6 +523,7 @@ public struct WordDiffResult: Sendable {
         totalFormatChanges: Int = 0,
         totalMediaChanges: Int = 0
     ) {
+        self.id = id
         self.blocks = blocks
         self.tableDiffs = tableDiffs
         self.metadataDiffs = metadataDiffs

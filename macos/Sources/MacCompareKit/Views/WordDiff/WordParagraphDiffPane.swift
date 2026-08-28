@@ -75,7 +75,7 @@ public struct WordParagraphDiffPane: View {
         ScrollViewReader { proxy in
             ScrollView([.vertical]) {
                 LazyVStack(spacing: 0) {
-                    ForEach(viewModel.filteredBlocks) { block in
+                    ForEach(viewModel.filteredBlocks, id: \.id) { block in
                         let isSelected = viewModel.selectedBlockIndex == block.blockIndex
 
                         HStack(spacing: 0) {
@@ -109,6 +109,7 @@ public struct WordParagraphDiffPane: View {
                     }
                 }
             }
+            .id(viewModel.diffResult.id)
             .onChange(of: viewModel.selectedBlockIndex) { _, newIndex in
                 if let idx = newIndex {
                     withAnimation(.easeInOut(duration: 0.2)) {
@@ -384,35 +385,31 @@ public struct WordParagraphDiffPane: View {
             segments.append((trailingSub, .unchanged))
         }
 
-        return HStack(spacing: 0) {
-            ForEach(Array(segments.enumerated()), id: \.offset) { _, seg in
-                switch seg.type {
-                case .added:
-                    Text(seg.text)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.green)
-                        .padding(.horizontal, 2)
-                        .background(RoundedRectangle(cornerRadius: 2).fill(Color.green.opacity(0.2)))
-                case .deleted:
-                    Text(seg.text)
-                        .font(.system(size: 13))
-                        .foregroundColor(.red)
-                        .strikethrough()
-                        .padding(.horizontal, 2)
-                        .background(RoundedRectangle(cornerRadius: 2).fill(Color.red.opacity(0.2)))
-                case .modified:
-                    Text(seg.text)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.orange)
-                        .padding(.horizontal, 2)
-                        .background(RoundedRectangle(cornerRadius: 2).fill(Color.orange.opacity(0.2)))
-                case .unchanged:
-                    Text(seg.text)
-                        .font(.system(size: 13))
-                        .foregroundColor(.primary)
-                }
+        var attrString = AttributedString()
+        for seg in segments {
+            var segAttr = AttributedString(seg.text)
+            segAttr.font = .system(size: 13, weight: (seg.type == .added || seg.type == .modified) ? .medium : .regular)
+
+            switch seg.type {
+            case .added:
+                segAttr.foregroundColor = Color.green
+                segAttr.backgroundColor = Color.green.opacity(0.2)
+            case .deleted:
+                segAttr.foregroundColor = Color.red
+                segAttr.strikethroughStyle = .single
+                segAttr.backgroundColor = Color.red.opacity(0.2)
+            case .modified:
+                segAttr.foregroundColor = Color.orange
+                segAttr.backgroundColor = Color.orange.opacity(0.2)
+            case .unchanged:
+                segAttr.foregroundColor = Color.primary
             }
+            attrString.append(segAttr)
         }
+
+        return Text(attrString)
+            .lineSpacing(4)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     // MARK: - Rich Text Runs Rendering
@@ -428,29 +425,45 @@ public struct WordParagraphDiffPane: View {
             }
         }()
 
-        return HStack(alignment: .firstTextBaseline, spacing: 0) {
-            ForEach(runs) { run in
-                var text = Text(run.text)
-                    .font(.system(
-                        size: run.fontSize ?? baseFontSize,
-                        weight: run.isBold || isHeading ? .bold : .regular
-                    ))
-
-                if run.isItalic {
-                    text = text.italic()
-                }
-                if run.isUnderline {
-                    text = text.underline()
-                }
-                if run.isStrikethrough {
-                    text = text.strikethrough()
-                }
-
-                return text
-                    .foregroundColor(colorFromHex(run.fontColorHex) ?? (isHeading ? .primary : .primary.opacity(0.9)))
-                    .background(colorFromHex(run.highlightColorHex)?.opacity(0.3) ?? Color.clear)
-            }
+        if runs.isEmpty {
+            return Text(baseText)
+                .font(.system(size: baseFontSize, weight: isHeading ? .bold : .regular))
+                .foregroundColor(isHeading ? .primary : .primary.opacity(0.9))
+                .lineSpacing(4)
+                .fixedSize(horizontal: false, vertical: true)
         }
+
+        var attrString = AttributedString()
+        for run in runs {
+            var runAttr = AttributedString(run.text)
+            let size = run.fontSize ?? baseFontSize
+            let weight: Font.Weight = (run.isBold || isHeading) ? .bold : .regular
+            runAttr.font = .system(size: size, weight: weight)
+
+            if run.isItalic {
+                runAttr.font = runAttr.font?.italic()
+            }
+            if run.isUnderline {
+                runAttr.underlineStyle = .single
+            }
+            if run.isStrikethrough {
+                runAttr.strikethroughStyle = .single
+            }
+            if let fgColor = colorFromHex(run.fontColorHex) {
+                runAttr.foregroundColor = fgColor
+            } else {
+                runAttr.foregroundColor = isHeading ? Color.primary : Color.primary.opacity(0.9)
+            }
+            if let bgColor = colorFromHex(run.highlightColorHex) {
+                runAttr.backgroundColor = bgColor.opacity(0.3)
+            }
+
+            attrString.append(runAttr)
+        }
+
+        return Text(attrString)
+            .lineSpacing(4)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     // MARK: - Row Background
