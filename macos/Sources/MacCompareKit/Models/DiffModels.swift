@@ -23,6 +23,7 @@ public enum FileEncoding: String, CaseIterable, Identifiable, Sendable {
 
 public extension Notification.Name {
     static let mcNewTextCompare = Notification.Name("MCNewTextCompare")
+    static let mcNewWordCompare = Notification.Name("MCNewWordCompare")
     static let mcNewFolderCompare = Notification.Name("MCNewFolderCompare")
     static let mcNewThreeWayMerge = Notification.Name("MCNewThreeWayMerge")
     static let mcOpenFile = Notification.Name("MCOpenFile")

@@ -64,7 +64,7 @@ public final class UpdateCheckerService {
     }
 
     public var currentVersion: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0"
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.2.0"
     }
 
     public var latestReleaseVersion: String = ""

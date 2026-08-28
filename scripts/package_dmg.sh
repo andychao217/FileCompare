@@ -6,7 +6,7 @@ set -e
 # Architecture: Universal Binary 2 (arm64 + x86_64)
 # ========================================================
 
-VERSION="${1:-0.1.0}"
+VERSION="${1:-0.2.0}"
 APP_NAME="MacCompare"
 BUNDLE_ID="com.andychao217.MacCompare"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

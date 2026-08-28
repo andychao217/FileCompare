@@ -109,6 +109,9 @@ public struct CustomTabBarView: View {
                 Button(languageManager.text(.newTextCompare)) {
                     tabManager.addTab(type: .textDiff)
                 }
+                Button(languageManager.text(.newWordCompare)) {
+                    tabManager.addTab(type: .wordDiff)
+                }
                 Button(languageManager.text(.newFolderCompare)) {
                     tabManager.addTab(type: .folderDiff)
                 }

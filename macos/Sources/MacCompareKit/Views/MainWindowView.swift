@@ -49,6 +49,8 @@ public struct MainWindowView: View {
                 switch activeTab.type {
                 case .textDiff:
                     TwoWayDiffView(viewModel: tabManager.textDiffViewModel(for: activeTab.id))
+                case .wordDiff:
+                    WordDiffView(viewModel: tabManager.wordDiffViewModel(for: activeTab.id))
                 case .folderDiff:
                     FolderDiffView(viewModel: tabManager.folderDiffViewModel(for: activeTab.id))
                 case .threeWayMerge:
@@ -61,17 +63,24 @@ public struct MainWindowView: View {
     }
 
     private var emptyPlaceholder: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             Image(systemName: "square.stack.3d.up.slash")
                 .font(.system(size: 36))
                 .foregroundColor(.secondary)
             Text(languageManager.text(.noFileSelected))
                 .font(.headline)
                 .foregroundColor(.secondary)
-            Button(languageManager.text(.newTextCompare)) {
-                tabManager.addTab(type: .textDiff)
+            HStack(spacing: 10) {
+                Button(languageManager.text(.newTextCompare)) {
+                    tabManager.addTab(type: .textDiff)
+                }
+                .buttonStyle(.borderedProminent)
+
+                Button(languageManager.text(.newWordCompare)) {
+                    tabManager.addTab(type: .wordDiff)
+                }
+                .buttonStyle(.bordered)
             }
-            .buttonStyle(.borderedProminent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(nsColor: .windowBackgroundColor))
@@ -127,6 +136,9 @@ private struct TabCreationCommands: ViewModifier {
             .onReceive(NotificationCenter.default.publisher(for: .mcNewTextCompare)) { _ in
                 tabManager.addTab(type: .textDiff)
             }
+            .onReceive(NotificationCenter.default.publisher(for: .mcNewWordCompare)) { _ in
+                tabManager.addTab(type: .wordDiff)
+            }
             .onReceive(NotificationCenter.default.publisher(for: .mcNewFolderCompare)) { _ in
                 tabManager.addTab(type: .folderDiff)
             }
@@ -167,8 +179,12 @@ private struct DiffActionCommands: ViewModifier {
                 handleTakeRight()
             }
             .onReceive(NotificationCenter.default.publisher(for: .mcToggleIgnoreWhitespace)) { _ in
-                guard let activeTab = tabManager.activeTab, activeTab.type == .textDiff else { return }
-                tabManager.textDiffViewModel(for: activeTab.id).ignoreWhitespace.toggle()
+                guard let activeTab = tabManager.activeTab else { return }
+                if activeTab.type == .textDiff {
+                    tabManager.textDiffViewModel(for: activeTab.id).ignoreWhitespace.toggle()
+                } else if activeTab.type == .wordDiff {
+                    tabManager.wordDiffViewModel(for: activeTab.id).ignoreWhitespace.toggle()
+                }
             }
             .onReceive(NotificationCenter.default.publisher(for: .mcToggleIgnoreCase)) { _ in
                 guard let activeTab = tabManager.activeTab, activeTab.type == .textDiff else { return }
@@ -181,6 +197,8 @@ private struct DiffActionCommands: ViewModifier {
         switch activeTab.type {
         case .textDiff:
             tabManager.textDiffViewModel(for: activeTab.id).openLeftFile()
+        case .wordDiff:
+            break
         case .folderDiff:
             tabManager.folderDiffViewModel(for: activeTab.id).chooseLeftFolder()
         case .threeWayMerge:
@@ -195,6 +213,8 @@ private struct DiffActionCommands: ViewModifier {
             let vm = tabManager.textDiffViewModel(for: activeTab.id)
             if vm.isLeftDirty { vm.saveLeftFile() }
             if vm.isRightDirty { vm.saveRightFile() }
+        case .wordDiff:
+            break
         case .folderDiff:
             break
         case .threeWayMerge:
@@ -207,6 +227,8 @@ private struct DiffActionCommands: ViewModifier {
         switch activeTab.type {
         case .textDiff:
             tabManager.textDiffViewModel(for: activeTab.id).nextDiff()
+        case .wordDiff:
+            tabManager.wordDiffViewModel(for: activeTab.id).nextDiff()
         case .threeWayMerge:
             tabManager.threeWayMergeViewModel(for: activeTab.id).nextConflict()
         case .folderDiff:
@@ -219,6 +241,8 @@ private struct DiffActionCommands: ViewModifier {
         switch activeTab.type {
         case .textDiff:
             tabManager.textDiffViewModel(for: activeTab.id).previousDiff()
+        case .wordDiff:
+            tabManager.wordDiffViewModel(for: activeTab.id).prevDiff()
         case .threeWayMerge:
             tabManager.threeWayMergeViewModel(for: activeTab.id).previousConflict()
         case .folderDiff:

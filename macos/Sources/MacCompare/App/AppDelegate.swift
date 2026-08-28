@@ -43,6 +43,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         textItem.target = self
         menu.addItem(textItem)
 
+        let wordItem = NSMenuItem(
+            title: languageManager.text(.newWordCompare),
+            action: #selector(newWordCompareFromDock),
+            keyEquivalent: ""
+        )
+        wordItem.target = self
+        menu.addItem(wordItem)
+
         let folderItem = NSMenuItem(
             title: languageManager.text(.newFolderCompare),
             action: #selector(newFolderCompareFromDock),
@@ -64,6 +72,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func newTextCompareFromDock() {
         openOrAddTab(type: .textDiff)
+    }
+
+    @objc private func newWordCompareFromDock() {
+        openOrAddTab(type: .wordDiff)
     }
 
     @objc private func newFolderCompareFromDock() {

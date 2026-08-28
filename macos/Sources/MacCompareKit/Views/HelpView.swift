@@ -22,7 +22,7 @@ public struct HelpView: View {
                     Text(languageManager.text(.help))
                         .font(.headline)
                         .foregroundColor(.primary)
-                    Text("MacCompare v0.1.0 • \(languageManager.text(.helpSubtitle))")
+                    Text("MacCompare v0.2.0 • \(languageManager.text(.helpSubtitle))")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -239,7 +239,7 @@ public struct HelpView: View {
             Text("MacCompare")
                 .font(.system(size: 18, weight: .bold))
 
-            Text("Version 0.1.0 • \(languageManager.text(.universalBinary))")
+            Text("Version 0.2.0 • \(languageManager.text(.universalBinary))")
                 .font(.caption)
                 .foregroundColor(.secondary)
 

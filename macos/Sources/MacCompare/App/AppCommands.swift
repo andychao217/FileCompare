@@ -14,6 +14,11 @@ public struct AppCommands: Commands {
             }
             .keyboardShortcut("n", modifiers: .command)
 
+            Button(languageManager.text(.newWordCompare)) {
+                NotificationCenter.default.post(name: .mcNewWordCompare, object: nil)
+            }
+            .keyboardShortcut("d", modifiers: [.command, .shift])
+
             Button(languageManager.text(.newFolderCompare)) {
                 NotificationCenter.default.post(name: .mcNewFolderCompare, object: nil)
             }

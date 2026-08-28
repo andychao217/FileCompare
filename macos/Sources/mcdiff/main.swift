@@ -10,7 +10,7 @@ func runCLI() async {
     }
 
     if args.contains("-v") || args.contains("--version") {
-        print("mcdiff version 0.1.0 (MacCompare CLI)")
+        print("mcdiff version 0.2.0 (MacCompare CLI)")
         return
     }
 

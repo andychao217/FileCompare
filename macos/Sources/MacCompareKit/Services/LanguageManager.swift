@@ -102,6 +102,7 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case architecture
     case universalBinary
     case newTextCompare
+    case newWordCompare
     case newFolderCompare
     case newThreeWayMerge
     case openFile
@@ -210,6 +211,31 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case autoCheckUpdatesOnLaunch
     case lastChecked
     case checkFailed
+
+    // Word Diff Specific
+    case wordDiff
+    case structuredContent
+    case formattingDiff
+    case tableDiff
+    case metadataDiff
+    case documentOutline
+    case noHeadingsDetected
+    case formatChanged
+    case diffOptions
+    case ignoreFormatting
+    case exportReport
+    case searchOrFilter
+    case parsingWordDocument
+    case toggleOutline
+    case dropWordPrompt
+    case noTablesDetected
+    case property
+    case wordCount
+    case paragraphs
+    case fileSize
+    case added
+    case deleted
+    case modified
 }
 
 @MainActor
@@ -604,7 +630,31 @@ public final class LanguageManager {
         .later: "Later",
         .autoCheckUpdatesOnLaunch: "Automatically check for updates on launch",
         .lastChecked: "Last checked",
-        .checkFailed: "Failed to check for updates. Please check your network connection."
+        .checkFailed: "Failed to check for updates. Please check your network connection.",
+        .newWordCompare: "New Word Compare",
+        .wordDiff: "Word Document Diff",
+        .structuredContent: "Structured Content",
+        .formattingDiff: "Formatting Diff",
+        .tableDiff: "Table Diff",
+        .metadataDiff: "Metadata Diff",
+        .documentOutline: "Document Outline",
+        .noHeadingsDetected: "No Headings Detected",
+        .formatChanged: "Format Changed",
+        .diffOptions: "Diff Options",
+        .ignoreFormatting: "Ignore Formatting",
+        .exportReport: "Export Report",
+        .searchOrFilter: "Search / Filter...",
+        .parsingWordDocument: "Parsing Word Document...",
+        .toggleOutline: "Toggle Outline Sidebar",
+        .dropWordPrompt: "Drag & drop .docx / .doc files here to compare",
+        .noTablesDetected: "No Tables Detected in Documents",
+        .property: "Property",
+        .wordCount: "Word Count",
+        .paragraphs: "Paragraphs",
+        .fileSize: "File Size",
+        .added: "Added",
+        .deleted: "Deleted",
+        .modified: "Modified"
     ]
 
     private let zhHansDictionary: [L10nKey: String] = [
@@ -763,7 +813,31 @@ public final class LanguageManager {
         .later: "稍后提醒",
         .autoCheckUpdatesOnLaunch: "启动时自动检查更新",
         .lastChecked: "上次检查时间",
-        .checkFailed: "检查更新失败，请检查您的网络连接。"
+        .checkFailed: "检查更新失败，请检查您的网络连接。",
+        .newWordCompare: "新建 Word 对比",
+        .wordDiff: "Word 文档比对",
+        .structuredContent: "结构化内容比对",
+        .formattingDiff: "样式格式比对",
+        .tableDiff: "表格网格比对",
+        .metadataDiff: "文档元数据比对",
+        .documentOutline: "文档章节大纲",
+        .noHeadingsDetected: "未检测到标题大纲",
+        .formatChanged: "格式变动",
+        .diffOptions: "比对选项",
+        .ignoreFormatting: "忽略格式微调",
+        .exportReport: "导出差异报告",
+        .searchOrFilter: "搜索与过滤段落...",
+        .parsingWordDocument: "正在解析 Word 文档...",
+        .toggleOutline: "切换大纲侧栏",
+        .dropWordPrompt: "拖拽 .docx 或 .doc 文档至此处开始比对",
+        .noTablesDetected: "文档中未包含表格",
+        .property: "文档属性",
+        .wordCount: "字数统计",
+        .paragraphs: "段落数",
+        .fileSize: "文件大小",
+        .added: "新增",
+        .deleted: "删除",
+        .modified: "修改"
     ]
 
     private let jaDictionary: [L10nKey: String] = [
@@ -922,6 +996,30 @@ public final class LanguageManager {
         .later: "後で通知",
         .autoCheckUpdatesOnLaunch: "起動時に自動的にアップデートを確認",
         .lastChecked: "最終確認日時",
-        .checkFailed: "アップデートの確認に失敗しました。ネットワーク接続を確認してください。"
+        .checkFailed: "アップデートの確認に失敗しました。ネットワーク接続を確認してください。",
+        .newWordCompare: "新規 Word 比較",
+        .wordDiff: "Word ドキュメント比較",
+        .structuredContent: "構造化コンテンツ比較",
+        .formattingDiff: "書式・スタイル比較",
+        .tableDiff: "テーブル比較",
+        .metadataDiff: "メタデータ比較",
+        .documentOutline: "ドキュメントアウトライン",
+        .noHeadingsDetected: "見出しが検出されませんでした",
+        .formatChanged: "書式変更",
+        .diffOptions: "比較オプション",
+        .ignoreFormatting: "書式の差異を無視",
+        .exportReport: "比較レポートを出力",
+        .searchOrFilter: "検索・フィルター...",
+        .parsingWordDocument: "Word ドキュメントを解析中...",
+        .toggleOutline: "アウトラインサイドバーの表示切替",
+        .dropWordPrompt: ".docx または .doc ファイルをここにドラッグ＆ドロップ",
+        .noTablesDetected: "テーブルは検出されませんでした",
+        .property: "プロパティ",
+        .wordCount: "文字数",
+        .paragraphs: "段落数",
+        .fileSize: "ファイルサイズ",
+        .added: "追加",
+        .deleted: "削除",
+        .modified: "変更"
     ]
 }
