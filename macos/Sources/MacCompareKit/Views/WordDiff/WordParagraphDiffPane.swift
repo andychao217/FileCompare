@@ -86,7 +86,8 @@ public struct WordParagraphDiffPane: View {
                                 tokens: block.tokensLeft,
                                 isLeft: true,
                                 isSelected: isSelected,
-                                mediaDifferences: block.mediaDifferences
+                                mediaDifferences: block.mediaDifferences,
+                                tableDiff: block.tableDiff
                             )
 
                             // Center Gutter / Marker
@@ -100,7 +101,8 @@ public struct WordParagraphDiffPane: View {
                                 isLeft: false,
                                 isSelected: isSelected,
                                 formatDifferences: block.formatDifferences,
-                                mediaDifferences: block.mediaDifferences
+                                mediaDifferences: block.mediaDifferences,
+                                tableDiff: block.tableDiff
                             )
                         }
                         .id(block.blockIndex)
@@ -232,12 +234,13 @@ public struct WordParagraphDiffPane: View {
         isLeft: Bool,
         isSelected: Bool,
         formatDifferences: [FormatDiffItem] = [],
-        mediaDifferences: [WordMediaDiffItem] = []
+        mediaDifferences: [WordMediaDiffItem] = [],
+        tableDiff: WordTableDiffResult? = nil
     ) -> some View {
         if let p = paragraph {
             VStack(alignment: .leading, spacing: 4) {
                 if let table = p.table {
-                    // Render Embedded Native Table Grid
+                    // Render Embedded Native Table Grid with Cell Diff Highlights
                     HStack(alignment: .top, spacing: 8) {
                         Text("\(p.index)")
                             .font(.system(size: 10, weight: .regular, design: .monospaced))
@@ -254,7 +257,7 @@ public struct WordParagraphDiffPane: View {
                                     .foregroundColor(.secondary)
                             }
 
-                            embeddedTableGrid(table: table, isLeft: isLeft)
+                            embeddedTableGrid(table: table, tableDiff: tableDiff, isLeft: isLeft)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
@@ -538,25 +541,49 @@ public struct WordParagraphDiffPane: View {
 
     // MARK: - Embedded Table Grid
     
-    private func embeddedTableGrid(table: WordTable, isLeft: Bool) -> some View {
+    private func embeddedTableGrid(table: WordTable, tableDiff: WordTableDiffResult?, isLeft: Bool) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(Array(table.rows.enumerated()), id: \.offset) { rowIdx, row in
                 HStack(spacing: 0) {
                     ForEach(Array(row.cells.enumerated()), id: \.offset) { colIdx, cell in
                         let text = cell.text.trimmingCharacters(in: .whitespacesAndNewlines)
+                        let cellDiff = tableDiff?.cellDiffs.first { $0.rowIndex == rowIdx && $0.colIndex == colIdx }
+                        let cType = cellDiff?.changeType ?? .unchanged
+
+                        let cellBg: Color = {
+                            if row.isHeader { return Color.secondary.opacity(0.08) }
+                            switch cType {
+                            case .added: return isLeft ? Color.clear : Color.green.opacity(0.18)
+                            case .deleted: return isLeft ? Color.red.opacity(0.18) : Color.clear
+                            case .modified: return Color.orange.opacity(0.18)
+                            case .unchanged: return Color.clear
+                            }
+                        }()
+
+                        let cellFg: Color = {
+                            switch cType {
+                            case .added: return isLeft ? adaptiveTextColor(from: nil) : Color.green
+                            case .deleted: return isLeft ? Color.red : adaptiveTextColor(from: nil)
+                            case .modified: return Color.orange
+                            case .unchanged: return adaptiveTextColor(from: nil)
+                            }
+                        }()
+
                         Text(text.isEmpty ? " " : text)
-                            .font(.system(size: 11, weight: row.isHeader ? .semibold : .regular))
-                            .foregroundColor(adaptiveTextColor(from: nil))
+                            .font(.system(size: 11, weight: (row.isHeader || cType != .unchanged) ? .semibold : .regular))
+                            .foregroundColor(cellFg)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 6)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(
-                                Rectangle()
-                                    .fill(row.isHeader ? Color.secondary.opacity(0.08) : Color.clear)
-                            )
+                            .background(Rectangle().fill(cellBg))
                             .overlay(
                                 Rectangle()
-                                    .stroke(Color.secondary.opacity(0.2), lineWidth: 0.5)
+                                    .stroke(
+                                        cType != .unchanged
+                                            ? (cType == .added ? Color.green.opacity(0.5) : (cType == .deleted ? Color.red.opacity(0.5) : Color.orange.opacity(0.5)))
+                                            : Color.secondary.opacity(0.2),
+                                        lineWidth: cType != .unchanged ? 1 : 0.5
+                                    )
                             )
                     }
                 }

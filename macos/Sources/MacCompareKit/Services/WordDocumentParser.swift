@@ -617,6 +617,17 @@ public final class WordDocumentParser: Sendable {
         return nil
     }
 
+    private func extractTextFromElement(_ node: XMLNode) -> String {
+        if node.kind == .element && (node.localName == "t" || node.name == "w:t") {
+            return node.stringValue ?? ""
+        }
+        var text = ""
+        for child in node.children ?? [] {
+            text += extractTextFromElement(child)
+        }
+        return text
+    }
+
     private func parseDocxSequentialBlocks(bundle: DocxXMLBundle, attrStrParagraphs: [WordParagraph]) -> (paragraphs: [WordParagraph], tables: [WordTable]) {
         guard let xmlDoc = try? XMLDocument(xmlString: bundle.documentXML, options: []) else {
             return ([], [])
@@ -638,16 +649,17 @@ public final class WordDocumentParser: Sendable {
             if localName == "tbl" {
                 // Table
                 var rows: [WordTableRow] = []
-                let trNodes = (try? elem.nodes(forXPath: "./*[local-name()='tr']")) ?? []
-                for (rIdx, trNode) in trNodes.enumerated() {
+                for trChild in elem.children ?? [] {
+                    guard let trElem = trChild as? XMLElement, (trElem.localName == "tr" || trElem.name == "w:tr") else { continue }
                     var cells: [WordTableCell] = []
-                    let tcNodes = (try? trNode.nodes(forXPath: "./*[local-name()='tc']")) ?? []
-                    for (cIdx, tcNode) in tcNodes.enumerated() {
-                        let tNodes = (try? tcNode.nodes(forXPath: ".//*[local-name()='t']")) ?? []
-                        let cellText = tNodes.compactMap { $0.stringValue }.joined()
-                        cells.append(WordTableCell(rowIndex: rIdx, columnIndex: cIdx, text: cellText))
+                    var cIdx = 0
+                    for tcChild in trElem.children ?? [] {
+                        guard let tcElem = tcChild as? XMLElement, (tcElem.localName == "tc" || tcElem.name == "w:tc") else { continue }
+                        let cellText = extractTextFromElement(tcElem).trimmingCharacters(in: .whitespacesAndNewlines)
+                        cells.append(WordTableCell(rowIndex: rows.count, columnIndex: cIdx, text: cellText))
+                        cIdx += 1
                     }
-                    rows.append(WordTableRow(rowIndex: rIdx, cells: cells, isHeader: rIdx == 0))
+                    rows.append(WordTableRow(rowIndex: rows.count, cells: cells, isHeader: rows.isEmpty))
                 }
 
                 if !rows.isEmpty {
@@ -668,14 +680,11 @@ public final class WordDocumentParser: Sendable {
                 // Paragraph
                 var runs: [WordTextRun] = []
                 var mediaItems: [WordMediaItem] = []
-
-                // 1. Text Runs
-                let rNodes = (try? elem.nodes(forXPath: "./*[local-name()='r']")) ?? []
                 var fullText = ""
-                for rNode in rNodes {
-                    guard let rElem = rNode as? XMLElement else { continue }
-                    let tNodes = (try? rElem.nodes(forXPath: ".//*[local-name()='t']")) ?? []
-                    let rText = tNodes.compactMap { $0.stringValue }.joined()
+
+                for pChild in elem.children ?? [] {
+                    guard let rElem = pChild as? XMLElement, (rElem.localName == "r" || rElem.name == "w:r") else { continue }
+                    let rText = extractTextFromElement(rElem)
                     if rText.isEmpty { continue }
 
                     let isBold = (try? rElem.nodes(forXPath: ".//*[local-name()='b']").first) != nil
@@ -709,10 +718,9 @@ public final class WordDocumentParser: Sendable {
                     fullText += rText
                 }
 
-                // If runs are empty, fallback to all w:t inside paragraph
+                // Fallback text if no runs extracted
                 if fullText.isEmpty {
-                    let tNodes = (try? elem.nodes(forXPath: ".//*[local-name()='t']")) ?? []
-                    fullText = tNodes.compactMap { $0.stringValue }.joined()
+                    fullText = extractTextFromElement(elem)
                     if !fullText.isEmpty {
                         runs = [WordTextRun(text: fullText)]
                     }
