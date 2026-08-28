@@ -5,6 +5,7 @@ const i18n = {
     heroSubtitle: "基于 Rust 高性能差分引擎与原生 SwiftUI 深度构建。专为 macOS 开发者和专业用户打造的极致比对工具。",
     downloadBtn: "免费下载 DMG",
     githubBtn: "GitHub 源代码",
+    wordDiffTab: "Word 对比",
     textDiffTab: "文本对比",
     folderDiffTab: "文件夹对比",
     threeWayMergeTab: "三向合并",
@@ -12,6 +13,8 @@ const i18n = {
     themeLight: "浅色界面",
     featuresTitle: "为极速与优雅而生",
     featuresSubtitle: "原生级响应速度，兼顾直观的视觉反馈与强大的生产力工具。",
+    featWordTitle: "Word 结构化全要素比对",
+    featWordDesc: "支持 .docx/.doc 段落富文本样式、原生内嵌表格网格、多媒体指纹与矢量图形 Shape 深度对比。",
     feat1Title: "Rust 差分内核",
     feat1Desc: "基于 Myers 算法与 SIMD 加速哈希，瞬间完成百万行文本及大型目录树的精准对比。",
     feat2Title: "对齐幻影行 (Phantom Lines)",
@@ -36,6 +39,7 @@ const i18n = {
     heroSubtitle: "Engineered with a high-performance Rust core and native SwiftUI. The ultimate diff & merge suite built for macOS developers.",
     downloadBtn: "Download DMG",
     githubBtn: "View on GitHub",
+    wordDiffTab: "Word Diff",
     textDiffTab: "Text Diff",
     folderDiffTab: "Folder Diff",
     threeWayMergeTab: "3-Way Merge",
@@ -43,8 +47,9 @@ const i18n = {
     themeLight: "Light UI",
     featuresTitle: "Built for Speed & Elegance",
     featuresSubtitle: "Native responsiveness with intuitive visual diffing and powerful productivity workflows.",
+    featWordTitle: "Word Structured Diff",
+    featWordDesc: "Deep diffing for .docx/.doc with rich styles, native table grids, media fingerprints, and vector shapes.",
     feat1Title: "Rust Diff Engine",
-    feat1Desc: "Powered by Myers algorithm and SIMD hashing, diffing millions of lines and large directories instantaneously.",
     feat1Desc: "Powered by Myers algorithm and SIMD hashing, diffing millions of lines instantaneously.",
     feat2Title: "Phantom Line Alignment",
     feat2Desc: "Smart empty line synchronization and token-level highlighting with bidirectional hunk navigation.",
@@ -68,6 +73,7 @@ const i18n = {
     heroSubtitle: "高性能 Rust コアとネイティブ SwiftUI で構築。macOS 開発者のための究極の差分比較ツール。",
     downloadBtn: "DMG をダウンロード",
     githubBtn: "GitHub で見る",
+    wordDiffTab: "Word 比較",
     textDiffTab: "テキスト比較",
     folderDiffTab: "フォルダ比較",
     threeWayMergeTab: "3方向マージ",
@@ -75,6 +81,8 @@ const i18n = {
     themeLight: "ライト",
     featuresTitle: "高速性と洗練されたデザイン",
     featuresSubtitle: "ネイティブの応答性と直感的な視覚差分フィードバックを実現。",
+    featWordTitle: "Word 構造化全要素比較",
+    featWordDesc: ".docx/.doc のリッチテキスト書式、ネイティブ表グリッド、メディアハッシュ、ベクター図形を高精度に比較。",
     feat1Title: "Rust 差分エンジン",
     feat1Desc: "Myers アルゴリズムと SIMD ハッシュにより、大規模ファイルやディレクトリを瞬時に比較。",
     feat2Title: "ファントム行アライメント",
@@ -96,10 +104,14 @@ const i18n = {
 };
 
 let currentLang = "zh";
-let currentMode = "text";
+let currentMode = "word";
 let currentPreviewTheme = "dark";
 
 const images = {
+  word: {
+    dark: "assets/word_diff_dark_ui.png",
+    light: "assets/word_diff_light_ui.png"
+  },
   text: {
     dark: "assets/text_diff_ui.jpg",
     light: "assets/text_diff_light_ui.jpg"

@@ -80,7 +80,8 @@
     <section id="showcase" class="showcase-container">
       <div class="showcase-header">
         <div class="showcase-tabs">
-          <button class="showcase-tab active" data-mode="text" data-i18n="textDiffTab">文本对比</button>
+          <button class="showcase-tab active" data-mode="word" data-i18n="wordDiffTab">Word 对比</button>
+          <button class="showcase-tab" data-mode="text" data-i18n="textDiffTab">文本对比</button>
           <button class="showcase-tab" data-mode="folder" data-i18n="folderDiffTab">文件夹对比</button>
           <button class="showcase-tab" data-mode="merge" data-i18n="threeWayMergeTab">三向合并</button>
         </div>
@@ -101,7 +102,7 @@
           <span class="window-title">MacCompare — High Precision Diff</span>
         </div>
         <div class="showcase-image-wrapper">
-          <img id="showcase-img" src="assets/text_diff_ui.jpg" alt="MacCompare UI Interface Preview">
+          <img id="showcase-img" src="assets/word_diff_dark_ui.png" alt="MacCompare UI Interface Preview">
         </div>
       </div>
     </section>
@@ -114,6 +115,12 @@
       </div>
 
       <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">📄</div>
+          <h3 class="feature-title" data-i18n="featWordTitle">Word 结构化全要素比对</h3>
+          <p class="feature-desc" data-i18n="featWordDesc">支持 .docx/.doc 段落富文本样式、原生内嵌表格网格、多媒体指纹与矢量图形 Shape 深度对比。</p>
+        </div>
+
         <div class="feature-card">
           <div class="feature-icon">🏎️</div>
           <h3 class="feature-title" data-i18n="feat1Title">Rust 差分内核</h3>
