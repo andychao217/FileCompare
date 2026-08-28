@@ -53,7 +53,7 @@ public struct WordOutlineSidebarView: View {
                     Text(LanguageManager.shared.text(.noHeadingsDetected))
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.secondary)
-                    Text("Word 标题样式（H1~H6）将自动在此提取为章节大纲")
+                    Text(LanguageManager.shared.text(.headingsHint))
                         .font(.system(size: 10))
                         .foregroundColor(.secondary.opacity(0.7))
                         .multilineTextAlignment(.center)

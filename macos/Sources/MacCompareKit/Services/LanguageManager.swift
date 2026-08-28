@@ -220,6 +220,7 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case metadataDiff
     case documentOutline
     case noHeadingsDetected
+    case headingsHint
     case formatChanged
     case diffOptions
     case ignoreFormatting
@@ -639,6 +640,7 @@ public final class LanguageManager {
         .metadataDiff: "Metadata Diff",
         .documentOutline: "Document Outline",
         .noHeadingsDetected: "No Headings Detected",
+        .headingsHint: "Word heading styles (H1~H6) will be automatically extracted here as an outline",
         .formatChanged: "Format Changed",
         .diffOptions: "Diff Options",
         .ignoreFormatting: "Ignore Formatting",
@@ -822,6 +824,7 @@ public final class LanguageManager {
         .metadataDiff: "文档元数据比对",
         .documentOutline: "文档章节大纲",
         .noHeadingsDetected: "未检测到标题大纲",
+        .headingsHint: "Word 标题样式（H1~H6）将自动在此提取为章节大纲",
         .formatChanged: "格式变动",
         .diffOptions: "比对选项",
         .ignoreFormatting: "忽略格式微调",
@@ -1005,6 +1008,7 @@ public final class LanguageManager {
         .metadataDiff: "メタデータ比較",
         .documentOutline: "ドキュメントアウトライン",
         .noHeadingsDetected: "見出しが検出されませんでした",
+        .headingsHint: "Word の見出しスタイル（H1〜H6）がここに自動的に抽出されます",
         .formatChanged: "書式変更",
         .diffOptions: "比較オプション",
         .ignoreFormatting: "書式の差異を無視",
