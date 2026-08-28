@@ -12,13 +12,14 @@ public struct WordOutlineSidebarView: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
-            HStack {
+            HStack(spacing: 6) {
                 Image(systemName: "list.bullet.indent")
                     .foregroundColor(.accentColor)
                     .font(.system(size: 12))
                 Text(LanguageManager.shared.text(.documentOutline))
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.primary)
+                    .lineLimit(1)
                 Spacer()
                 Text("\(headingsCount)")
                     .font(.caption2)
@@ -34,11 +35,11 @@ public struct WordOutlineSidebarView: View {
                             .foregroundColor(.secondary)
                     }
                     .buttonStyle(.plain)
-                    .padding(.leading, 4)
+                    .padding(.leading, 2)
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 10)
+            .frame(height: 42)
             .background(Color(nsColor: .controlBackgroundColor))
 
             Divider()
