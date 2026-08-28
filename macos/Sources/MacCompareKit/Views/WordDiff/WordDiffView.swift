@@ -1,3 +1,4 @@
+@preconcurrency import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -138,31 +139,20 @@ public struct WordDiffView: View {
     }
 
     private func handleDrop(providers: [NSItemProvider]) -> Bool {
-        Task { @MainActor in
-            var loadedURLs: [URL] = []
-            for provider in providers {
-                if let item = try? await provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) {
-                    if let data = item as? Data, let url = URL(dataRepresentation: data, relativeTo: nil) {
-                        let ext = url.pathExtension.lowercased()
-                        if ["docx", "doc", "rtf"].contains(ext) {
-                            loadedURLs.append(url)
-                        }
-                    } else if let url = item as? URL {
-                        let ext = url.pathExtension.lowercased()
-                        if ["docx", "doc", "rtf"].contains(ext) {
-                            loadedURLs.append(url)
-                        }
-                    }
-                }
-            }
+        for provider in providers {
+            _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                guard let url = url else { return }
+                let ext = url.pathExtension.lowercased()
+                guard ["docx", "doc", "rtf"].contains(ext) else { return }
 
-            if loadedURLs.count >= 2 {
-                viewModel.loadFiles(left: loadedURLs[0], right: loadedURLs[1])
-            } else if let first = loadedURLs.first {
-                if viewModel.leftDocument == nil {
-                    viewModel.loadSingleFile(from: first, isLeft: true)
-                } else {
-                    viewModel.loadSingleFile(from: first, isLeft: false)
+                DispatchQueue.main.async {
+                    if self.viewModel.leftDocument == nil {
+                        self.viewModel.loadSingleFile(from: url, isLeft: true)
+                    } else if self.viewModel.rightDocument == nil {
+                        self.viewModel.loadSingleFile(from: url, isLeft: false)
+                    } else {
+                        self.viewModel.loadSingleFile(from: url, isLeft: true)
+                    }
                 }
             }
         }
