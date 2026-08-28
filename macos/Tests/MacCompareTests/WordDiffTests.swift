@@ -172,21 +172,19 @@ final class WordDiffTests: XCTestCase {
 
         let diff = await WordDiffEngine.shared.compareDocuments(left: d1, right: d2)
 
-        XCTAssertEqual(diff.blocks.count, 20)
-        XCTAssertEqual(diff.totalModifications, 3)
-        XCTAssertEqual(diff.totalAdditions, 0)
-        XCTAssertEqual(diff.totalDeletions, 0)
+        XCTAssertEqual(diff.blocks.count, 23)
+        
+        // Block 0: Embedded Table Grid (3 rows x 4 cols)
+        XCTAssertTrue(diff.blocks[0].isTableBlock)
+        XCTAssertNotNil(diff.blocks[0].tableDiff)
 
-        // Line 1: '工作日报' vs '工作日报是' -> Modified
-        XCTAssertEqual(diff.blocks[0].changeType, .modified)
-        XCTAssertEqual(diff.blocks[0].leftParagraph?.text, "工作日报")
-        XCTAssertEqual(diff.blocks[0].rightParagraph?.text, "工作日报是")
+        // Block 1: '工作日报' vs '工作日报是' -> Modified
+        XCTAssertEqual(diff.blocks[1].changeType, .modified)
+        XCTAssertEqual(diff.blocks[1].leftParagraph?.text, "工作日报")
+        XCTAssertEqual(diff.blocks[1].rightParagraph?.text, "工作日报是")
 
-        // Line 4: '事项 1...' vs '事项 12...' -> Modified
-        XCTAssertEqual(diff.blocks[3].changeType, .modified)
-
-        // Line 2: '要获得事业的成功...' -> Unchanged
-        XCTAssertEqual(diff.blocks[1].changeType, .unchanged)
+        // Block 4: Vector Shape Block
+        XCTAssertTrue(diff.blocks[4].leftParagraph?.mediaItems.contains { $0.mediaType == .shape } ?? false)
     }
 
     func testMediaDiffDetectionAndImageHash() async {

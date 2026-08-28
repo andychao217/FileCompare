@@ -102,13 +102,14 @@ public struct WordTextRun: Identifiable, Sendable, Codable, Equatable {
     }
 }
 
-// MARK: - Word Media Models (Images, Video, Audio, Attachments)
+// MARK: - Word Media Models (Images, Video, Audio, Attachments, Shapes)
 
 public enum WordMediaType: String, Sendable, Codable, Equatable, CaseIterable {
     case image = "Image"
     case video = "Video"
     case audio = "Audio"
     case attachment = "Attachment"
+    case shape = "Shape"
 
     public var iconName: String {
         switch self {
@@ -116,6 +117,7 @@ public enum WordMediaType: String, Sendable, Codable, Equatable, CaseIterable {
         case .video: return "video.fill"
         case .audio: return "waveform"
         case .attachment: return "paperclip"
+        case .shape: return "rectangle.fill"
         }
     }
 }
@@ -132,9 +134,18 @@ public struct WordMediaItem: Identifiable, Sendable, Codable, Equatable {
     public let heightPoints: CGFloat?
     public let relationshipId: String?
     public let paragraphIndex: Int
+    public let shapeType: String?
+    public let fillColorHex: String?
+    public let strokeColorHex: String?
 
     public var formattedSize: String {
-        ByteCountFormatter.string(fromByteCount: Int64(fileSize), countStyle: .file)
+        if mediaType == .shape {
+            if let w = widthPoints, let h = heightPoints {
+                return "\(Int(w))×\(Int(h)) pt"
+            }
+            return "Vector Shape"
+        }
+        return ByteCountFormatter.string(fromByteCount: Int64(fileSize), countStyle: .file)
     }
 
     public init(
@@ -148,7 +159,10 @@ public struct WordMediaItem: Identifiable, Sendable, Codable, Equatable {
         widthPoints: CGFloat? = nil,
         heightPoints: CGFloat? = nil,
         relationshipId: String? = nil,
-        paragraphIndex: Int = 0
+        paragraphIndex: Int = 0,
+        shapeType: String? = nil,
+        fillColorHex: String? = nil,
+        strokeColorHex: String? = nil
     ) {
         self.id = id
         self.mediaType = mediaType
@@ -161,6 +175,9 @@ public struct WordMediaItem: Identifiable, Sendable, Codable, Equatable {
         self.heightPoints = heightPoints
         self.relationshipId = relationshipId
         self.paragraphIndex = paragraphIndex
+        self.shapeType = shapeType
+        self.fillColorHex = fillColorHex
+        self.strokeColorHex = strokeColorHex
     }
 }
 
@@ -198,9 +215,11 @@ public struct WordParagraph: Identifiable, Sendable, Codable, Equatable {
     public let style: WordParagraphStyle
     public let bulletPrefix: String?
     public var mediaItems: [WordMediaItem]
+    public var table: WordTable?
 
     public var isHeading: Bool { headingLevel != nil }
     public var hasMedia: Bool { !mediaItems.isEmpty }
+    public var isTableBlock: Bool { table != nil }
 
     public init(
         id: UUID = UUID(),
@@ -210,7 +229,8 @@ public struct WordParagraph: Identifiable, Sendable, Codable, Equatable {
         runs: [WordTextRun] = [],
         style: WordParagraphStyle = WordParagraphStyle(),
         bulletPrefix: String? = nil,
-        mediaItems: [WordMediaItem] = []
+        mediaItems: [WordMediaItem] = [],
+        table: WordTable? = nil
     ) {
         self.id = id
         self.index = index
@@ -220,6 +240,7 @@ public struct WordParagraph: Identifiable, Sendable, Codable, Equatable {
         self.style = style
         self.bulletPrefix = bulletPrefix
         self.mediaItems = mediaItems
+        self.table = table
     }
 }
 
@@ -389,10 +410,14 @@ public struct WordDiffBlock: Identifiable, Sendable {
     public let tokensRight: [DiffToken]
     public let formatDifferences: [FormatDiffItem]
     public let mediaDifferences: [WordMediaDiffItem]
+    public let tableDiff: WordTableDiffResult?
     public let isFormatOnly: Bool
 
     public var isPhantomLeft: Bool { leftParagraph == nil }
     public var isPhantomRight: Bool { rightParagraph == nil }
+    public var isTableBlock: Bool {
+        leftParagraph?.isTableBlock == true || rightParagraph?.isTableBlock == true || tableDiff != nil
+    }
     public var hasMedia: Bool {
         !(leftParagraph?.mediaItems.isEmpty ?? true) ||
         !(rightParagraph?.mediaItems.isEmpty ?? true) ||
@@ -409,6 +434,7 @@ public struct WordDiffBlock: Identifiable, Sendable {
         tokensRight: [DiffToken] = [],
         formatDifferences: [FormatDiffItem] = [],
         mediaDifferences: [WordMediaDiffItem] = [],
+        tableDiff: WordTableDiffResult? = nil,
         isFormatOnly: Bool = false
     ) {
         self.id = id
@@ -420,6 +446,7 @@ public struct WordDiffBlock: Identifiable, Sendable {
         self.tokensRight = tokensRight
         self.formatDifferences = formatDifferences
         self.mediaDifferences = mediaDifferences
+        self.tableDiff = tableDiff
         self.isFormatOnly = isFormatOnly
     }
 }

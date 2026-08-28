@@ -236,69 +236,93 @@ public struct WordParagraphDiffPane: View {
     ) -> some View {
         if let p = paragraph {
             VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .top, spacing: 8) {
-                    // Paragraph index badge
-                    Text("\(p.index)")
-                        .font(.system(size: 10, weight: .regular, design: .monospaced))
-                        .foregroundColor(.secondary.opacity(0.7))
-                        .frame(width: 28, alignment: .trailing)
+                if let table = p.table {
+                    // Render Embedded Native Table Grid
+                    HStack(alignment: .top, spacing: 8) {
+                        Text("\(p.index)")
+                            .font(.system(size: 10, weight: .regular, design: .monospaced))
+                            .foregroundColor(.secondary.opacity(0.7))
+                            .frame(width: 28, alignment: .trailing)
 
-                    // Text Content with runs / fine diff tokens
-                    VStack(alignment: .leading, spacing: 2) {
-                        if !tokens.isEmpty {
-                            highlightedTokenText(fullText: p.text, tokens: tokens, isLeft: isLeft)
-                        } else {
-                            renderedRunsText(runs: p.runs, baseText: p.text, headingLevel: p.headingLevel)
-                        }
-
-                        // Formatting Difference Badge if present on right pane
-                        if !formatDifferences.isEmpty && !isLeft {
-                            HStack(spacing: 4) {
-                                Image(systemName: "sparkles")
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "tablecells")
                                     .font(.system(size: 10))
-                                    .foregroundColor(.purple)
-                                Text("\(formatDifferences.count) format changes")
-                                    .font(.system(size: 10, weight: .medium))
-                                    .foregroundColor(.purple)
+                                    .foregroundColor(.accentColor)
+                                Text("表格 (\(table.rows.count)行 × \(table.columnCount)列)")
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundColor(.secondary)
                             }
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Capsule().fill(Color.purple.opacity(0.12)))
-                            .popover(isPresented: Binding(
-                                get: { activePopoverBlockId == p.id },
-                                set: { if !$0 { activePopoverBlockId = nil } }
-                            )) {
-                                WordFormatPopoverView(formatDifferences: formatDifferences)
-                            }
-                            .onTapGesture {
-                                activePopoverBlockId = p.id
-                            }
-                        }
 
-                        // Media Differences Rendering
-                        if !mediaDifferences.isEmpty {
-                            VStack(alignment: .leading, spacing: 6) {
-                                ForEach(mediaDifferences) { mDiff in
-                                    WordMediaThumbnailView(mediaDiff: mDiff, isLeft: isLeft)
-                                }
-                            }
-                            .padding(.top, 4)
-                        } else if !p.mediaItems.isEmpty {
-                            VStack(alignment: .leading, spacing: 6) {
-                                ForEach(p.mediaItems) { item in
-                                    let dummyDiff = WordMediaDiffItem(
-                                        changeType: .unchanged,
-                                        mediaType: item.mediaType,
-                                        leftMedia: isLeft ? item : nil,
-                                        rightMedia: isLeft ? nil : item
-                                    )
-                                    WordMediaThumbnailView(mediaDiff: dummyDiff, isLeft: isLeft)
-                                }
-                            }
-                            .padding(.top, 4)
+                            embeddedTableGrid(table: table, isLeft: isLeft)
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    HStack(alignment: .top, spacing: 8) {
+                        // Paragraph index badge
+                        Text("\(p.index)")
+                            .font(.system(size: 10, weight: .regular, design: .monospaced))
+                            .foregroundColor(.secondary.opacity(0.7))
+                            .frame(width: 28, alignment: .trailing)
+
+                        // Text Content with runs / fine diff tokens
+                        VStack(alignment: .leading, spacing: 2) {
+                            if !tokens.isEmpty {
+                                highlightedTokenText(fullText: p.text, tokens: tokens, isLeft: isLeft)
+                            } else {
+                                renderedRunsText(runs: p.runs, baseText: p.text, headingLevel: p.headingLevel)
+                            }
+
+                            // Formatting Difference Badge if present on right pane
+                            if !formatDifferences.isEmpty && !isLeft {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "sparkles")
+                                        .font(.system(size: 10))
+                                        .foregroundColor(.purple)
+                                    Text("\(formatDifferences.count) format changes")
+                                        .font(.system(size: 10, weight: .medium))
+                                        .foregroundColor(.purple)
+                                }
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Capsule().fill(Color.purple.opacity(0.12)))
+                                .popover(isPresented: Binding(
+                                    get: { activePopoverBlockId == p.id },
+                                    set: { if !$0 { activePopoverBlockId = nil } }
+                                )) {
+                                    WordFormatPopoverView(formatDifferences: formatDifferences)
+                                }
+                                .onTapGesture {
+                                    activePopoverBlockId = p.id
+                                }
+                            }
+
+                            // Media Differences Rendering
+                            if !mediaDifferences.isEmpty {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    ForEach(mediaDifferences) { mDiff in
+                                        WordMediaThumbnailView(mediaDiff: mDiff, isLeft: isLeft)
+                                    }
+                                }
+                                .padding(.top, 4)
+                            } else if !p.mediaItems.isEmpty {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    ForEach(p.mediaItems) { item in
+                                        let dummyDiff = WordMediaDiffItem(
+                                            changeType: .unchanged,
+                                            mediaType: item.mediaType,
+                                            leftMedia: isLeft ? item : nil,
+                                            rightMedia: isLeft ? nil : item
+                                        )
+                                        WordMediaThumbnailView(mediaDiff: dummyDiff, isLeft: isLeft)
+                                    }
+                                }
+                                .padding(.top, 4)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
             }
             .padding(.horizontal, 10)
@@ -510,6 +534,40 @@ public struct WordParagraphDiffPane: View {
         let g = Double((intVal & 0x00FF00) >> 8) / 255.0
         let b = Double(intVal & 0x0000FF) / 255.0
         return Color(red: r, green: g, blue: b)
+    }
+
+    // MARK: - Embedded Table Grid
+    
+    private func embeddedTableGrid(table: WordTable, isLeft: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(table.rows.enumerated()), id: \.offset) { rowIdx, row in
+                HStack(spacing: 0) {
+                    ForEach(Array(row.cells.enumerated()), id: \.offset) { colIdx, cell in
+                        let text = cell.text.trimmingCharacters(in: .whitespacesAndNewlines)
+                        Text(text.isEmpty ? " " : text)
+                            .font(.system(size: 11, weight: row.isHeader ? .semibold : .regular))
+                            .foregroundColor(adaptiveTextColor(from: nil))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 6)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(
+                                Rectangle()
+                                    .fill(row.isHeader ? Color.secondary.opacity(0.08) : Color.clear)
+                            )
+                            .overlay(
+                                Rectangle()
+                                    .stroke(Color.secondary.opacity(0.2), lineWidth: 0.5)
+                            )
+                    }
+                }
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 4))
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.04), radius: 2, x: 0, y: 1)
     }
 
     private func chooseFile(isLeft: Bool) {

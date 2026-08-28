@@ -35,6 +35,39 @@ public struct WordMediaThumbnailView: View {
                             .onTapGesture {
                                 isShowingDetailPopover = true
                             }
+                    } else if media.mediaType == .shape {
+                        // Vector Shape Native Render
+                        let fillColor = colorFromHex(media.fillColorHex) ?? Color(red: 0.35, green: 0.6, blue: 0.85)
+                        let strokeColor = colorFromHex(media.strokeColorHex) ?? Color(red: 0.18, green: 0.45, blue: 0.7)
+                        let width = max(40, min(media.widthPoints ?? 80, 240))
+                        let height = max(18, min(media.heightPoints ?? 28, 120))
+
+                        ZStack {
+                            if media.shapeType == "ellipse" {
+                                Ellipse()
+                                    .fill(fillColor)
+                                    .frame(width: width, height: height)
+                                    .overlay(Ellipse().stroke(strokeColor, lineWidth: 1.5))
+                            } else if media.shapeType == "roundRect" {
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(fillColor)
+                                    .frame(width: width, height: height)
+                                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(strokeColor, lineWidth: 1.5))
+                            } else {
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(fillColor)
+                                    .frame(width: width, height: height)
+                                    .overlay(RoundedRectangle(cornerRadius: 3).stroke(strokeColor, lineWidth: 1.5))
+                            }
+                        }
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .stroke(borderColor, lineWidth: mediaDiff.changeType != .unchanged ? 1.5 : 0)
+                        )
+                        .shadow(color: Color.black.opacity(0.12), radius: 3, x: 0, y: 1)
+                        .onTapGesture {
+                            isShowingDetailPopover = true
+                        }
                     } else {
                         // Video / Audio / Attachment Media Card
                         HStack(spacing: 8) {
@@ -231,6 +264,17 @@ public struct WordMediaThumbnailView: View {
         case .video: return .purple
         case .audio: return .orange
         case .attachment: return .teal
+        case .shape: return .cyan
         }
+    }
+
+    private func colorFromHex(_ hex: String?) -> Color? {
+        guard let hex = hex?.trimmingCharacters(in: CharacterSet.alphanumerics.inverted),
+              hex.count == 6,
+              let intVal = UInt64(hex, radix: 16) else { return nil }
+        let r = Double((intVal & 0xFF0000) >> 16) / 255.0
+        let g = Double((intVal & 0x00FF00) >> 8) / 255.0
+        let b = Double(intVal & 0x0000FF) / 255.0
+        return Color(red: r, green: g, blue: b)
     }
 }

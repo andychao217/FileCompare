@@ -68,6 +68,16 @@ public final class WordDiffEngine: Sendable {
                 let lPara = leftParas[leftIdx]
                 let rPara = rightParas[rightIdx]
 
+                var tableDiff: WordTableDiffResult? = nil
+                var isTableDiffModified = false
+                if lPara.isTableBlock || rPara.isTableBlock {
+                    let td = compareSingleTable(leftT: lPara.table, rightT: rPara.table, tableIndex: blockIdx + 1)
+                    tableDiff = td
+                    if td.changeType != .unchanged {
+                        isTableDiffModified = true
+                    }
+                }
+
                 let formatDiffs = ignoreFormatting ? [] : detectFormatDifferences(left: lPara, right: rPara)
                 let isFormatOnly = !formatDiffs.isEmpty
 
@@ -80,9 +90,12 @@ public final class WordDiffEngine: Sendable {
                 if hasMediaChanges {
                     mediaChanges += mediaDiffs.filter { $0.changeType != .unchanged }.count
                 }
+                if isTableDiffModified {
+                    mods += 1
+                }
 
                 let effectiveChangeType: ChangeType = {
-                    if hasMediaChanges || isFormatOnly {
+                    if isTableDiffModified || hasMediaChanges || isFormatOnly {
                         return .modified
                     }
                     return .unchanged
@@ -95,6 +108,7 @@ public final class WordDiffEngine: Sendable {
                     changeType: effectiveChangeType,
                     formatDifferences: formatDiffs,
                     mediaDifferences: mediaDiffs,
+                    tableDiff: tableDiff,
                     isFormatOnly: isFormatOnly
                 )
                 blocks.append(block)
@@ -103,6 +117,11 @@ public final class WordDiffEngine: Sendable {
             case .delete(let leftIdx):
                 let lPara = leftParas[leftIdx]
                 dels += 1
+                var tableDiff: WordTableDiffResult? = nil
+                if let lTable = lPara.table {
+                    tableDiff = compareSingleTable(leftT: lTable, rightT: nil, tableIndex: blockIdx + 1)
+                }
+
                 let mediaDiffs = lPara.mediaItems.map {
                     WordMediaDiffItem(changeType: .deleted, mediaType: $0.mediaType, leftMedia: $0, changeDescriptions: ["媒体资源已被移除"])
                 }
@@ -114,7 +133,8 @@ public final class WordDiffEngine: Sendable {
                     leftParagraph: lPara,
                     rightParagraph: nil,
                     changeType: .deleted,
-                    mediaDifferences: mediaDiffs
+                    mediaDifferences: mediaDiffs,
+                    tableDiff: tableDiff
                 )
                 blocks.append(block)
                 blockIdx += 1
@@ -122,6 +142,11 @@ public final class WordDiffEngine: Sendable {
             case .insert(let rightIdx):
                 let rPara = rightParas[rightIdx]
                 adds += 1
+                var tableDiff: WordTableDiffResult? = nil
+                if let rTable = rPara.table {
+                    tableDiff = compareSingleTable(leftT: nil, rightT: rTable, tableIndex: blockIdx + 1)
+                }
+
                 let mediaDiffs = rPara.mediaItems.map {
                     WordMediaDiffItem(changeType: .added, mediaType: $0.mediaType, rightMedia: $0, changeDescriptions: ["新增媒体资源"])
                 }
@@ -133,7 +158,8 @@ public final class WordDiffEngine: Sendable {
                     leftParagraph: nil,
                     rightParagraph: rPara,
                     changeType: .added,
-                    mediaDifferences: mediaDiffs
+                    mediaDifferences: mediaDiffs,
+                    tableDiff: tableDiff
                 )
                 blocks.append(block)
                 blockIdx += 1
@@ -142,6 +168,11 @@ public final class WordDiffEngine: Sendable {
                 let lPara = leftParas[leftIdx]
                 let rPara = rightParas[rightIdx]
                 mods += 1
+
+                var tableDiff: WordTableDiffResult? = nil
+                if lPara.isTableBlock || rPara.isTableBlock {
+                    tableDiff = compareSingleTable(leftT: lPara.table, rightT: rPara.table, tableIndex: blockIdx + 1)
+                }
 
                 // Fine token-level character diff inside paragraph
                 let (tokensLeft, tokensRight) = computeTokenDiff(
@@ -167,6 +198,7 @@ public final class WordDiffEngine: Sendable {
                     tokensRight: tokensRight,
                     formatDifferences: formatDiffs,
                     mediaDifferences: mediaDiffs,
+                    tableDiff: tableDiff,
                     isFormatOnly: false
                 )
                 blocks.append(block)
@@ -415,6 +447,73 @@ public final class WordDiffEngine: Sendable {
 
     // MARK: - Table Diff
 
+    private func compareSingleTable(leftT: WordTable?, rightT: WordTable?, tableIndex: Int = 1) -> WordTableDiffResult {
+        let maxRows = max(leftT?.rowCount ?? 0, rightT?.rowCount ?? 0)
+        let maxCols = max(leftT?.columnCount ?? 0, rightT?.columnCount ?? 0)
+
+        var cellDiffs: [WordTableCellDiff] = []
+        var hasDiff = false
+
+        for r in 0..<maxRows {
+            for c in 0..<maxCols {
+                let lCell = (r < (leftT?.rows.count ?? 0) && c < (leftT?.rows[r].cells.count ?? 0)) ? leftT?.rows[r].cells[c] : nil
+                let rCell = (r < (rightT?.rows.count ?? 0) && c < (rightT?.rows[r].cells.count ?? 0)) ? rightT?.rows[r].cells[c] : nil
+
+                let lText = lCell?.text ?? ""
+                let rText = rCell?.text ?? ""
+
+                var cType: ChangeType = .unchanged
+                var tokensL: [DiffToken] = []
+                var tokensR: [DiffToken] = []
+
+                if lCell == nil && rCell != nil {
+                    cType = .added
+                    hasDiff = true
+                } else if lCell != nil && rCell == nil {
+                    cType = .deleted
+                    hasDiff = true
+                } else if lText != rText {
+                    cType = .modified
+                    hasDiff = true
+                    let (tl, tr) = computeTokenDiff(left: lText, right: rText, ignoreWhitespace: false)
+                    tokensL = tl
+                    tokensR = tr
+                }
+
+                cellDiffs.append(WordTableCellDiff(
+                    rowIndex: r,
+                    colIndex: c,
+                    leftCell: lCell,
+                    rightCell: rCell,
+                    changeType: cType,
+                    tokensLeft: tokensL,
+                    tokensRight: tokensR
+                ))
+            }
+        }
+
+        let overallType: ChangeType
+        if leftT == nil && rightT != nil {
+            overallType = .added
+        } else if leftT != nil && rightT == nil {
+            overallType = .deleted
+        } else if hasDiff {
+            overallType = .modified
+        } else {
+            overallType = .unchanged
+        }
+
+        return WordTableDiffResult(
+            tableIndex: tableIndex,
+            leftTable: leftT,
+            rightTable: rightT,
+            cellDiffs: cellDiffs,
+            maxRows: maxRows,
+            maxCols: maxCols,
+            changeType: overallType
+        )
+    }
+
     private func computeTableDiffs(leftTables: [WordTable], rightTables: [WordTable]) -> [WordTableDiffResult] {
         var results: [WordTableDiffResult] = []
         let maxCount = max(leftTables.count, rightTables.count)
@@ -422,63 +521,8 @@ public final class WordDiffEngine: Sendable {
         for i in 0..<maxCount {
             let leftT = i < leftTables.count ? leftTables[i] : nil
             let rightT = i < rightTables.count ? rightTables[i] : nil
-
-            let maxRows = max(leftT?.rowCount ?? 0, rightT?.rowCount ?? 0)
-            let maxCols = max(leftT?.columnCount ?? 0, rightT?.columnCount ?? 0)
-
-            var cellDiffs: [WordTableCellDiff] = []
-            var hasDiff = false
-
-            for r in 0..<maxRows {
-                for c in 0..<maxCols {
-                    let lCell = (r < (leftT?.rows.count ?? 0) && c < (leftT?.rows[r].cells.count ?? 0)) ? leftT?.rows[r].cells[c] : nil
-                    let rCell = (r < (rightT?.rows.count ?? 0) && c < (rightT?.rows[r].cells.count ?? 0)) ? rightT?.rows[r].cells[c] : nil
-
-                    let lText = lCell?.text ?? ""
-                    let rText = rCell?.text ?? ""
-
-                    var cType: ChangeType = .unchanged
-                    if lCell == nil && rCell != nil {
-                        cType = .added
-                        hasDiff = true
-                    } else if lCell != nil && rCell == nil {
-                        cType = .deleted
-                        hasDiff = true
-                    } else if lText != rText {
-                        cType = .modified
-                        hasDiff = true
-                    }
-
-                    cellDiffs.append(WordTableCellDiff(
-                        rowIndex: r,
-                        colIndex: c,
-                        leftCell: lCell,
-                        rightCell: rCell,
-                        changeType: cType
-                    ))
-                }
-            }
-
-            let overallType: ChangeType
-            if leftT == nil && rightT != nil {
-                overallType = .added
-            } else if leftT != nil && rightT == nil {
-                overallType = .deleted
-            } else if hasDiff {
-                overallType = .modified
-            } else {
-                overallType = .unchanged
-            }
-
-            results.append(WordTableDiffResult(
-                tableIndex: i + 1,
-                leftTable: leftT,
-                rightTable: rightT,
-                cellDiffs: cellDiffs,
-                maxRows: maxRows,
-                maxCols: maxCols,
-                changeType: overallType
-            ))
+            let res = compareSingleTable(leftT: leftT, rightT: rightT, tableIndex: i + 1)
+            results.append(res)
         }
 
         return results
