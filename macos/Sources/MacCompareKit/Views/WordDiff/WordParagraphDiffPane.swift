@@ -449,11 +449,8 @@ public struct WordParagraphDiffPane: View {
             if run.isStrikethrough {
                 runAttr.strikethroughStyle = .single
             }
-            if let fgColor = colorFromHex(run.fontColorHex) {
-                runAttr.foregroundColor = fgColor
-            } else {
-                runAttr.foregroundColor = isHeading ? Color.primary : Color.primary.opacity(0.9)
-            }
+            runAttr.foregroundColor = adaptiveTextColor(from: run.fontColorHex, isHeading: isHeading)
+
             if let bgColor = colorFromHex(run.highlightColorHex) {
                 runAttr.backgroundColor = bgColor.opacity(0.3)
             }
@@ -478,6 +475,31 @@ public struct WordParagraphDiffPane: View {
         case .modified: return Color.orange.opacity(0.08)
         case .unchanged: return Color.clear
         }
+    }
+
+    private func adaptiveTextColor(from hex: String?, isHeading: Bool = false) -> Color {
+        guard let hex = hex?.trimmingCharacters(in: CharacterSet.alphanumerics.inverted),
+              hex.count == 6,
+              let intVal = UInt64(hex, radix: 16) else {
+            return isHeading ? Color.primary : Color.primary.opacity(0.9)
+        }
+        let r = Double((intVal & 0xFF0000) >> 16) / 255.0
+        let g = Double((intVal & 0x00FF00) >> 8) / 255.0
+        let b = Double(intVal & 0x0000FF) / 255.0
+
+        let luminance = 0.299 * r + 0.587 * g + 0.114 * b
+
+        // If color is very dark (like #000000, #1F2329, #333333), map to Color.primary so it adapts to dark/light themes perfectly
+        if luminance < 0.3 {
+            return isHeading ? Color.primary : Color.primary.opacity(0.9)
+        }
+
+        // If color is neutral gray (like #8F959E), map to Color.secondary
+        if abs(r - g) < 0.05 && abs(g - b) < 0.05 && luminance < 0.65 {
+            return Color.secondary
+        }
+
+        return Color(red: r, green: g, blue: b)
     }
 
     private func colorFromHex(_ hex: String?) -> Color? {
