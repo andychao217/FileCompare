@@ -120,6 +120,15 @@ public struct WordDiffView: View {
                                 .foregroundColor(.purple)
                         }
                     }
+
+                    if viewModel.diffResult.totalMediaChanges > 0 {
+                        HStack(spacing: 4) {
+                            Circle().fill(Color.blue).frame(width: 6, height: 6)
+                            Text("🖼️ \(viewModel.diffResult.totalMediaChanges) 媒体变动")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(.blue)
+                        }
+                    }
                 }
             } else if let doc = viewModel.leftDocument ?? viewModel.rightDocument {
                 Text("\(doc.fileName) (\(doc.metadata.fileSizeFormatted) • \(doc.metadata.wordCount) words)")

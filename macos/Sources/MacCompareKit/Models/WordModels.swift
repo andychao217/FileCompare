@@ -102,6 +102,93 @@ public struct WordTextRun: Identifiable, Sendable, Codable, Equatable {
     }
 }
 
+// MARK: - Word Media Models (Images, Video, Audio, Attachments)
+
+public enum WordMediaType: String, Sendable, Codable, Equatable, CaseIterable {
+    case image = "Image"
+    case video = "Video"
+    case audio = "Audio"
+    case attachment = "Attachment"
+
+    public var iconName: String {
+        switch self {
+        case .image: return "photo.fill"
+        case .video: return "video.fill"
+        case .audio: return "waveform"
+        case .attachment: return "paperclip"
+        }
+    }
+}
+
+public struct WordMediaItem: Identifiable, Sendable, Codable, Equatable {
+    public let id: UUID
+    public let mediaType: WordMediaType
+    public let fileName: String
+    public let fileExtension: String
+    public let fileSize: Int
+    public let hashSHA256: String
+    public let data: Data?
+    public let widthPoints: CGFloat?
+    public let heightPoints: CGFloat?
+    public let relationshipId: String?
+    public let paragraphIndex: Int
+
+    public var formattedSize: String {
+        ByteCountFormatter.string(fromByteCount: Int64(fileSize), countStyle: .file)
+    }
+
+    public init(
+        id: UUID = UUID(),
+        mediaType: WordMediaType = .image,
+        fileName: String,
+        fileExtension: String,
+        fileSize: Int,
+        hashSHA256: String,
+        data: Data? = nil,
+        widthPoints: CGFloat? = nil,
+        heightPoints: CGFloat? = nil,
+        relationshipId: String? = nil,
+        paragraphIndex: Int = 0
+    ) {
+        self.id = id
+        self.mediaType = mediaType
+        self.fileName = fileName
+        self.fileExtension = fileExtension
+        self.fileSize = fileSize
+        self.hashSHA256 = hashSHA256
+        self.data = data
+        self.widthPoints = widthPoints
+        self.heightPoints = heightPoints
+        self.relationshipId = relationshipId
+        self.paragraphIndex = paragraphIndex
+    }
+}
+
+public struct WordMediaDiffItem: Identifiable, Sendable, Equatable {
+    public let id: UUID
+    public let changeType: ChangeType
+    public let mediaType: WordMediaType
+    public let leftMedia: WordMediaItem?
+    public let rightMedia: WordMediaItem?
+    public let changeDescriptions: [String]
+
+    public init(
+        id: UUID = UUID(),
+        changeType: ChangeType,
+        mediaType: WordMediaType = .image,
+        leftMedia: WordMediaItem? = nil,
+        rightMedia: WordMediaItem? = nil,
+        changeDescriptions: [String] = []
+    ) {
+        self.id = id
+        self.changeType = changeType
+        self.mediaType = mediaType
+        self.leftMedia = leftMedia
+        self.rightMedia = rightMedia
+        self.changeDescriptions = changeDescriptions
+    }
+}
+
 public struct WordParagraph: Identifiable, Sendable, Codable, Equatable {
     public let id: UUID
     public let index: Int
@@ -110,8 +197,10 @@ public struct WordParagraph: Identifiable, Sendable, Codable, Equatable {
     public let runs: [WordTextRun]
     public let style: WordParagraphStyle
     public let bulletPrefix: String?
+    public var mediaItems: [WordMediaItem]
 
     public var isHeading: Bool { headingLevel != nil }
+    public var hasMedia: Bool { !mediaItems.isEmpty }
 
     public init(
         id: UUID = UUID(),
@@ -120,7 +209,8 @@ public struct WordParagraph: Identifiable, Sendable, Codable, Equatable {
         text: String,
         runs: [WordTextRun] = [],
         style: WordParagraphStyle = WordParagraphStyle(),
-        bulletPrefix: String? = nil
+        bulletPrefix: String? = nil,
+        mediaItems: [WordMediaItem] = []
     ) {
         self.id = id
         self.index = index
@@ -129,6 +219,7 @@ public struct WordParagraph: Identifiable, Sendable, Codable, Equatable {
         self.runs = runs
         self.style = style
         self.bulletPrefix = bulletPrefix
+        self.mediaItems = mediaItems
     }
 }
 
@@ -297,10 +388,16 @@ public struct WordDiffBlock: Identifiable, Sendable {
     public let tokensLeft: [DiffToken]
     public let tokensRight: [DiffToken]
     public let formatDifferences: [FormatDiffItem]
+    public let mediaDifferences: [WordMediaDiffItem]
     public let isFormatOnly: Bool
 
     public var isPhantomLeft: Bool { leftParagraph == nil }
     public var isPhantomRight: Bool { rightParagraph == nil }
+    public var hasMedia: Bool {
+        !(leftParagraph?.mediaItems.isEmpty ?? true) ||
+        !(rightParagraph?.mediaItems.isEmpty ?? true) ||
+        !mediaDifferences.isEmpty
+    }
 
     public init(
         id: UUID = UUID(),
@@ -311,6 +408,7 @@ public struct WordDiffBlock: Identifiable, Sendable {
         tokensLeft: [DiffToken] = [],
         tokensRight: [DiffToken] = [],
         formatDifferences: [FormatDiffItem] = [],
+        mediaDifferences: [WordMediaDiffItem] = [],
         isFormatOnly: Bool = false
     ) {
         self.id = id
@@ -321,6 +419,7 @@ public struct WordDiffBlock: Identifiable, Sendable {
         self.tokensLeft = tokensLeft
         self.tokensRight = tokensRight
         self.formatDifferences = formatDifferences
+        self.mediaDifferences = mediaDifferences
         self.isFormatOnly = isFormatOnly
     }
 }
@@ -406,9 +505,10 @@ public struct WordDiffResult: Sendable {
     public var totalDeletions: Int
     public var totalModifications: Int
     public var totalFormatChanges: Int
+    public var totalMediaChanges: Int
 
     public var totalDifferences: Int {
-        totalAdditions + totalDeletions + totalModifications + totalFormatChanges
+        totalAdditions + totalDeletions + totalModifications + totalFormatChanges + totalMediaChanges
     }
 
     public init(
@@ -418,7 +518,8 @@ public struct WordDiffResult: Sendable {
         totalAdditions: Int = 0,
         totalDeletions: Int = 0,
         totalModifications: Int = 0,
-        totalFormatChanges: Int = 0
+        totalFormatChanges: Int = 0,
+        totalMediaChanges: Int = 0
     ) {
         self.blocks = blocks
         self.tableDiffs = tableDiffs
@@ -427,5 +528,6 @@ public struct WordDiffResult: Sendable {
         self.totalDeletions = totalDeletions
         self.totalModifications = totalModifications
         self.totalFormatChanges = totalFormatChanges
+        self.totalMediaChanges = totalMediaChanges
     }
 }

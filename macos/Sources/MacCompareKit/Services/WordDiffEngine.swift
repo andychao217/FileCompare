@@ -14,8 +14,8 @@ public final class WordDiffEngine: Sendable {
         ignoreWhitespace: Bool = false,
         ignoreFormatting: Bool = false
     ) async -> WordDiffResult {
-        // 1. Paragraph-Level Alignment & Diff
-        let (blocks, adds, dels, mods, formatChanges) = computeParagraphDiff(
+        // 1. Paragraph & Media Comparison
+        let (blocks, adds, dels, mods, formatChanges, mediaChanges) = computeParagraphDiff(
             leftParas: left.paragraphs,
             rightParas: right.paragraphs,
             ignoreWhitespace: ignoreWhitespace,
@@ -35,7 +35,8 @@ public final class WordDiffEngine: Sendable {
             totalAdditions: adds,
             totalDeletions: dels,
             totalModifications: mods,
-            totalFormatChanges: formatChanges
+            totalFormatChanges: formatChanges,
+            totalMediaChanges: mediaChanges
         )
     }
 
@@ -46,7 +47,7 @@ public final class WordDiffEngine: Sendable {
         rightParas: [WordParagraph],
         ignoreWhitespace: Bool,
         ignoreFormatting: Bool
-    ) -> (blocks: [WordDiffBlock], additions: Int, deletions: Int, modifications: Int, formatChanges: Int) {
+    ) -> (blocks: [WordDiffBlock], additions: Int, deletions: Int, modifications: Int, formatChanges: Int, mediaChanges: Int) {
         let leftTexts = leftParas.map { sanitizeText($0.text, ignoreWhitespace: ignoreWhitespace) }
         let rightTexts = rightParas.map { sanitizeText($0.text, ignoreWhitespace: ignoreWhitespace) }
 
@@ -58,6 +59,7 @@ public final class WordDiffEngine: Sendable {
         var dels = 0
         var mods = 0
         var formatChanges = 0
+        var mediaChanges = 0
         var blockIdx = 0
 
         for edit in edits {
@@ -69,16 +71,30 @@ public final class WordDiffEngine: Sendable {
                 let formatDiffs = ignoreFormatting ? [] : detectFormatDifferences(left: lPara, right: rPara)
                 let isFormatOnly = !formatDiffs.isEmpty
 
+                let mediaDiffs = compareParagraphMedia(leftMedia: lPara.mediaItems, rightMedia: rPara.mediaItems)
+                let hasMediaChanges = mediaDiffs.contains { $0.changeType != .unchanged }
+
                 if isFormatOnly {
                     formatChanges += 1
                 }
+                if hasMediaChanges {
+                    mediaChanges += mediaDiffs.filter { $0.changeType != .unchanged }.count
+                }
+
+                let effectiveChangeType: ChangeType = {
+                    if hasMediaChanges || isFormatOnly {
+                        return .modified
+                    }
+                    return .unchanged
+                }()
 
                 let block = WordDiffBlock(
                     blockIndex: blockIdx,
                     leftParagraph: lPara,
                     rightParagraph: rPara,
-                    changeType: isFormatOnly ? .modified : .unchanged,
+                    changeType: effectiveChangeType,
                     formatDifferences: formatDiffs,
+                    mediaDifferences: mediaDiffs,
                     isFormatOnly: isFormatOnly
                 )
                 blocks.append(block)
@@ -87,11 +103,18 @@ public final class WordDiffEngine: Sendable {
             case .delete(let leftIdx):
                 let lPara = leftParas[leftIdx]
                 dels += 1
+                let mediaDiffs = lPara.mediaItems.map {
+                    WordMediaDiffItem(changeType: .deleted, mediaType: $0.mediaType, leftMedia: $0, changeDescriptions: ["媒体资源已被移除"])
+                }
+                if !mediaDiffs.isEmpty {
+                    mediaChanges += mediaDiffs.count
+                }
                 let block = WordDiffBlock(
                     blockIndex: blockIdx,
                     leftParagraph: lPara,
                     rightParagraph: nil,
-                    changeType: .deleted
+                    changeType: .deleted,
+                    mediaDifferences: mediaDiffs
                 )
                 blocks.append(block)
                 blockIdx += 1
@@ -99,11 +122,18 @@ public final class WordDiffEngine: Sendable {
             case .insert(let rightIdx):
                 let rPara = rightParas[rightIdx]
                 adds += 1
+                let mediaDiffs = rPara.mediaItems.map {
+                    WordMediaDiffItem(changeType: .added, mediaType: $0.mediaType, rightMedia: $0, changeDescriptions: ["新增媒体资源"])
+                }
+                if !mediaDiffs.isEmpty {
+                    mediaChanges += mediaDiffs.count
+                }
                 let block = WordDiffBlock(
                     blockIndex: blockIdx,
                     leftParagraph: nil,
                     rightParagraph: rPara,
-                    changeType: .added
+                    changeType: .added,
+                    mediaDifferences: mediaDiffs
                 )
                 blocks.append(block)
                 blockIdx += 1
@@ -121,6 +151,12 @@ public final class WordDiffEngine: Sendable {
                 )
 
                 let formatDiffs = ignoreFormatting ? [] : detectFormatDifferences(left: lPara, right: rPara)
+                let mediaDiffs = compareParagraphMedia(leftMedia: lPara.mediaItems, rightMedia: rPara.mediaItems)
+                let hasMediaDiffs = mediaDiffs.contains { $0.changeType != .unchanged }
+
+                if hasMediaDiffs {
+                    mediaChanges += mediaDiffs.filter { $0.changeType != .unchanged }.count
+                }
 
                 let block = WordDiffBlock(
                     blockIndex: blockIdx,
@@ -130,6 +166,7 @@ public final class WordDiffEngine: Sendable {
                     tokensLeft: tokensLeft,
                     tokensRight: tokensRight,
                     formatDifferences: formatDiffs,
+                    mediaDifferences: mediaDiffs,
                     isFormatOnly: false
                 )
                 blocks.append(block)
@@ -137,7 +174,68 @@ public final class WordDiffEngine: Sendable {
             }
         }
 
-        return (blocks, adds, dels, mods, formatChanges)
+        return (blocks, adds, dels, mods, formatChanges, mediaChanges)
+    }
+
+    // MARK: - Multimedia Diff Detection
+
+    private func compareParagraphMedia(leftMedia: [WordMediaItem], rightMedia: [WordMediaItem]) -> [WordMediaDiffItem] {
+        var diffs: [WordMediaDiffItem] = []
+        let maxCount = max(leftMedia.count, rightMedia.count)
+
+        for i in 0..<maxCount {
+            if i < leftMedia.count && i < rightMedia.count {
+                let l = leftMedia[i]
+                let r = rightMedia[i]
+
+                if l.hashSHA256 == r.hashSHA256 {
+                    diffs.append(WordMediaDiffItem(
+                        changeType: .unchanged,
+                        mediaType: l.mediaType,
+                        leftMedia: l,
+                        rightMedia: r
+                    ))
+                } else {
+                    var desc: [String] = ["媒体资源内容已更改"]
+                    if l.fileSize != r.fileSize {
+                        desc.append("大小: \(l.formattedSize) → \(r.formattedSize)")
+                    }
+                    if let lw = l.widthPoints, let lh = l.heightPoints,
+                       let rw = r.widthPoints, let rh = r.heightPoints {
+                        if Int(lw) != Int(rw) || Int(lh) != Int(rh) {
+                            desc.append("尺寸: \(Int(lw))×\(Int(lh))pt → \(Int(rw))×\(Int(rh))pt")
+                        }
+                    }
+                    diffs.append(WordMediaDiffItem(
+                        changeType: .modified,
+                        mediaType: r.mediaType,
+                        leftMedia: l,
+                        rightMedia: r,
+                        changeDescriptions: desc
+                    ))
+                }
+            } else if i < leftMedia.count {
+                let l = leftMedia[i]
+                diffs.append(WordMediaDiffItem(
+                    changeType: .deleted,
+                    mediaType: l.mediaType,
+                    leftMedia: l,
+                    rightMedia: nil,
+                    changeDescriptions: ["\(l.mediaType.rawValue) 已被移除 (\(l.fileName))"]
+                ))
+            } else if i < rightMedia.count {
+                let r = rightMedia[i]
+                diffs.append(WordMediaDiffItem(
+                    changeType: .added,
+                    mediaType: r.mediaType,
+                    leftMedia: nil,
+                    rightMedia: r,
+                    changeDescriptions: ["新增 \(r.mediaType.rawValue) (\(r.fileName))"]
+                ))
+            }
+        }
+
+        return diffs
     }
 
     // MARK: - Format & Style Diff Detection

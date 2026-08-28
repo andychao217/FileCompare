@@ -217,7 +217,10 @@ public final class WordDiffViewModel {
                 .badge-del { background: #fee2e2; color: #b91c1c; }
                 .badge-mod { background: #fef3c7; color: #b45309; }
                 .badge-fmt { background: #f3e8ff; color: #6b21a8; }
+                .badge-media { background: #e0f2fe; color: #0369a1; }
                 .format-note { font-size: 12px; color: #6b21a8; margin-top: 4px; font-style: italic; }
+                .media-card { display: inline-block; margin-top: 6px; padding: 6px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; }
+                .media-img { max-width: 240px; max-height: 160px; border-radius: 4px; border: 1px solid #cbd5e1; margin-top: 4px; display: block; }
             </style>
         </head>
         <body>
@@ -230,6 +233,7 @@ public final class WordDiffViewModel {
                     <span class="stat-del">- \(diffResult.totalDeletions) Deleted</span>
                     <span class="stat-mod">~ \(diffResult.totalModifications) Modified</span>
                     <span class="stat-fmt">* \(diffResult.totalFormatChanges) Format Changes</span>
+                    <span class="stat-mod">🖼️ \(diffResult.totalMediaChanges) Media Changes</span>
                 </div>
             </div>
 
@@ -256,14 +260,43 @@ public final class WordDiffViewModel {
                 badge = "<span class='badge badge-del'>- DEL</span>"
             case .modified:
                 rowClass = "modified"
-                badge = block.isFormatOnly ? "<span class='badge badge-fmt'>* FMT</span>" : "<span class='badge badge-mod'>~ MOD</span>"
+                if !block.mediaDifferences.isEmpty && block.mediaDifferences.contains(where: { $0.changeType != .unchanged }) {
+                    badge = "<span class='badge badge-media'>🖼️ MEDIA</span>"
+                } else if block.isFormatOnly {
+                    badge = "<span class='badge badge-fmt'>* FMT</span>"
+                } else {
+                    badge = "<span class='badge badge-mod'>~ MOD</span>"
+                }
             case .unchanged:
                 rowClass = ""
                 badge = ""
             }
 
-            let leftText = block.leftParagraph?.text ?? "<span style='color: #94a3b8;'>—</span>"
-            let rightText = block.rightParagraph?.text ?? "<span style='color: #94a3b8;'>—</span>"
+            var leftContent = block.leftParagraph?.text ?? "<span style='color: #94a3b8;'>—</span>"
+            var rightContent = block.rightParagraph?.text ?? "<span style='color: #94a3b8;'>—</span>"
+
+            // Append Media Thumbnails to HTML
+            if let leftMedia = block.leftParagraph?.mediaItems {
+                for m in leftMedia {
+                    if m.mediaType == .image, let data = m.data {
+                        let base64 = data.base64EncodedString()
+                        leftContent += "<div><img class='media-img' src='data:image/\(m.fileExtension);base64,\(base64)' alt='\(m.fileName)'/></div>"
+                    } else {
+                        leftContent += "<div class='media-card'>📎 \(m.fileName) (\(m.formattedSize))</div>"
+                    }
+                }
+            }
+
+            if let rightMedia = block.rightParagraph?.mediaItems {
+                for m in rightMedia {
+                    if m.mediaType == .image, let data = m.data {
+                        let base64 = data.base64EncodedString()
+                        rightContent += "<div><img class='media-img' src='data:image/\(m.fileExtension);base64,\(base64)' alt='\(m.fileName)'/></div>"
+                    } else {
+                        rightContent += "<div class='media-card'>📎 \(m.fileName) (\(m.formattedSize))</div>"
+                    }
+                }
+            }
 
             var formatNotes = ""
             if !block.formatDifferences.isEmpty {
@@ -274,8 +307,8 @@ public final class WordDiffViewModel {
             html += """
                 <tr class="\(rowClass)">
                     <td style="color: #94a3b8; font-size: 11px;">\(block.blockIndex + 1)</td>
-                    <td>\(leftText)</td>
-                    <td>\(badge)\(rightText)\(formatNotes)</td>
+                    <td>\(leftContent)</td>
+                    <td>\(badge)\(rightContent)\(formatNotes)</td>
                 </tr>
             """
         }

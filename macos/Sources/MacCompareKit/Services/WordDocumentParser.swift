@@ -1,8 +1,9 @@
 import Foundation
 import AppKit
 import UniformTypeIdentifiers
+import CryptoKit
 
-/// Parser responsible for extracting structured content, rich text runs, tables, and metadata from .docx and .doc files.
+/// Parser responsible for extracting structured content, rich text runs, tables, metadata and multimedia from .docx and .doc files.
 public final class WordDocumentParser: Sendable {
     public static let shared = WordDocumentParser()
 
@@ -32,7 +33,6 @@ public final class WordDocumentParser: Sendable {
     // MARK: - DOCX Parser (OpenXML + AppKit Hybrid)
 
     private func parseDocx(from url: URL, formattedSize: String) async throws -> WordDocumentModel {
-        // Try XML-level extraction for tables and headings first, fallback to NSAttributedString
         var paragraphs: [WordParagraph] = []
         var tables: [WordTable] = []
         var comments: [WordComment] = []
@@ -49,15 +49,15 @@ public final class WordDocumentParser: Sendable {
             extractMetadataFromAttributes(docAttrs, into: &metadata)
         }
 
-        // 2. XML Extraction for tables, comments, and structure enrichment
-        if let xmlData = try? extractDocxXML(from: url) {
-            if let extractedTables = parseDocxTablesFromXML(xmlData.documentXML), !extractedTables.isEmpty {
+        // 2. XML Extraction for tables, comments, media and structure enrichment
+        if let bundle = try? extractDocxXML(from: url) {
+            if let extractedTables = parseDocxTablesFromXML(bundle.documentXML), !extractedTables.isEmpty {
                 tables = extractedTables
             }
-            if let extractedComments = parseDocxCommentsFromXML(xmlData.commentsXML) {
+            if let extractedComments = parseDocxCommentsFromXML(bundle.commentsXML) {
                 comments = extractedComments
             }
-            if let coreMeta = parseDocxCorePropsXML(xmlData.corePropsXML) {
+            if let coreMeta = parseDocxCorePropsXML(bundle.corePropsXML) {
                 if let title = coreMeta.title { metadata.title = title }
                 if let author = coreMeta.author { metadata.author = author }
                 if let modifiedBy = coreMeta.lastModifiedBy { metadata.lastModifiedBy = modifiedBy }
@@ -65,6 +65,9 @@ public final class WordDocumentParser: Sendable {
                 if let modified = coreMeta.modifiedAt { metadata.modifiedAt = modified }
                 if let revision = coreMeta.revision { metadata.revision = revision }
             }
+
+            // Enrich paragraphs with media items extracted from XML
+            enrichParagraphsWithDocxMedia(paragraphs: &paragraphs, bundle: bundle)
         }
 
         // Calculate counts
@@ -189,9 +192,39 @@ public final class WordDocumentParser: Sendable {
                 detectedHeadingLevel = 3
             }
 
+            var foundAttachmentMedia: [WordMediaItem] = []
+
             if paraRange.length > 0 && paraRange.location + paraRange.length <= (attrStr.string as NSString).length {
                 attrStr.enumerateAttributes(in: paraRange, options: []) { attrs, range, _ in
                     let subText = (attrStr.string as NSString).substring(with: range)
+
+                    // Check for embedded text attachment images
+                    if let attachment = attrs[.attachment] as? NSTextAttachment {
+                        var imgData: Data? = nil
+                        if let img = attachment.image {
+                            if let tiff = img.tiffRepresentation,
+                               let bitmap = NSBitmapImageRep(data: tiff) {
+                                imgData = bitmap.representation(using: .png, properties: [:])
+                            }
+                        } else if let fileWrapper = attachment.fileWrapper, let contents = fileWrapper.regularFileContents {
+                            imgData = contents
+                        }
+
+                        if let data = imgData {
+                            let hash = self.computeSHA256Hex(data: data)
+                            let mediaItem = WordMediaItem(
+                                mediaType: .image,
+                                fileName: "image_\(pIndex + 1).png",
+                                fileExtension: "png",
+                                fileSize: data.count,
+                                hashSHA256: hash,
+                                data: data,
+                                paragraphIndex: pIndex + 1
+                            )
+                            foundAttachmentMedia.append(mediaItem)
+                        }
+                    }
+
                     if subText.isEmpty { return }
 
                     var isBold = false
@@ -252,7 +285,7 @@ public final class WordDocumentParser: Sendable {
                 }
             }
 
-            if runs.isEmpty {
+            if runs.isEmpty && foundAttachmentMedia.isEmpty {
                 runs.append(WordTextRun(text: rawPara))
             }
 
@@ -267,7 +300,8 @@ public final class WordDocumentParser: Sendable {
                 text: rawPara,
                 runs: runs,
                 style: paraStyle,
-                bulletPrefix: bulletPrefix
+                bulletPrefix: bulletPrefix,
+                mediaItems: foundAttachmentMedia
             )
             paragraphs.append(paragraph)
         }
@@ -297,6 +331,8 @@ public final class WordDocumentParser: Sendable {
         var documentXML: String
         var commentsXML: String?
         var corePropsXML: String?
+        var mediaDataMap: [String: Data] // "media/image1.png" -> Data
+        var relationships: [String: String] // "rId4" -> "media/image1.png"
     }
 
     private func extractDocxXML(from url: URL) throws -> DocxXMLBundle? {
@@ -331,11 +367,150 @@ public final class WordDocumentParser: Sendable {
             corePropsContent = try? String(contentsOf: corePropsPath, encoding: .utf8)
         }
 
+        // Extract media files (word/media/*)
+        var mediaDataMap: [String: Data] = [:]
+        let mediaDir = tempDir.appendingPathComponent("word/media")
+        if let mediaFiles = try? FileManager.default.contentsOfDirectory(atPath: mediaDir.path) {
+            for fileName in mediaFiles {
+                let filePath = mediaDir.appendingPathComponent(fileName)
+                if let data = try? Data(contentsOf: filePath) {
+                    mediaDataMap["media/\(fileName)"] = data
+                }
+            }
+        }
+
+        // Extract relationships (word/_rels/document.xml.rels)
+        var relationships: [String: String] = [:]
+        let relsPath = tempDir.appendingPathComponent("word/_rels/document.xml.rels")
+        if let relsContent = try? String(contentsOf: relsPath, encoding: .utf8) {
+            let relPattern = "(?s)<Relationship[^>]*Id=\"([^\"]+)\"[^>]*Target=\"([^\"]+)\""
+            if let relRegex = try? NSRegularExpression(pattern: relPattern) {
+                let matches = relRegex.matches(in: relsContent, range: NSRange(relsContent.startIndex..., in: relsContent))
+                for m in matches {
+                    if let idRange = Range(m.range(at: 1), in: relsContent),
+                       let targetRange = Range(m.range(at: 2), in: relsContent) {
+                        let rId = String(relsContent[idRange])
+                        let target = String(relsContent[targetRange])
+                        relationships[rId] = target
+                    }
+                }
+            }
+        }
+
         return DocxXMLBundle(
             documentXML: docContent,
             commentsXML: commentsContent,
-            corePropsXML: corePropsContent
+            corePropsXML: corePropsContent,
+            mediaDataMap: mediaDataMap,
+            relationships: relationships
         )
+    }
+
+    private func enrichParagraphsWithDocxMedia(paragraphs: inout [WordParagraph], bundle: DocxXMLBundle) {
+        guard !bundle.mediaDataMap.isEmpty else { return }
+
+        // Find all <w:p>...</w:p> blocks in document.xml
+        let pPattern = "(?s)<w:p(?: [^>]*)?>(.*?)</w:p>"
+        guard let pRegex = try? NSRegularExpression(pattern: pPattern) else { return }
+        let pMatches = pRegex.matches(in: bundle.documentXML, range: NSRange(bundle.documentXML.startIndex..., in: bundle.documentXML))
+
+        // Regexes for image embeddings and extents
+        let blipRegex = try? NSRegularExpression(pattern: "<a:blip[^>]*r:embed=\"([^\"]+)\"")
+        let vmlRegex = try? NSRegularExpression(pattern: "<v:imagedata[^>]*r:id=\"([^\"]+)\"")
+        let extentRegex = try? NSRegularExpression(pattern: "<wp:extent[^>]*cx=\"([0-9]+)\"[^>]*cy=\"([0-9]+)\"")
+
+        var nonTablePIndex = 0
+        for pMatch in pMatches {
+            guard let pRange = Range(pMatch.range(at: 1), in: bundle.documentXML) else { continue }
+            let pContent = String(bundle.documentXML[pRange])
+
+            var foundMedia: [WordMediaItem] = []
+
+            // Check drawing extents (EMU / 12700 = pt)
+            var widthPt: CGFloat? = nil
+            var heightPt: CGFloat? = nil
+            if let extentMatch = extentRegex?.firstMatch(in: pContent, range: NSRange(pContent.startIndex..., in: pContent)) {
+                if let cxRange = Range(extentMatch.range(at: 1), in: pContent),
+                   let cyRange = Range(extentMatch.range(at: 2), in: pContent),
+                   let cx = Double(pContent[cxRange]),
+                   let cy = Double(pContent[cyRange]) {
+                    widthPt = CGFloat(cx / 12700.0)
+                    heightPt = CGFloat(cy / 12700.0)
+                }
+            }
+
+            // Check OpenXML Drawing Blip
+            var rIds: [String] = []
+            if let blipMatches = blipRegex?.matches(in: pContent, range: NSRange(pContent.startIndex..., in: pContent)) {
+                for bm in blipMatches {
+                    if let rRange = Range(bm.range(at: 1), in: pContent) {
+                        rIds.append(String(pContent[rRange]))
+                    }
+                }
+            }
+
+            // Check VML legacy Image
+            if let vmlMatches = vmlRegex?.matches(in: pContent, range: NSRange(pContent.startIndex..., in: pContent)) {
+                for vm in vmlMatches {
+                    if let rRange = Range(vm.range(at: 1), in: pContent) {
+                        rIds.append(String(pContent[rRange]))
+                    }
+                }
+            }
+
+            for rId in rIds {
+                guard let targetPath = bundle.relationships[rId] else { continue }
+                // normalize targetPath e.g. "media/image1.png" or "../media/image1.png"
+                let cleanTarget = targetPath.replacingOccurrences(of: "../", with: "")
+                guard let data = bundle.mediaDataMap[cleanTarget] else { continue }
+
+                let fileName = (cleanTarget as NSString).lastPathComponent
+                let fileExt = (fileName as NSString).pathExtension.lowercased()
+                let hash = computeSHA256Hex(data: data)
+                let mediaType = determineMediaType(forExtension: fileExt)
+
+                let mediaItem = WordMediaItem(
+                    mediaType: mediaType,
+                    fileName: fileName,
+                    fileExtension: fileExt,
+                    fileSize: data.count,
+                    hashSHA256: hash,
+                    data: data,
+                    widthPoints: widthPt,
+                    heightPoints: heightPt,
+                    relationshipId: rId,
+                    paragraphIndex: nonTablePIndex + 1
+                )
+                foundMedia.append(mediaItem)
+            }
+
+            if !foundMedia.isEmpty && nonTablePIndex < paragraphs.count {
+                paragraphs[nonTablePIndex].mediaItems.append(contentsOf: foundMedia)
+            }
+
+            let textContent = extractTextFromXML(pContent).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !textContent.isEmpty || !foundMedia.isEmpty {
+                nonTablePIndex += 1
+            }
+        }
+    }
+
+    private func determineMediaType(forExtension ext: String) -> WordMediaType {
+        switch ext {
+        case "png", "jpg", "jpeg", "gif", "webp", "tiff", "bmp", "svg", "ico":
+            return .image
+        case "mp4", "mov", "avi", "m4v", "mkv", "webm":
+            return .video
+        case "mp3", "m4a", "wav", "aac", "ogg", "flac":
+            return .audio
+        default:
+            return .attachment
+        }
+    }
+
+    private func computeSHA256Hex(data: Data) -> String {
+        let digest = SHA256.hash(data: data)
+        return digest.map { String(format: "%02x", $0) }.joined()
     }
 
     private func parseDocxTablesFromXML(_ xml: String) -> [WordTable]? {

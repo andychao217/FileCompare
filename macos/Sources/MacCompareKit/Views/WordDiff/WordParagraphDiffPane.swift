@@ -85,7 +85,8 @@ public struct WordParagraphDiffPane: View {
                                 changeType: block.changeType,
                                 tokens: block.tokensLeft,
                                 isLeft: true,
-                                isSelected: isSelected
+                                isSelected: isSelected,
+                                mediaDifferences: block.mediaDifferences
                             )
 
                             // Center Gutter / Marker
@@ -98,7 +99,8 @@ public struct WordParagraphDiffPane: View {
                                 tokens: block.tokensRight,
                                 isLeft: false,
                                 isSelected: isSelected,
-                                formatDifferences: block.formatDifferences
+                                formatDifferences: block.formatDifferences,
+                                mediaDifferences: block.mediaDifferences
                             )
                         }
                         .id(block.blockIndex)
@@ -131,8 +133,25 @@ public struct WordParagraphDiffPane: View {
                             .foregroundColor(.secondary.opacity(0.7))
                             .frame(width: 28, alignment: .trailing)
 
-                        renderedRunsText(runs: p.runs, baseText: p.text, headingLevel: p.headingLevel)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        VStack(alignment: .leading, spacing: 4) {
+                            renderedRunsText(runs: p.runs, baseText: p.text, headingLevel: p.headingLevel)
+
+                            if !p.mediaItems.isEmpty {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    ForEach(p.mediaItems) { item in
+                                        let dummyDiff = WordMediaDiffItem(
+                                            changeType: .unchanged,
+                                            mediaType: item.mediaType,
+                                            leftMedia: isLeft ? item : nil,
+                                            rightMedia: isLeft ? nil : item
+                                        )
+                                        WordMediaThumbnailView(mediaDiff: dummyDiff, isLeft: isLeft)
+                                    }
+                                }
+                                .padding(.top, 4)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 8)
@@ -211,7 +230,8 @@ public struct WordParagraphDiffPane: View {
         tokens: [DiffToken],
         isLeft: Bool,
         isSelected: Bool,
-        formatDifferences: [FormatDiffItem] = []
+        formatDifferences: [FormatDiffItem] = [],
+        mediaDifferences: [WordMediaDiffItem] = []
     ) -> some View {
         if let p = paragraph {
             VStack(alignment: .leading, spacing: 4) {
@@ -252,6 +272,29 @@ public struct WordParagraphDiffPane: View {
                             .onTapGesture {
                                 activePopoverBlockId = p.id
                             }
+                        }
+
+                        // Media Differences Rendering
+                        if !mediaDifferences.isEmpty {
+                            VStack(alignment: .leading, spacing: 6) {
+                                ForEach(mediaDifferences) { mDiff in
+                                    WordMediaThumbnailView(mediaDiff: mDiff, isLeft: isLeft)
+                                }
+                            }
+                            .padding(.top, 4)
+                        } else if !p.mediaItems.isEmpty {
+                            VStack(alignment: .leading, spacing: 6) {
+                                ForEach(p.mediaItems) { item in
+                                    let dummyDiff = WordMediaDiffItem(
+                                        changeType: .unchanged,
+                                        mediaType: item.mediaType,
+                                        leftMedia: isLeft ? item : nil,
+                                        rightMedia: isLeft ? nil : item
+                                    )
+                                    WordMediaThumbnailView(mediaDiff: dummyDiff, isLeft: isLeft)
+                                }
+                            }
+                            .padding(.top, 4)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
