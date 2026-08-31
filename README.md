@@ -1,10 +1,136 @@
 # MacCompare
 
-> **MacCompare** 是专为 macOS 生态打造的高性能、现代原生文件与目录对比合并工具。基于 Rust 高性能差分引擎与原生 SwiftUI/AppKit 深度构建，支持 Universal Binary 2 (Apple Silicon M系列 + Intel x86_64)。
+<p align="center">
+  <b>A modern, high-performance native file & directory comparison and merge tool for macOS.</b><br>
+  <b>专为 macOS 生态打造的高性能、现代原生文件与目录对比合并工具。</b>
+</p>
+
+<p align="center">
+  <a href="#english">English</a> • <a href="#简体中文">简体中文</a>
+</p>
 
 ---
 
-## 🌟 核心特性
+<a name="english"></a>
+## English
+
+> **MacCompare** is a high-performance, modern native file & directory comparison and merge tool tailored for macOS. Built with a high-performance Rust differential engine and native SwiftUI / AppKit, supporting Universal Binary 2 (Apple Silicon M-Series + Intel x86_64).
+
+### 🌟 Key Features
+
+- **📄 Structured Word Document Comparison (.docx / .doc)**:
+  - **Body Text & Styling Diff**: High-fidelity paragraph text flow reconstruction, with granular diffing for font weight, italics, underline, font size, and color changes.
+  - **Native Embedded Table Grid Diff**: Cell-level precision difference tracking (Green for additions, Red for deletions, Orange for modifications) without misalignments.
+  - **Multimedia & Vector Graphics**: Deep SHA-256 fingerprint comparison for embedded images, audio/video, and attachments; native rendering of Word vector shapes (DrawingML Shape).
+  - **Outline & Metadata**: Automatic extraction of H1~H6 heading outlines with one-click anchor navigation; comparison of author, creation/modification timestamps, and word count statistics.
+- **⚡ Modern Native UI & Two-Stage Diff**: Native SwiftUI + AppKit architecture with macOS Tahoe material styling, Retina smooth scrolling, and seamless Dark/Light mode adaptation. Features line-level change positioning and word/character-level granular highlighting, complete with Phantom Line Alignment.
+- **🔀 Git 3-Way Conflict Merge**: Visual 3-way conflict resolution across Local vs. Base vs. Remote, intelligent auto-merging of non-conflicting sections, and one-click conflict resolution.
+- **📁 Blazing-Fast Folder Diff & Sync**: Quick timestamp/size checks and deep CRC32 hash comparison, featuring rule-based bidirectional synchronization with safe Dry-Run preview.
+- **🛠️ Developer Ecosystem & CLI Integration**: Built-in `mcdiff` terminal CLI tool, with out-of-the-box integration for `git difftool` and `git mergetool`.
+
+### 📸 Screenshots & UI Preview
+
+#### 1. Word Document Structured Comparison (Word Diff)
+
+| Dark UI | Light UI |
+| :---: | :---: |
+| ![Word Diff Dark](docs/assets/word_diff_dark_ui.png) | ![Word Diff Light](docs/assets/word_diff_light_ui.png) |
+
+#### 2. Fine-Grained Text & Code Comparison (Text Diff)
+
+| 2-Way Text Diff | 3-Way Merge |
+| :---: | :---: |
+| ![Text Diff](docs/assets/text_diff_ui.jpg) | ![3-Way Merge](docs/assets/three_way_merge_ui.jpg) |
+
+#### 3. Folder Fast Diff & Sync (Folder Diff)
+
+![Folder Diff](docs/assets/folder_diff_ui.jpg)
+
+### 📁 Project Structure
+
+```
+FileCompare/
+├── docs/                             # Official website & documentation (GitHub Pages)
+│   ├── assets/                       # Screenshots and web visual assets
+│   ├── index.html                    # Homepage
+│   ├── styles.css                    # Glassmorphism & adaptive responsive styles
+│   └── script.js                     # Interactions & multi-language switcher (EN/ZH/JA)
+│
+├── core/                             # Rust high-performance core engine (Cargo Workspace)
+│   ├── crates/diff-core/             # Myers/Patience Diff algorithm & 3-Way Merge
+│   ├── crates/fs-scanner/            # Fast concurrent directory scanner & CRC32 hashing
+│   ├── crates/syntax-highlighter/    # Tree-sitter incremental syntax highlighting interface
+│   └── crates/maccompare-ffi/        # UniFFI / C-ABI cross-language bindings
+│
+├── macos/                            # macOS native application (Swift 6 / SPM)
+│   ├── Package.swift                 # SPM modular configuration
+│   ├── Sources/
+│   │   ├── MacCompareKit/            # Core models, ViewModels, Word parser & UI components
+│   │   ├── MacCompare/               # macOS main application
+│   │   └── mcdiff/                   # Terminal CLI comparison tool
+│   └── Tests/MacCompareTests/        # Unit test suite
+│
+└── scripts/                          # Build and release automation scripts
+    ├── build_universal_lib.sh        # Universal Binary 2 (arm64 + x86_64) compilation
+    ├── package_dmg.sh                # Automated code signing & DMG release packaging
+    └── run_app.sh                    # Build and run locally for testing
+```
+
+### 🚀 Quick Start
+
+#### Build & Run Tests
+
+```bash
+cd macos
+swift build
+swift test
+```
+
+#### Using Terminal CLI (`mcdiff`)
+
+```bash
+# 1. Compare two text / code files
+mcdiff file_a.txt file_b.txt
+
+# 2. Compare two Word documents (.docx / .doc)
+mcdiff document_v1.docx document_v2.docx
+
+# 3. Compare two directories
+mcdiff dir_a/ dir_b/
+
+# 4. Git 3-Way conflict merge
+mcdiff --merge local.py base.py remote.py -o merged.py
+```
+
+#### Configure as Default Git Diff & Merge Tool
+
+```bash
+git config --global merge.tool maccompare
+git config --global mergetool.maccompare.cmd 'mcdiff "$LOCAL" "$REMOTE" -b "$BASE" -m "$MERGED"'
+git config --global mergetool.maccompare.trustExitCode true
+
+git config --global diff.tool maccompare
+git config --global difftool.maccompare.cmd 'mcdiff "$LOCAL" "$REMOTE"'
+```
+
+#### Package Universal DMG Release
+
+```bash
+./scripts/package_dmg.sh 0.2.0
+```
+
+### 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+<a name="简体中文"></a>
+## 简体中文
+
+> **MacCompare** 是专为 macOS 生态打造的高性能、现代原生文件与目录对比合并工具。基于 Rust 高性能差分引擎与原生 SwiftUI/AppKit 深度构建，支持 Universal Binary 2 (Apple Silicon M系列 + Intel x86_64)。
+
+### 🌟 核心特性
 
 - **📄 Word 文档结构化全要素比对 (.docx / .doc)**：
   - **正文与样式对比**：高保真还原段落文字流，精细比对字体加粗、倾斜、下划线、字号及颜色变动。
@@ -16,29 +142,25 @@
 - **📁 极速文件夹对比与同步**：支持时间戳/大小极速对比与 CRC32 深度哈希比对，提供带 Dry Run 安全预览的规则化双向同步。
 - **🛠️ 开发者生态与 CLI 整合**：提供 `mcdiff` 终端命令行工具，原生支持 `git difftool` 与 `git mergetool` 随时唤起。
 
----
+### 📸 界面预览
 
-## 📸 界面预览
-
-### 1. Word 文档结构化比对 (Word Diff)
+#### 1. Word 文档结构化比对 (Word Diff)
 
 | 深色模式 (Dark UI) | 浅色模式 (Light UI) |
 | :---: | :---: |
 | ![Word Diff Dark](docs/assets/word_diff_dark_ui.png) | ![Word Diff Light](docs/assets/word_diff_light_ui.png) |
 
-### 2. 文本与代码精细对比 (Text Diff)
+#### 2. 文本与代码精细对比 (Text Diff)
 
 | 文本双向对比 | 三向冲突合并 (3-Way Merge) |
 | :---: | :---: |
 | ![Text Diff](docs/assets/text_diff_ui.jpg) | ![3-Way Merge](docs/assets/three_way_merge_ui.jpg) |
 
-### 3. 文件夹极速对比与同步 (Folder Diff)
+#### 3. 文件夹极速对比与同步 (Folder Diff)
 
 ![Folder Diff](docs/assets/folder_diff_ui.jpg)
 
----
-
-## 📁 项目目录结构
+### 📁 项目目录结构
 
 ```
 FileCompare/
@@ -68,11 +190,9 @@ FileCompare/
     └── run_app.sh                    # 构建并启动测试
 ```
 
----
+### 🚀 快速开始
 
-## 🚀 快速开始
-
-### 编译与运行测试
+#### 编译与运行测试
 
 ```bash
 cd macos
@@ -80,7 +200,7 @@ swift build
 swift test
 ```
 
-### 使用终端命令行工具 (`mcdiff`)
+#### 使用终端命令行工具 (`mcdiff`)
 
 ```bash
 # 1. 对比两个文本/代码文件
@@ -96,7 +216,7 @@ mcdiff dir_a/ dir_b/
 mcdiff --merge local.py base.py remote.py -o merged.py
 ```
 
-### 配置为 Git 默认合并与对比工具
+#### 配置为 Git 默认合并与对比工具
 
 ```bash
 git config --global merge.tool maccompare
@@ -107,14 +227,13 @@ git config --global diff.tool maccompare
 git config --global difftool.maccompare.cmd 'mcdiff "$LOCAL" "$REMOTE"'
 ```
 
-### 打包通用安装镜像 (DMG)
+#### 打包通用安装镜像 (DMG)
 
 ```bash
 ./scripts/package_dmg.sh 0.2.0
 ```
 
----
-
-## 📄 开源许可证
+### 📄 开源许可证
 
 本项目基于 [MIT License](LICENSE) 开源。
+
