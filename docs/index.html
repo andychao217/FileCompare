@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MacCompare - Next-Gen File Comparison & 3-Way Merge for macOS</title>
   <meta name="description"
-    content="A high-performance macOS native file comparison and 3-way merge tool built with Rust and SwiftUI.">
+    content="A high-performance macOS native file comparison and 3-way merge tool built with Rust and SwiftUI. Supports Text, Excel, Word, and Folders.">
   <link rel="stylesheet" href="styles.css">
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚖️</text></svg>">
@@ -49,7 +49,7 @@
     <!-- Hero Section -->
     <section class="hero">
       <div class="pill-badge" data-i18n="badge">
-        ⚡ macOS 原生架构 • Intel & Apple Silicon 通用二进制
+        ⚡ macOS 原生架构 • Intel & Apple Silicon 通用二进制 v0.3.0
       </div>
       <h1 class="hero-title" data-i18n="heroTitle">
         下一代 macOS <span class="gradient-text">文件比对与合并套件</span>
@@ -80,7 +80,9 @@
     <section id="showcase" class="showcase-container">
       <div class="showcase-header">
         <div class="showcase-tabs">
-          <button class="showcase-tab active" data-mode="word" data-i18n="wordDiffTab">Word 对比</button>
+          <button class="showcase-tab active" data-mode="welcome" data-i18n="welcomeTab">启动主页</button>
+          <button class="showcase-tab" data-mode="excel" data-i18n="excelDiffTab">Excel 对比</button>
+          <button class="showcase-tab" data-mode="word" data-i18n="wordDiffTab">Word 对比</button>
           <button class="showcase-tab" data-mode="text" data-i18n="textDiffTab">文本对比</button>
           <button class="showcase-tab" data-mode="folder" data-i18n="folderDiffTab">文件夹对比</button>
           <button class="showcase-tab" data-mode="merge" data-i18n="threeWayMergeTab">三向合并</button>
@@ -99,10 +101,10 @@
             <span class="dot yellow"></span>
             <span class="dot green"></span>
           </div>
-          <span class="window-title">MacCompare — High Precision Diff</span>
+          <span class="window-title">MacCompare — High Precision Diff Suite</span>
         </div>
         <div class="showcase-image-wrapper">
-          <img id="showcase-img" src="assets/word_diff_dark_ui.png" alt="MacCompare UI Interface Preview">
+          <img id="showcase-img" src="assets/welcome_home_dark_ui.png" alt="MacCompare UI Interface Preview">
         </div>
       </div>
     </section>
@@ -116,9 +118,21 @@
 
       <div class="features-grid">
         <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3 class="feature-title" data-i18n="featExcelTitle">Excel 与表格结构化比对</h3>
+          <p class="feature-desc" data-i18n="featExcelDesc">支持 .xlsx/.xls/.csv/.tsv 多工作表自动对齐、主键列映射、单元格字符级高亮与数值容差。</p>
+        </div>
+
+        <div class="feature-card">
           <div class="feature-icon">📄</div>
           <h3 class="feature-title" data-i18n="featWordTitle">Word 结构化全要素比对</h3>
           <p class="feature-desc" data-i18n="featWordDesc">支持 .docx/.doc 段落富文本样式、原生内嵌表格网格、多媒体指纹与矢量图形 Shape 深度对比。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🏠</div>
+          <h3 class="feature-title" data-i18n="featHomeTitle">启动欢迎主页与历史记录</h3>
+          <p class="feature-desc" data-i18n="featHomeDesc">2x2 黄金对称四大模式直达、全局持久化历史会话一键恢复与单侧文件即时预览。</p>
         </div>
 
         <div class="feature-card">
@@ -147,8 +161,8 @@
 
         <div class="feature-card">
           <div class="feature-icon">📑</div>
-          <h3 class="feature-title" data-i18n="feat5Title">多标签与多窗口拖拽</h3>
-          <p class="feature-desc" data-i18n="feat5Desc">支持像 Safari 一样自由拖拽合并与分离标签页，多任务比对井井有条。</p>
+          <h3 class="feature-title" data-i18n="feat5Title">多标签与快捷循环切换</h3>
+          <p class="feature-desc" data-i18n="feat5Desc">支持像 Safari 一样自由拖拽拆分与合并窗口，支持 ⌃Tab 快捷键无缝循环切换多任务标签。</p>
         </div>
 
         <div class="feature-card">
@@ -175,10 +189,14 @@
           </div>
           <button id="copy-btn" class="copy-btn" onclick="copyCli()">Copy</button>
         </div>
-        <pre class="terminal-content" id="cli-code"><code><span class="terminal-comment"># 1. 文本对比</span>
-<span class="terminal-prompt">$</span> mcdiff file_a.txt file_b.txt
+        <pre class="terminal-content" id="cli-code"><code><span class="terminal-comment"># 1. 比较 Excel 表格与 Word 文档</span>
+<span class="terminal-prompt">$</span> mcdiff sales_2025.xlsx sales_2026.xlsx
+<span class="terminal-prompt">$</span> mcdiff contract_v1.docx contract_v2.docx
 
-<span class="terminal-comment"># 2. 配置为 Git 默认合并工具</span>
+<span class="terminal-comment"># 2. 文本与代码对比</span>
+<span class="terminal-prompt">$</span> mcdiff main.rs main_refactored.rs
+
+<span class="terminal-comment"># 3. 配置为 Git 默认合并工具</span>
 <span class="terminal-prompt">$</span> git config --global merge.tool maccompare
 <span class="terminal-prompt">$</span> git config --global mergetool.maccompare.cmd 'mcdiff "$LOCAL" "$REMOTE" -b "$BASE" -m "$MERGED"'
 <span class="terminal-prompt">$</span> git config --global mergetool.maccompare.trustExitCode true</code></pre>

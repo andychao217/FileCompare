@@ -160,6 +160,9 @@ public final class WordDiffViewModel {
             ignoreFormatting: ignoreFormatting
         )
         self.diffResult = result
+        if let l = leftFileURL, let r = rightFileURL {
+            RecentHistoryManager.shared.addRecord(left: l, right: r, type: .wordDiff)
+        }
     }
 
     // MARK: - Navigation

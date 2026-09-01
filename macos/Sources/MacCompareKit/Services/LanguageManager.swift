@@ -86,9 +86,13 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case tabDragMergeDesc
     case cancelTabDragDesc
     case textDiffGuideDetail
+    case excelDiffGuideDetail
+    case wordDiffGuideDetail
     case folderDiffGuideDetail
     case threeWayMergeGuideDetail
     case gitMergetoolConfigGuide
+    case nextTab
+    case prevTab
     case aboutFooter
 
     // Menu Items - Custom Commands
@@ -237,6 +241,49 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case added
     case deleted
     case modified
+
+    // Excel Diff Specific
+    case newExcelCompare
+    case excelDiff
+    case filterAll
+    case filterDiffs
+    case filterSame
+    case excelRules
+    case excelRulesTitle
+    case excelFirstRowHeader
+    case excelNumericTolerance
+    case excelToleranceValue
+    case excelKeyColumnsHeader
+    case excelKeyColumnsDesc
+    case excelRowInspectorTitle
+    case excelDifferenceRows
+    case excelSameRows
+    case excelLoadTime
+    case excelLoadingPrompt
+    case selectExcelFilesPrompt
+    case statusModified
+    case statusAdded
+    case statusDeleted
+    case copyLeft
+    case copyRight
+    case swapSides
+    case selectFilePrompt
+    case retry
+
+    // Welcome Home Hub Specific
+    case welcomeTitle
+    case welcomeSubtitle
+    case welcomeTextDiffTitle
+    case welcomeTextDiffDesc
+    case welcomeExcelDiffTitle
+    case welcomeExcelDiffDesc
+    case welcomeWordDiffTitle
+    case welcomeWordDiffDesc
+    case welcomeFolderDiffTitle
+    case welcomeFolderDiffDesc
+    case recentComparisons
+    case openExisting
+    case noRecentComparisons
 }
 
 @MainActor
@@ -518,6 +565,8 @@ public final class LanguageManager {
         .tabDragMergeTitle: "Chrome-Style Tab Drag & Merge",
         .textDiffDesc: "High-performance two-way text diffing with line highlighting and hunk merging.",
         .textDiffGuideDetail: "• Adding Files: Drag & drop two files from Finder into the left/right panes, or click 'Choose...'. Single file loads neutrally; both files trigger comparison.\n• Merge & Actions: Click 'Take Left/Right' to merge hunks and ⌘ S to save.\n• Options: Toggle 'Ignore Whitespace' / 'Ignore Case'; clear with safety confirmation; optionally enable '.bak' backups in Settings.",
+        .excelDiffGuideDetail: "• Multi-Sheet Support: Auto-detects and aligns all worksheets across workbooks (.xlsx / .xls / .csv / .tsv).\n• Comparison Engine: Key-based column mapping & Myers LCS row alignment with character-level intra-cell diffing.\n• Rules & Inspector: Configurable floating-point numeric tolerance, case/whitespace sensitivity, and bottom row detail inspector.",
+        .wordDiffGuideDetail: "• Rich Text Comparison: Compares text paragraphs, styles (bold/italic/underline/color), and structural changes in .docx files.\n• Visual Diff: Inspect differences across document outline, embedded tables, and media/vector images with image hash matching.",
         .folderDiffDesc: "Deep directory comparison and two-way file tree synchronization.",
         .folderDiffGuideDetail: "• Adding Folders: Drag & drop directories from Finder, or choose from sidebar quick places and recent history.\n• Comparison Modes: Choose 'Quick Mode' (file size & timestamp) or 'Deep Hash Mode' (CRC32 checksums).\n• Safe Sync: Click 'Dry-Run Preview' to inspect all planned file actions before applying physical synchronization.",
         .threeWayMergeDesc: "Interactive 3-way conflict resolution based on a common Base ancestor.",
@@ -525,6 +574,8 @@ public final class LanguageManager {
         .gitMergetoolConfigGuide: "Git mergetool Setup Commands (Run in Terminal):",
         .tabDragMergeDesc: "Drag tabs to reorder within window, drag outside to tear off into standalone window, and drag into another window's tab bar to merge seamlessly.",
         .cancelTabDragDesc: "Cancel ongoing tab dragging operation",
+        .nextTab: "Next Tab",
+        .prevTab: "Previous Tab",
         .aboutFooter: "Built for macOS 14.0+ with Swift & SwiftUI.",
         .general: "General",
         .appearance: "Appearance",
@@ -656,7 +707,46 @@ public final class LanguageManager {
         .fileSize: "File Size",
         .added: "Added",
         .deleted: "Deleted",
-        .modified: "Modified"
+        .modified: "Modified",
+        .newExcelCompare: "New Excel Compare",
+        .excelDiff: "Excel Spreadsheet Diff",
+        .filterAll: "All",
+        .filterDiffs: "Diffs",
+        .filterSame: "Same",
+        .excelRules: "Rules",
+        .excelRulesTitle: "Comparison Rules & Settings",
+        .excelFirstRowHeader: "First row as header",
+        .excelNumericTolerance: "Numeric Tolerance",
+        .excelToleranceValue: "Tolerance (e.g. 0.001)",
+        .excelKeyColumnsHeader: "Key Columns (Alignment)",
+        .excelKeyColumnsDesc: "Select key columns to align rows across sheets:",
+        .excelRowInspectorTitle: "Row Detail Inspector",
+        .excelDifferenceRows: "difference row(s)",
+        .excelSameRows: "identical row(s)",
+        .excelLoadTime: "Load time",
+        .excelLoadingPrompt: "Parsing and comparing Excel spreadsheets...",
+        .selectExcelFilesPrompt: "Select or drop two Excel (.xlsx / .xls) files to compare",
+        .statusModified: "MODIFIED",
+        .statusAdded: "ADDED",
+        .statusDeleted: "DELETED",
+        .copyLeft: "Copy Left Value",
+        .copyRight: "Copy Right Value",
+        .swapSides: "Swap Sides",
+        .selectFilePrompt: "Choose file...",
+        .retry: "Retry",
+        .welcomeTitle: "Welcome to MacCompare",
+        .welcomeSubtitle: "Select a comparison mode to get started",
+        .welcomeTextDiffTitle: "Text & Code Compare",
+        .welcomeTextDiffDesc: "Fine-grained line & token diff across source code",
+        .welcomeExcelDiffTitle: "Excel Table Compare",
+        .welcomeExcelDiffDesc: "Multi-sheet sync, cell-level highlighting & alignment",
+        .welcomeWordDiffTitle: "Word Document Compare",
+        .welcomeWordDiffDesc: "Styles, embedded tables, vector shapes & outline",
+        .welcomeFolderDiffTitle: "Folder Diff & Sync",
+        .welcomeFolderDiffDesc: "Fast CRC32 scan & bidirectional safe sync",
+        .recentComparisons: "Recent Comparisons",
+        .openExisting: "Open Existing...",
+        .noRecentComparisons: "No recent comparisons yet"
     ]
 
     private let zhHansDictionary: [L10nKey: String] = [
@@ -702,6 +792,8 @@ public final class LanguageManager {
         .tabDragMergeTitle: "Chrome 风格标签页拖拽与合并",
         .textDiffDesc: "双向文本差异比对与逐行同步工具。",
         .textDiffGuideDetail: "• 如何添加文件：直接从访达（Finder）将两份文件拖入左右面板，或点击右上角「选择...」按钮。单侧加载保持中性无色，双侧加载后自动高亮比对。\n• 差异采纳与保存：点击「← / → 采纳」可快速将当前差异块复制到对侧，按 ⌘ S 保存修改。\n• 过滤与安全防护：支持忽略空白符/大小写切换；支持一键清空重选（带二次确认）；可在设置中开启「保存时自动创建 .bak 备份」。",
+        .excelDiffGuideDetail: "• 多工作表智能对齐：自动识别并对齐工作簿（.xlsx / .xls / .csv / .tsv）中的所有 Sheet 工作表。\n• 高精度对齐引擎：支持按指定主键列 Map Join 关联对齐，或基于 Myers LCS 算法实现整行动态对齐，提供字符级单元格内联高亮。\n• 规则与明细检查器：支持配置浮点数容差（Tolerance）、大小写与空白符忽略，底部提供当前行各列明细检查器（Row Detail Inspector）。",
+        .wordDiffGuideDetail: "• 富文本段落流对比：精准对比 .docx 文档的段落文本、文字样式（加粗/倾斜/下划线/前景色）与结构变动。\n• 多维可视化差异：支持大纲目录变动检查、嵌入表格单元格网格级比对、以及基于图片感知哈希的图片与矢量图形比对。",
         .folderDiffDesc: "目录树结构深度对比与双向文件同步工具。",
         .folderDiffGuideDetail: "• 如何添加文件夹：从访达拖入文件夹至左右区域，或在左侧边栏快速选取常用目录（文稿、下载、桌面等）及最近历史记录。\n• 比对模式切换：提供「快速比对」（基于文件大小与修改时间戳）与「深度哈希比对」（基于 CRC32 内容计算）。\n• 安全同步预演：在执行从左到右或从右到左物理同步前，可点击「演练预览 (Dry-Run)」查看所有文件变更计划，确认无误后再执行。",
         .threeWayMergeDesc: "基于共同基准祖先（Base）的三向冲突合并工具。",
@@ -709,6 +801,8 @@ public final class LanguageManager {
         .gitMergetoolConfigGuide: "Git mergetool 配置命令（在终端中运行）：",
         .tabDragMergeDesc: "支持在窗口内拖拽排序、按住标签拖出窗口拆分为独立新窗口、将标签拖入其他窗口顶部标签栏实现多窗口自由合并。",
         .cancelTabDragDesc: "取消当前正在进行的标签页拖拽",
+        .nextTab: "下一个标签页",
+        .prevTab: "上一个标签页",
         .aboutFooter: "专为 macOS 14.0+ 打造，采用 Swift 与 SwiftUI 纯原生实现。",
         .general: "常规",
         .appearance: "外观",
@@ -840,7 +934,46 @@ public final class LanguageManager {
         .fileSize: "文件大小",
         .added: "新增",
         .deleted: "删除",
-        .modified: "修改"
+        .modified: "修改",
+        .newExcelCompare: "新建 Excel 对比",
+        .excelDiff: "Excel 表格比对",
+        .filterAll: "全部",
+        .filterDiffs: "仅差异",
+        .filterSame: "仅相同",
+        .excelRules: "比对规则",
+        .excelRulesTitle: "比对规则与设置",
+        .excelFirstRowHeader: "首行作为表头",
+        .excelNumericTolerance: "数值容差",
+        .excelToleranceValue: "容差阈值（如 0.001）",
+        .excelKeyColumnsHeader: "主键列（用于行对齐）",
+        .excelKeyColumnsDesc: "选择用于对齐各工作表行的关键列：",
+        .excelRowInspectorTitle: "当前行明细检查器",
+        .excelDifferenceRows: "处差异行",
+        .excelSameRows: "处相同行",
+        .excelLoadTime: "耗时",
+        .excelLoadingPrompt: "正在解析并比对 Excel 表格数据...",
+        .selectExcelFilesPrompt: "选择或拖拽两个 Excel (.xlsx / .xls) 文件以开始比对",
+        .statusModified: "已修改",
+        .statusAdded: "新增行",
+        .statusDeleted: "已删除",
+        .copyLeft: "复制左侧单元格内容",
+        .copyRight: "复制右侧单元格内容",
+        .swapSides: "左右对调",
+        .selectFilePrompt: "选择文件...",
+        .retry: "重试",
+        .welcomeTitle: "欢迎使用 MacCompare",
+        .welcomeSubtitle: "选择对比模式开始高效比对",
+        .welcomeTextDiffTitle: "文本与代码对比",
+        .welcomeTextDiffDesc: "行级与分词级精细对比，支持多种语言语法",
+        .welcomeExcelDiffTitle: "Excel 表格对比",
+        .welcomeExcelDiffDesc: "多工作表自动识别、智能行对齐与单元格高亮",
+        .welcomeWordDiffTitle: "Word 文档对比",
+        .welcomeWordDiffDesc: "正文段落流、富文本样式、表格与图形比对",
+        .welcomeFolderDiffTitle: "文件夹极速对比与同步",
+        .welcomeFolderDiffDesc: "目录结构毫秒级扫描、CRC32 哈希与双向同步",
+        .recentComparisons: "最近对比记录",
+        .openExisting: "打开本地文件...",
+        .noRecentComparisons: "暂无历史比对记录"
     ]
 
     private let jaDictionary: [L10nKey: String] = [
@@ -886,6 +1019,8 @@ public final class LanguageManager {
         .tabDragMergeTitle: "Chrome風タブドラッグ＆結合",
         .textDiffDesc: "双方向テキスト差分比較および行単位同期ツール。",
         .textDiffGuideDetail: "• ファイルの追加方法：Finder から左右のパネルにファイルをドラッグ＆ドロップするか、「選択...」ボタンをクリックします。単側読み込みは中立表示され、両側読み込みで自動差分比較されます。\n• 差分マージと保存：「← / → 採用」をクリックしてハンクを反対側に素早くコピーし、⌘ S で保存します。\n• フィルタと安全性：空白/大文字小文字の無視切り替え、確認ダイアログ付きの一括クリア、設定での「.bak バックアップ自動作成」に対応しています。",
+        .excelDiffGuideDetail: "• 複数シート自動アライメント：ワークブック（.xlsx / .xls / .csv / .tsv）内の全シートを自動検出して照合。\n• 高精度差分エンジン：主キー列による Map Join または Myers LCS アルゴリズムによる行揃えと、セル内インライン差分表示。\n• ルールと詳細インスペクター：数値の許容誤差（Tolerance）、大文字/小文字や空白の無視、行詳細インスペクター（Row Detail Inspector）を搭載。",
+        .wordDiffGuideDetail: "• リッチテキスト段落比較：.docx の段落テキスト、書式スタイル（太字/斜体/下線/色）および構造の変更を高精度に抽出。\n• 多次元ビジュアル差分：見出しアウトライン、埋め込みテーブル、画像ハッシュ照合によるベクター・画像差分に対応。",
         .folderDiffDesc: "ディレクトリ構造の差分比較および双方向ファイル同期ツール。",
         .folderDiffGuideDetail: "• フォルダの追加方法：Finder から左右の領域にフォルダをドラッグ＆ドロップするか、サイドバーのショートカットや最近の履歴から選択します。\n• 比較モード：「簡易比較（サイズとタイムスタンプ）」と「ハッシュ比較（CRC32チェックサム）」を選択可能です。\n• 安全な同期プレビュー：同期を実行する前に、「ドライランプレビュー」でファイル変更予定一覧を確認できます。",
         .threeWayMergeDesc: "共通祖先（Base）に基づく3方向コンフリクト解決ツール。",
@@ -893,6 +1028,8 @@ public final class LanguageManager {
         .gitMergetoolConfigGuide: "Git mergetool 設定コマンド（ターミナルで実行）：",
         .tabDragMergeDesc: "ウインドウ内でのタブ並べ替え、ドラッグして独立ウインドウへ分離、他ウインドウのタブバーへドラッグしてシームレスに結合。",
         .cancelTabDragDesc: "進行中のタブドラッグ操作をキャンセル",
+        .nextTab: "次のタブ",
+        .prevTab: "前のタブ",
         .aboutFooter: "macOS 14.0+ 向けに Swift と SwiftUI で開発。",
         .general: "一般",
         .appearance: "外観",
@@ -1024,6 +1161,45 @@ public final class LanguageManager {
         .fileSize: "ファイルサイズ",
         .added: "追加",
         .deleted: "削除",
-        .modified: "変更"
+        .modified: "変更",
+        .newExcelCompare: "新規 Excel 比較",
+        .excelDiff: "Excel スプレッドシート比較",
+        .filterAll: "すべて",
+        .filterDiffs: "差異のみ",
+        .filterSame: "一致のみ",
+        .excelRules: "比較ルール",
+        .excelRulesTitle: "比較ルールと設定",
+        .excelFirstRowHeader: "1行目をヘッダーとして扱う",
+        .excelNumericTolerance: "数値許容誤差",
+        .excelToleranceValue: "許容誤差（例: 0.001）",
+        .excelKeyColumnsHeader: "キー列（行アライメント）",
+        .excelKeyColumnsDesc: "シート間の行アライメントに使用するキー列を選択:",
+        .excelRowInspectorTitle: "選択行の詳細インスペクター",
+        .excelDifferenceRows: "件の差異行",
+        .excelSameRows: "件の一致行",
+        .excelLoadTime: "所要時間",
+        .excelLoadingPrompt: "Excel データを解析・比較中...",
+        .selectExcelFilesPrompt: "2つの Excel (.xlsx / .xls) ファイルを選択またはドロップして比較を開始",
+        .statusModified: "変更あり",
+        .statusAdded: "追加行",
+        .statusDeleted: "削除行",
+        .copyLeft: "左側のセル値をコピー",
+        .copyRight: "右側のセル値をコピー",
+        .swapSides: "左右の入れ替え",
+        .selectFilePrompt: "ファイルを選択...",
+        .retry: "再試行",
+        .welcomeTitle: "MacCompare へようこそ",
+        .welcomeSubtitle: "比較モードを選択して開始",
+        .welcomeTextDiffTitle: "テキスト・コード比較",
+        .welcomeTextDiffDesc: "行レベル・単語レベルの詳細な差分抽出",
+        .welcomeExcelDiffTitle: "Excel テーブル比較",
+        .welcomeExcelDiffDesc: "複数シート自動認識、セル単位の差分ハイライト",
+        .welcomeWordDiffTitle: "Word ドキュメント比較",
+        .welcomeWordDiffDesc: "書式スタイル、埋め込みテーブル、図形の高精度比較",
+        .welcomeFolderDiffTitle: "フォルダ比較・同期",
+        .welcomeFolderDiffDesc: "高速 CRC32 スキャンと安全な双方向同期",
+        .recentComparisons: "最近の比較履歴",
+        .openExisting: "既存ファイルを開く...",
+        .noRecentComparisons: "比較履歴はありません"
     ]
 }

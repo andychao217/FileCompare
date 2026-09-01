@@ -42,8 +42,10 @@ public struct MainWindowView: View {
     @ViewBuilder
     private var mainContent: some View {
         VStack(spacing: 0) {
-            CustomTabBarView(tabManager: tabManager)
-            Divider()
+            if !tabManager.tabs.isEmpty {
+                CustomTabBarView(tabManager: tabManager)
+                Divider()
+            }
 
             if let activeTab = tabManager.activeTab {
                 switch activeTab.type {
@@ -51,39 +53,17 @@ public struct MainWindowView: View {
                     TwoWayDiffView(viewModel: tabManager.textDiffViewModel(for: activeTab.id))
                 case .wordDiff:
                     WordDiffView(viewModel: tabManager.wordDiffViewModel(for: activeTab.id))
+                case .excelDiff:
+                    ExcelDiffView(viewModel: tabManager.excelDiffViewModel(for: activeTab.id))
                 case .folderDiff:
                     FolderDiffView(viewModel: tabManager.folderDiffViewModel(for: activeTab.id))
                 case .threeWayMerge:
                     ThreeWayMergeView(viewModel: tabManager.threeWayMergeViewModel(for: activeTab.id))
                 }
             } else {
-                emptyPlaceholder
+                WelcomeHomeView(tabManager: tabManager)
             }
         }
-    }
-
-    private var emptyPlaceholder: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "square.stack.3d.up.slash")
-                .font(.system(size: 36))
-                .foregroundColor(.secondary)
-            Text(languageManager.text(.noFileSelected))
-                .font(.headline)
-                .foregroundColor(.secondary)
-            HStack(spacing: 10) {
-                Button(languageManager.text(.newTextCompare)) {
-                    tabManager.addTab(type: .textDiff)
-                }
-                .buttonStyle(.borderedProminent)
-
-                Button(languageManager.text(.newWordCompare)) {
-                    tabManager.addTab(type: .wordDiff)
-                }
-                .buttonStyle(.bordered)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(nsColor: .windowBackgroundColor))
     }
 }
 
@@ -136,6 +116,9 @@ private struct TabCreationCommands: ViewModifier {
             .onReceive(NotificationCenter.default.publisher(for: .mcNewTextCompare)) { _ in
                 tabManager.addTab(type: .textDiff)
             }
+            .onReceive(NotificationCenter.default.publisher(for: .mcNewExcelCompare)) { _ in
+                tabManager.addTab(type: .excelDiff)
+            }
             .onReceive(NotificationCenter.default.publisher(for: .mcNewWordCompare)) { _ in
                 tabManager.addTab(type: .wordDiff)
             }
@@ -149,6 +132,12 @@ private struct TabCreationCommands: ViewModifier {
                 if let activeId = tabManager.selectedTabId {
                     tabManager.closeTab(id: activeId)
                 }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .mcNextTab)) { _ in
+                tabManager.selectNextTab()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .mcPrevTab)) { _ in
+                tabManager.selectPreviousTab()
             }
     }
 }
@@ -199,6 +188,8 @@ private struct DiffActionCommands: ViewModifier {
             tabManager.textDiffViewModel(for: activeTab.id).openLeftFile()
         case .wordDiff:
             break
+        case .excelDiff:
+            break
         case .folderDiff:
             tabManager.folderDiffViewModel(for: activeTab.id).chooseLeftFolder()
         case .threeWayMerge:
@@ -215,6 +206,8 @@ private struct DiffActionCommands: ViewModifier {
             if vm.isRightDirty { vm.saveRightFile() }
         case .wordDiff:
             break
+        case .excelDiff:
+            break
         case .folderDiff:
             break
         case .threeWayMerge:
@@ -229,6 +222,8 @@ private struct DiffActionCommands: ViewModifier {
             tabManager.textDiffViewModel(for: activeTab.id).nextDiff()
         case .wordDiff:
             tabManager.wordDiffViewModel(for: activeTab.id).nextDiff()
+        case .excelDiff:
+            tabManager.excelDiffViewModel(for: activeTab.id).nextDiff()
         case .threeWayMerge:
             tabManager.threeWayMergeViewModel(for: activeTab.id).nextConflict()
         case .folderDiff:
@@ -243,6 +238,8 @@ private struct DiffActionCommands: ViewModifier {
             tabManager.textDiffViewModel(for: activeTab.id).previousDiff()
         case .wordDiff:
             tabManager.wordDiffViewModel(for: activeTab.id).prevDiff()
+        case .excelDiff:
+            tabManager.excelDiffViewModel(for: activeTab.id).prevDiff()
         case .threeWayMerge:
             tabManager.threeWayMergeViewModel(for: activeTab.id).previousConflict()
         case .folderDiff:

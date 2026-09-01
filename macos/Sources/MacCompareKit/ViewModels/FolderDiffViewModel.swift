@@ -115,6 +115,7 @@ public final class FolderDiffViewModel {
                 recentSessions.removeLast()
             }
         }
+        RecentHistoryManager.shared.addRecord(left: left, right: right, type: .folderDiff)
 
         Task {
             await scanDirectories()

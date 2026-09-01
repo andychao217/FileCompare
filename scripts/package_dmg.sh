@@ -6,7 +6,7 @@ set -e
 # Architecture: Universal Binary 2 (arm64 + x86_64)
 # ========================================================
 
-VERSION="${1:-0.2.0}"
+VERSION="${1:-0.3.0}"
 APP_NAME="MacCompare"
 BUNDLE_ID="com.andychao217.MacCompare"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -20,7 +20,7 @@ echo "========================================================"
 echo "📦 Packaging ${APP_NAME} v${VERSION} (Universal Binary 2)"
 echo "========================================================"
 
-SWIFT_BIN="$(xcrun -f swift || which swift)"
+SWIFT_BIN="xcrun --toolchain default swift"
 
 # 1. Compile Universal Binary 2 (Dual Architecture: arm64 + x86_64)
 echo "[1/4] Compiling Universal Binary 2 (arm64 + x86_64)..."
@@ -160,8 +160,17 @@ hdiutil create \
     -format UDZO \
     "${DMG_PATH}"
 
+# 5. Also copy MacCompare.app directly to dist/ for easy direct running
+rm -rf "${DIST_DIR}/${APP_NAME}.app"
+cp -R "${APP_BUNDLE}" "${DIST_DIR}/${APP_NAME}.app"
+if [ -f "${APP_BUNDLE}/Contents/MacOS/mcdiff" ]; then
+    cp "${APP_BUNDLE}/Contents/MacOS/mcdiff" "${DIST_DIR}/mcdiff"
+fi
+
 echo "========================================================"
-echo "✅ Universal DMG Packaging Complete!"
-echo "📍 DMG File: ${DMG_PATH}"
-echo "📏 Size: $(du -sh "${DMG_PATH}" | cut -f1)"
+echo "✅ Packaging Complete!"
+echo "📍 DMG File:   ${DMG_PATH}"
+echo "📍 App Bundle: ${DIST_DIR}/${APP_NAME}.app"
+echo "📍 CLI Tool:   ${DIST_DIR}/mcdiff"
+echo "📏 DMG Size:   $(du -sh "${DMG_PATH}" | cut -f1)"
 echo "========================================================"

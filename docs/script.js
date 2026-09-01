@@ -1,10 +1,12 @@
 const i18n = {
   zh: {
-    badge: "⚡ macOS 原生架构 • Intel & Apple Silicon 通用二进制",
+    badge: "⚡ macOS 原生架构 • Intel & Apple Silicon 通用二进制 v0.3.0",
     heroTitle: "下一代 macOS <span class='gradient-text'>文件比对与合并套件</span>",
     heroSubtitle: "基于 Rust 高性能差分引擎与原生 SwiftUI 深度构建。专为 macOS 开发者和专业用户打造的极致比对工具。",
     downloadBtn: "免费下载 DMG",
     githubBtn: "GitHub 源代码",
+    welcomeTab: "启动主页",
+    excelDiffTab: "Excel 对比",
     wordDiffTab: "Word 对比",
     textDiffTab: "文本对比",
     folderDiffTab: "文件夹对比",
@@ -13,8 +15,12 @@ const i18n = {
     themeLight: "浅色界面",
     featuresTitle: "为极速与优雅而生",
     featuresSubtitle: "原生级响应速度，兼顾直观的视觉反馈与强大的生产力工具。",
+    featExcelTitle: "Excel 与表格结构化比对",
+    featExcelDesc: "支持 .xlsx/.xls/.csv/.tsv 多工作表自动对齐、主键列映射、单元格字符级高亮与数值容差。",
     featWordTitle: "Word 结构化全要素比对",
     featWordDesc: "支持 .docx/.doc 段落富文本样式、原生内嵌表格网格、多媒体指纹与矢量图形 Shape 深度对比。",
+    featHomeTitle: "启动欢迎主页与历史记录",
+    featHomeDesc: "2x2 黄金对称四大模式直达、全局持久化历史会话一键恢复与单侧文件即时预览。",
     feat1Title: "Rust 差分内核",
     feat1Desc: "基于 Myers 算法与 SIMD 加速哈希，瞬间完成百万行文本及大型目录树的精准对比。",
     feat2Title: "对齐幻影行 (Phantom Lines)",
@@ -23,8 +29,8 @@ const i18n = {
     feat3Desc: "支持深度 Hash 与元数据比对模式，带预演 (Dry-Run) 安全机制的一键目录双向同步。",
     feat4Title: "Git 三向合并 (3-Way Merge)",
     feat4Desc: "无缝衔接 Local、Base、Remote 冲突分支，智能自动解决非冲突项，提供完整 Git CLI 支持。",
-    feat5Title: "多标签与多窗口拖拽",
-    feat5Desc: "支持像 Safari 一样自由拖拽合并与分离标签页，多任务比对井井有条。",
+    feat5Title: "多标签与快捷循环切换",
+    feat5Desc: "支持像 Safari 一样自由拖拽拆分与合并窗口，支持 ⌃Tab 快捷键无缝循环切换多任务标签。",
     feat6Title: "原生多语言与深浅外观",
     feat6Desc: "内置中文、英文、日文支持，完美适配 macOS 全局系统主题自适应与快捷切换。",
     cliTitle: "终端命令行与 Git 工具集成",
@@ -34,11 +40,13 @@ const i18n = {
     footerDesc: "基于 MIT / Apache-2.0 许可证开源。"
   },
   en: {
-    badge: "⚡ macOS Native • Universal Binary (Intel & Apple Silicon)",
+    badge: "⚡ macOS Native • Universal Binary (Intel & Apple Silicon) v0.3.0",
     heroTitle: "Next-Gen File Comparison <span class='gradient-text'>& 3-Way Merge for macOS</span>",
     heroSubtitle: "Engineered with a high-performance Rust core and native SwiftUI. The ultimate diff & merge suite built for macOS developers.",
     downloadBtn: "Download DMG",
     githubBtn: "View on GitHub",
+    welcomeTab: "Welcome Hub",
+    excelDiffTab: "Excel Diff",
     wordDiffTab: "Word Diff",
     textDiffTab: "Text Diff",
     folderDiffTab: "Folder Diff",
@@ -47,8 +55,12 @@ const i18n = {
     themeLight: "Light UI",
     featuresTitle: "Built for Speed & Elegance",
     featuresSubtitle: "Native responsiveness with intuitive visual diffing and powerful productivity workflows.",
+    featExcelTitle: "Excel & Spreadsheet Diff",
+    featExcelDesc: "Multi-sheet sync for .xlsx/.xls/.csv/.tsv, Key-based alignment, intra-cell inline diffing & numeric tolerance.",
     featWordTitle: "Word Structured Diff",
     featWordDesc: "Deep diffing for .docx/.doc with rich styles, native table grids, media fingerprints, and vector shapes.",
+    featHomeTitle: "Welcome Hub & History",
+    featHomeDesc: "Sleek 2x2 launcher dashboard, persistent session history, and single-file instant previews.",
     feat1Title: "Rust Diff Engine",
     feat1Desc: "Powered by Myers algorithm and SIMD hashing, diffing millions of lines instantaneously.",
     feat2Title: "Phantom Line Alignment",
@@ -57,8 +69,8 @@ const i18n = {
     feat3Desc: "Deep Hash and Quick comparison modes with Dry-Run preview safety before applying sync operations.",
     feat4Title: "Git 3-Way Merge",
     feat4Desc: "Seamlessly resolve Local, Base, and Remote conflict branches with auto-resolution and CLI integration.",
-    feat5Title: "Tab & Window Dragging",
-    feat5Desc: "Tear off tabs to new windows or merge multiple windows together just like Safari.",
+    feat5Title: "Tabs & Fast Cycling",
+    feat5Desc: "Safari-style drag-to-split and merge windows, with ⌃Tab hotkeys for rapid tab cycling.",
     feat6Title: "Theme & Multilingual",
     feat6Desc: "Built-in English, Chinese, and Japanese with automatic macOS system appearance synchronization.",
     cliTitle: "CLI & Git Mergetool Integration",
@@ -68,11 +80,13 @@ const i18n = {
     footerDesc: "Open source under MIT / Apache-2.0 license."
   },
   ja: {
-    badge: "⚡ macOS ネイティブ • Universal Binary (Intel & Apple Silicon)",
+    badge: "⚡ macOS ネイティブ • Universal Binary (Intel & Apple Silicon) v0.3.0",
     heroTitle: "次世代 macOS <span class='gradient-text'>ファイル比較＆3方向マージ</span>",
     heroSubtitle: "高性能 Rust コアとネイティブ SwiftUI で構築。macOS 開発者のための究極の差分比較ツール。",
     downloadBtn: "DMG をダウンロード",
     githubBtn: "GitHub で見る",
+    welcomeTab: "ホーム",
+    excelDiffTab: "Excel 比較",
     wordDiffTab: "Word 比較",
     textDiffTab: "テキスト比較",
     folderDiffTab: "フォルダ比較",
@@ -81,8 +95,12 @@ const i18n = {
     themeLight: "ライト",
     featuresTitle: "高速性と洗練されたデザイン",
     featuresSubtitle: "ネイティブの応答性と直感的な視覚差分フィードバックを実現。",
+    featExcelTitle: "Excel テーブル構造化比較",
+    featExcelDesc: ".xlsx/.xls/.csv/.tsv の複数シート自動照合、主キー整列、セル内インライン差分、数値許容誤差に対応。",
     featWordTitle: "Word 構造化全要素比較",
     featWordDesc: ".docx/.doc のリッチテキスト書式、ネイティブ表グリッド、メディアハッシュ、ベクター図形を高精度に比較。",
+    featHomeTitle: "ウェルカムホーム＆履歴",
+    featHomeDesc: "2x2 黄金比ランチャー、永続的な比較セッション履歴、単側ファイルの即時プレビューを搭載。",
     feat1Title: "Rust 差分エンジン",
     feat1Desc: "Myers アルゴリズムと SIMD ハッシュにより、大規模ファイルやディレクトリを瞬時に比較。",
     feat2Title: "ファントム行アライメント",
@@ -91,8 +109,8 @@ const i18n = {
     feat3Desc: "詳細ハッシュ比較とプレビュー（Dry-Run）確認による安全な双方向同期。",
     feat4Title: "Git 3方向マージ",
     feat4Desc: "Local、Base、Remote ブランチの競合を快適に解決。非競合の自動解決もサポート。",
-    feat5Title: "タブとウインドウの統合",
-    feat5Desc: "Safari のようにタブをドラッグして別ウインドウへの分離や結合が可能。",
+    feat5Title: "タブ循環切替と結合",
+    feat5Desc: "Safari のようにタブをドラッグして分離/結合可能。⌃Tab でスムーズにタブ間を切り替え。",
     feat6Title: "多言語＆外観テーマ",
     feat6Desc: "日本語、英語、中国語を標準搭載。macOS の外観モードに完全連動。",
     cliTitle: "CLI & Git 統合",
@@ -104,10 +122,18 @@ const i18n = {
 };
 
 let currentLang = "zh";
-let currentMode = "word";
+let currentMode = "welcome";
 let currentPreviewTheme = "dark";
 
 const images = {
+  welcome: {
+    dark: "assets/welcome_home_dark_ui.png",
+    light: "assets/welcome_home_light_ui.png"
+  },
+  excel: {
+    dark: "assets/excel_diff_dark_ui.png",
+    light: "assets/excel_diff_light_ui.png"
+  },
   word: {
     dark: "assets/word_diff_dark_ui.png",
     light: "assets/word_diff_light_ui.png"
@@ -157,7 +183,7 @@ document.querySelectorAll(".showcase-tab").forEach(tab => {
   });
 });
 
-// Preview theme clicks
+// Theme preview toggle clicks
 document.querySelectorAll(".theme-opt-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".theme-opt-btn").forEach(b => b.classList.remove("active"));
@@ -167,43 +193,36 @@ document.querySelectorAll(".theme-opt-btn").forEach(btn => {
   });
 });
 
-// Web page dark/light mode toggle
-const toggleThemeBtn = document.getElementById("theme-toggle-btn");
-if (toggleThemeBtn) {
-  toggleThemeBtn.addEventListener("click", () => {
-    const isLight = document.body.getAttribute("data-theme") === "light";
-    if (isLight) {
-      document.body.removeAttribute("data-theme");
-      toggleThemeBtn.innerHTML = "🌙";
-    } else {
-      document.body.setAttribute("data-theme", "light");
-      toggleThemeBtn.innerHTML = "☀️";
-    }
-  });
-}
+// Global Theme Toggle
+const themeToggleBtn = document.getElementById("theme-toggle-btn");
+themeToggleBtn.addEventListener("click", () => {
+  const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+  const newTheme = currentTheme === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", newTheme);
+  themeToggleBtn.textContent = newTheme === "dark" ? "🌙" : "☀️";
+});
 
-// Language selector
+// Language Select
 const langSelect = document.getElementById("lang-select");
-if (langSelect) {
-  langSelect.addEventListener("change", (e) => {
-    updateLanguage(e.target.value);
-  });
-}
+langSelect.addEventListener("change", (e) => {
+  updateLanguage(e.target.value);
+});
 
-// Copy CLI commands
+// Copy CLI Code
 function copyCli() {
   const code = document.getElementById("cli-code").innerText;
   navigator.clipboard.writeText(code).then(() => {
     const btn = document.getElementById("copy-btn");
-    btn.innerText = "✓ Copied!";
+    btn.textContent = "Copied!";
     setTimeout(() => {
-      btn.innerText = "Copy";
+      btn.textContent = "Copy";
     }, 2000);
   });
 }
 
-// Initialize
+// Initial setup
 document.addEventListener("DOMContentLoaded", () => {
+  document.documentElement.setAttribute("data-theme", "dark");
   updateLanguage("zh");
   updateShowcase();
 });

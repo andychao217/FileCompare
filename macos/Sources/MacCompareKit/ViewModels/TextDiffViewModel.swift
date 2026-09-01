@@ -279,6 +279,9 @@ public final class TextDiffViewModel {
                 ignoreCase: ignoreCase
             )
             self.diffResult = res
+            if let l = leftFileURL, let r = rightFileURL {
+                RecentHistoryManager.shared.addRecord(left: l, right: r, type: .textDiff)
+            }
         } else if hasLeftFile {
             let lines = leftContent.components(separatedBy: .newlines)
             let diffLines = lines.enumerated().map { idx, line in

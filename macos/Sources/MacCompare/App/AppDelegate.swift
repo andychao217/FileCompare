@@ -43,6 +43,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         textItem.target = self
         menu.addItem(textItem)
 
+        let excelItem = NSMenuItem(
+            title: languageManager.text(.newExcelCompare),
+            action: #selector(newExcelCompareFromDock),
+            keyEquivalent: ""
+        )
+        excelItem.target = self
+        menu.addItem(excelItem)
+
         let wordItem = NSMenuItem(
             title: languageManager.text(.newWordCompare),
             action: #selector(newWordCompareFromDock),
@@ -72,6 +80,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func newTextCompareFromDock() {
         openOrAddTab(type: .textDiff)
+    }
+
+    @objc private func newExcelCompareFromDock() {
+        openOrAddTab(type: .excelDiff)
     }
 
     @objc private func newWordCompareFromDock() {

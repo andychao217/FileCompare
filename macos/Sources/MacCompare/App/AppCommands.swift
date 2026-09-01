@@ -14,6 +14,11 @@ public struct AppCommands: Commands {
             }
             .keyboardShortcut("n", modifiers: .command)
 
+            Button(languageManager.text(.newExcelCompare)) {
+                NotificationCenter.default.post(name: .mcNewExcelCompare, object: nil)
+            }
+            .keyboardShortcut("e", modifiers: [.command, .shift])
+
             Button(languageManager.text(.newWordCompare)) {
                 NotificationCenter.default.post(name: .mcNewWordCompare, object: nil)
             }
@@ -52,6 +57,18 @@ public struct AppCommands: Commands {
         }
 
         CommandGroup(after: .windowList) {
+            Button("Next Tab") {
+                NotificationCenter.default.post(name: .mcNextTab, object: nil)
+            }
+            .keyboardShortcut(.tab, modifiers: .control)
+
+            Button("Previous Tab") {
+                NotificationCenter.default.post(name: .mcPrevTab, object: nil)
+            }
+            .keyboardShortcut(.tab, modifiers: [.control, .shift])
+
+            Divider()
+
             Button(languageManager.text(.moveTabToNewWindow)) {
                 WindowManager.shared.moveActiveTabToNewWindow()
             }

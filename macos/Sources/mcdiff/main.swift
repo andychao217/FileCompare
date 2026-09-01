@@ -10,7 +10,7 @@ func runCLI() async {
     }
 
     if args.contains("-v") || args.contains("--version") {
-        print("mcdiff version 0.2.0 (MacCompare CLI)")
+        print("mcdiff version 0.3.0 (MacCompare CLI)")
         return
     }
 
@@ -73,30 +73,59 @@ func runCLI() async {
                 print("[\(entry.status.rawValue)] \(entry.relativePath)")
             }
         } else {
-            do {
-                let leftText = try String(contentsOfFile: path1)
-                let rightText = try String(contentsOfFile: path2)
-                let res = await DiffEngineService.shared.compareText(left: leftText, right: rightText)
+            let ext1 = URL(fileURLWithPath: path1).pathExtension.lowercased()
+            let ext2 = URL(fileURLWithPath: path2).pathExtension.lowercased()
 
-                print("--- \(path1)")
-                print("+++ \(path2)")
-                print("@@ Additions: \(res.totalAdditions), Deletions: \(res.totalDeletions), Modifications: \(res.totalModifications) @@")
+            if ["xlsx", "xls", "csv", "tsv"].contains(ext1) || ["xlsx", "xls", "csv", "tsv"].contains(ext2) {
+                do {
+                    let leftWb = try await ExcelDocumentParser.shared.parseWorkbook(from: URL(fileURLWithPath: path1))
+                    let rightWb = try await ExcelDocumentParser.shared.parseWorkbook(from: URL(fileURLWithPath: path2))
+                    let diffResult = await ExcelDiffEngine.shared.compareWorkbooks(left: leftWb, right: rightWb)
 
-                for line in res.lines {
-                    switch line.changeType {
-                    case .unchanged:
-                        print("  \(line.contentLeft)")
-                    case .added:
-                        print("+ \(line.contentRight)")
-                    case .deleted:
-                        print("- \(line.contentLeft)")
-                    case .modified:
-                        print("~ \(line.contentLeft) => \(line.contentRight)")
+                    print("[mcdiff] Comparing Excel / Spreadsheet: \(path1) <-> \(path2)")
+                    print("Total Differences: \(diffResult.totalDifferences) row(s), Load Time: \(diffResult.loadTimeSeconds)s")
+                    print("----------------------------------------------------------------------")
+
+                    for sheet in diffResult.sheetDiffs {
+                        print("\n📊 Sheet: [\(sheet.sheetName)] (\(sheet.differenceRowCount) diffs, \(sheet.sameRowCount) identical, Status: \(sheet.status.rawValue))")
+                        for row in sheet.alignedRows where row.rowDiffType != .unchanged {
+                            let leftNum = row.leftRowIndex.map { "R\($0)" } ?? "----"
+                            let rightNum = row.rightRowIndex.map { "R\($0)" } ?? "----"
+                            let diffCells = row.cellDiffs.filter { $0.diffType != .unchanged }
+                            let cellSummary = diffCells.map { "\($0.columnLetter)(\($0.headerName ?? "")): '\($0.leftCell?.rawValue ?? "")' => '\($0.rightCell?.rawValue ?? "")'" }.joined(separator: ", ")
+                            print("  [\(row.rowDiffType.rawValue.uppercased())] \(leftNum) <-> \(rightNum): \(cellSummary)")
+                        }
                     }
+                } catch {
+                    print("[mcdiff] Error comparing Excel files: \(error.localizedDescription)")
+                    exit(1)
                 }
-            } catch {
-                print("[mcdiff] Error reading files: \(error.localizedDescription)")
-                exit(1)
+            } else {
+                do {
+                    let leftText = try String(contentsOfFile: path1)
+                    let rightText = try String(contentsOfFile: path2)
+                    let res = await DiffEngineService.shared.compareText(left: leftText, right: rightText)
+
+                    print("--- \(path1)")
+                    print("+++ \(path2)")
+                    print("@@ Additions: \(res.totalAdditions), Deletions: \(res.totalDeletions), Modifications: \(res.totalModifications) @@")
+
+                    for line in res.lines {
+                        switch line.changeType {
+                        case .unchanged:
+                            print("  \(line.contentLeft)")
+                        case .added:
+                            print("+ \(line.contentRight)")
+                        case .deleted:
+                            print("- \(line.contentLeft)")
+                        case .modified:
+                            print("~ \(line.contentLeft) => \(line.contentRight)")
+                        }
+                    }
+                } catch {
+                    print("[mcdiff] Error reading files: \(error.localizedDescription)")
+                    exit(1)
+                }
             }
         }
     } else {

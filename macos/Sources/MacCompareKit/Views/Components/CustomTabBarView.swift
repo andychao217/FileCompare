@@ -41,7 +41,7 @@ public struct CustomTabBarView: View {
                             .foregroundColor(isSelected ? .primary : .secondary)
                             .lineLimit(1)
 
-                        if isSelected && tabManager.tabs.count > 1 {
+                        if isSelected {
                             Button {
                                 tabManager.closeTab(id: tab.id)
                             } label: {
@@ -108,6 +108,9 @@ public struct CustomTabBarView: View {
             Menu {
                 Button(languageManager.text(.newTextCompare)) {
                     tabManager.addTab(type: .textDiff)
+                }
+                Button(languageManager.text(.newExcelCompare)) {
+                    tabManager.addTab(type: .excelDiff)
                 }
                 Button(languageManager.text(.newWordCompare)) {
                     tabManager.addTab(type: .wordDiff)

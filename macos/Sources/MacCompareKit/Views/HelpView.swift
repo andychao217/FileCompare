@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 public struct HelpView: View {
     @State private var languageManager = LanguageManager.shared
@@ -8,6 +9,10 @@ public struct HelpView: View {
 
     public init(onDismiss: (() -> Void)? = nil) {
         self.onDismiss = onDismiss
+    }
+
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.3.0"
     }
 
     public var body: some View {
@@ -22,7 +27,7 @@ public struct HelpView: View {
                     Text(languageManager.text(.help))
                         .font(.headline)
                         .foregroundColor(.primary)
-                    Text("MacCompare v0.2.0 • \(languageManager.text(.helpSubtitle))")
+                    Text("MacCompare v\(appVersion) • \(languageManager.text(.helpSubtitle))")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -68,7 +73,7 @@ public struct HelpView: View {
                 .padding(24)
             }
         }
-        .frame(width: 720, height: 530)
+        .frame(width: 720, height: 550)
         .background(Color(nsColor: .controlBackgroundColor))
         .id("help-\(themeManager.themeRevision)-\(languageManager.effectiveLanguage.rawValue)")
         .preferredColorScheme(themeManager.effectiveColorScheme)
@@ -77,7 +82,7 @@ public struct HelpView: View {
     // MARK: - Features & User Guide Section
 
     private var featuresSection: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 16) {
             // 1. Text Diff Card
             guideCard(
                 icon: "doc.text.magnifyingglass",
@@ -87,7 +92,25 @@ public struct HelpView: View {
                 codeSnippet: nil
             )
 
-            // 2. Folder Diff Card
+            // 2. Excel Diff Card
+            guideCard(
+                icon: "tablecells",
+                title: languageManager.text(.excelDiff),
+                summary: languageManager.text(.welcomeExcelDiffDesc),
+                detail: languageManager.text(.excelDiffGuideDetail),
+                codeSnippet: nil
+            )
+
+            // 3. Word Diff Card
+            guideCard(
+                icon: "doc.richtext",
+                title: languageManager.text(.welcomeWordDiffTitle),
+                summary: languageManager.text(.welcomeWordDiffDesc),
+                detail: languageManager.text(.wordDiffGuideDetail),
+                codeSnippet: nil
+            )
+
+            // 4. Folder Diff Card
             guideCard(
                 icon: "folder.badge.gearshape",
                 title: languageManager.text(.folderDiff),
@@ -96,7 +119,7 @@ public struct HelpView: View {
                 codeSnippet: nil
             )
 
-            // 3. Three-Way Merge Card (with Git mergetool configuration guide)
+            // 5. Three-Way Merge Card (with Git mergetool configuration guide)
             guideCard(
                 icon: "arrow.triangle.merge",
                 title: languageManager.text(.threeWayMerge),
@@ -105,7 +128,7 @@ public struct HelpView: View {
                 codeSnippet: "git config --global merge.tool maccompare\ngit config --global mergetool.maccompare.cmd 'mcdiff merge \"$LOCAL\" \"$BASE\" \"$REMOTE\" -o \"$MERGED\"'\ngit config --global mergetool.maccompare.trustExitCode true"
             )
 
-            // 4. Tab Drag & Window Merge Card
+            // 6. Tab Drag & Window Merge Card
             guideCard(
                 icon: "uiwindow.split.2x1",
                 title: languageManager.text(.tabDragMergeTitle),
@@ -183,15 +206,19 @@ public struct HelpView: View {
     // MARK: - Shortcuts Section
 
     private var shortcutsSection: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 8) {
             shortcutRow(key: "⌘ N", desc: languageManager.text(.newTextCompare))
+            shortcutRow(key: "⇧ ⌘ E", desc: languageManager.text(.newExcelCompare))
+            shortcutRow(key: "⇧ ⌘ D", desc: languageManager.text(.newWordCompare))
             shortcutRow(key: "⇧ ⌘ N", desc: languageManager.text(.newFolderCompare))
             shortcutRow(key: "⌥ ⌘ M", desc: languageManager.text(.newThreeWayMerge))
+            shortcutRow(key: "⌃ Tab", desc: languageManager.text(.nextTab))
+            shortcutRow(key: "⌃ ⇧ Tab", desc: languageManager.text(.prevTab))
             shortcutRow(key: "⌘ O", desc: languageManager.text(.openFile))
             shortcutRow(key: "⌘ S", desc: languageManager.text(.save))
             shortcutRow(key: "⌘ W", desc: languageManager.text(.closeTab))
-            shortcutRow(key: "⌘ ]", desc: languageManager.text(.nextDiff))
-            shortcutRow(key: "⌘ [", desc: languageManager.text(.prevDiff))
+            shortcutRow(key: "⌘ ] / ⌘ ↓", desc: languageManager.text(.nextDiff))
+            shortcutRow(key: "⌘ [ / ⌘ ↑", desc: languageManager.text(.prevDiff))
             shortcutRow(key: "⌥ ⌘ ←", desc: languageManager.text(.takeLeft))
             shortcutRow(key: "⌥ ⌘ →", desc: languageManager.text(.takeRight))
             shortcutRow(key: "⌥ ⌘ W", desc: languageManager.text(.ignoreWhitespace))
@@ -213,10 +240,10 @@ public struct HelpView: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(Color(nsColor: .windowBackgroundColor))
-                .clipShape(RoundedRectangle(cornerRadius: 4))
+                .clipShape(RoundedRectangle(cornerRadius: 5))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 4)
-                        .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 5)
+                        .stroke(Color.secondary.opacity(0.25), lineWidth: 1)
                 )
         }
         .padding(.horizontal, 14)
@@ -231,16 +258,26 @@ public struct HelpView: View {
 
     private var aboutSection: some View {
         VStack(spacing: 16) {
-            Image(systemName: "doc.on.doc.fill")
-                .font(.system(size: 48))
-                .foregroundColor(.accentColor)
-                .padding(.top, 8)
+            if let icon = NSImage(named: "AppIcon") ?? NSApp.applicationIconImage {
+                Image(nsImage: icon)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 80, height: 80)
+                    .cornerRadius(18)
+                    .shadow(color: Color.black.opacity(0.2), radius: 6, y: 3)
+                    .padding(.top, 8)
+            } else {
+                Image(systemName: "doc.on.doc.fill")
+                    .font(.system(size: 54))
+                    .foregroundColor(.accentColor)
+                    .padding(.top, 8)
+            }
 
             Text("MacCompare")
-                .font(.system(size: 18, weight: .bold))
+                .font(.system(size: 20, weight: .bold))
 
-            Text("Version 0.2.0 • \(languageManager.text(.universalBinary))")
-                .font(.caption)
+            Text("Version \(appVersion) • \(languageManager.text(.universalBinary))")
+                .font(.subheadline)
                 .foregroundColor(.secondary)
 
             Divider().padding(.vertical, 4)
