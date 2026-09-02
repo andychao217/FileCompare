@@ -49,13 +49,13 @@
     <!-- Hero Section -->
     <section class="hero">
       <div class="pill-badge" data-i18n="badge">
-        ⚡ macOS 原生架构 • Intel & Apple Silicon 通用二进制 v0.3.0
+        ⚡ macOS 原生架构 • Rust 双引擎架构 • Universal Binary 2 v0.4.0
       </div>
       <h1 class="hero-title" data-i18n="heroTitle">
         下一代 macOS <span class="gradient-text">文件比对与合并套件</span>
       </h1>
       <p class="hero-subtitle" data-i18n="heroSubtitle">
-        基于 Rust 高性能差分引擎与原生 SwiftUI 深度构建。专为 macOS 开发者和专业用户打造的极致比对工具。
+        基于 Rust 高吞吐差分引擎与原生 SwiftUI 深度构建。内置海量数据流式视口分页与双引擎调度，专为 macOS 打造。
       </p>
 
       <div class="hero-actions">
@@ -76,7 +76,7 @@
       </div>
     </section>
 
-    <!-- Interactive Showcase Section -->
+    <!-- Interactive Showcase Section with Split-Compare Slider -->
     <section id="showcase" class="showcase-container">
       <div class="showcase-header">
         <div class="showcase-tabs">
@@ -89,8 +89,9 @@
         </div>
 
         <div class="theme-preview-toggle">
-          <button class="theme-opt-btn active" data-theme-opt="dark" data-i18n="themeDark">深色界面</button>
-          <button class="theme-opt-btn" data-theme-opt="light" data-i18n="themeLight">浅色界面</button>
+          <button class="theme-opt-btn" data-preset="100" data-i18n="presetDark">🌙 深色</button>
+          <button class="theme-opt-btn active" data-preset="50" data-i18n="presetSplit">⚖️ 对半对比</button>
+          <button class="theme-opt-btn" data-preset="0" data-i18n="presetLight">☀️ 浅色</button>
         </div>
       </div>
 
@@ -101,10 +102,48 @@
             <span class="dot yellow"></span>
             <span class="dot green"></span>
           </div>
-          <span class="window-title">MacCompare — High Precision Diff Suite</span>
+          <span class="window-title"></span>
+          <div class="slider-hint-pill">
+            <span class="hint-icon">↔️</span>
+            <span data-i18n="sliderHint">左右拖拽竖线实时对比深浅外观</span>
+          </div>
         </div>
-        <div class="showcase-image-wrapper">
-          <img id="showcase-img" src="assets/welcome_home_dark_ui.png" alt="MacCompare UI Interface Preview">
+
+        <!-- Interactive Split-Slider Image Container -->
+        <div class="showcase-image-wrapper image-compare-container" id="image-compare">
+          <!-- Light Mode Image (Base layer, visible on the right) -->
+          <img id="img-light" class="compare-img compare-img-base" src="assets/welcome_home_light_ui.png"
+            alt="Light UI Preview">
+
+          <!-- Dark Mode Image (Overlay layer, clipped from left to split point) -->
+          <div class="compare-overlay" id="compare-overlay">
+            <img id="img-dark" class="compare-img compare-img-overlay" src="assets/welcome_home_dark_ui.png"
+              alt="Dark UI Preview">
+          </div>
+
+          <!-- Draggable Divider Line & Knob -->
+          <div class="compare-handle" id="compare-handle">
+            <div class="handle-line"></div>
+            <div class="handle-knob" title="Drag to compare Dark & Light themes">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </div>
+            <div class="handle-line"></div>
+          </div>
+
+          <!-- Corner Badges -->
+          <div class="compare-badge badge-left">
+            <span>🌙</span> <span data-i18n="themeDarkLabel">深色界面</span>
+          </div>
+          <div class="compare-badge badge-right">
+            <span>☀️</span> <span data-i18n="themeLightLabel">浅色界面</span>
+          </div>
         </div>
       </div>
     </section>
@@ -118,9 +157,16 @@
 
       <div class="features-grid">
         <div class="feature-card">
+          <div class="feature-icon">🏎️</div>
+          <h3 class="feature-title" data-i18n="feat1Title">Rust 核心与双引擎架构</h3>
+          <p class="feature-desc" data-i18n="feat1Desc">支持在偏好设置中自由切换 Rust 高性能核心或 Swift 原生引擎，支持 Myers 算法与并发 Rayon 扫描。</p>
+        </div>
+
+        <div class="feature-card">
           <div class="feature-icon">📊</div>
-          <h3 class="feature-title" data-i18n="featExcelTitle">Excel 与表格结构化比对</h3>
-          <p class="feature-desc" data-i18n="featExcelDesc">支持 .xlsx/.xls/.csv/.tsv 多工作表自动对齐、主键列映射、单元格字符级高亮与数值容差。</p>
+          <h3 class="feature-title" data-i18n="featExcelTitle">海量表格与多工作表比对</h3>
+          <p class="feature-desc" data-i18n="featExcelDesc">集成 Calamine 与 Memmap2 流式解析，64位行哈希秒级筛选，视口分页保持 30MB
+            极低内存，表头双向像素级锁定同步滚动。</p>
         </div>
 
         <div class="feature-card">
@@ -133,12 +179,6 @@
           <div class="feature-icon">🏠</div>
           <h3 class="feature-title" data-i18n="featHomeTitle">启动欢迎主页与历史记录</h3>
           <p class="feature-desc" data-i18n="featHomeDesc">2x2 黄金对称四大模式直达、全局持久化历史会话一键恢复与单侧文件即时预览。</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">🏎️</div>
-          <h3 class="feature-title" data-i18n="feat1Title">Rust 差分内核</h3>
-          <p class="feature-desc" data-i18n="feat1Desc">基于 Myers 算法与 SIMD 加速哈希，瞬间完成百万行文本及大型目录树的精准对比。</p>
         </div>
 
         <div class="feature-card">
@@ -189,7 +229,7 @@
           </div>
           <button id="copy-btn" class="copy-btn" onclick="copyCli()">Copy</button>
         </div>
-        <pre class="terminal-content" id="cli-code"><code><span class="terminal-comment"># 1. 比较 Excel 表格与 Word 文档</span>
+        <pre class="terminal-content" id="cli-code"><code><span class="terminal-comment"># 1. 比较 Excel 表格 (.xlsx/.xlsb/.xls/.csv/.tsv) 与 Word 文档</span>
 <span class="terminal-prompt">$</span> mcdiff sales_2025.xlsx sales_2026.xlsx
 <span class="terminal-prompt">$</span> mcdiff contract_v1.docx contract_v2.docx
 

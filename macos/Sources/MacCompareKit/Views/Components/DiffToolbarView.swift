@@ -118,6 +118,7 @@ public struct DiffToolbarView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 6)
         .background(Color(nsColor: .controlBackgroundColor))
+        .focusEffectDisabled()
     }
 }
 

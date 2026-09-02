@@ -64,6 +64,7 @@ public struct MainWindowView: View {
                 WelcomeHomeView(tabManager: tabManager)
             }
         }
+        .focusEffectDisabled()
     }
 }
 

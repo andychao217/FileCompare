@@ -4,7 +4,7 @@ use globset::{Glob, GlobSet, GlobSetBuilder};
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// Status of an item when comparing two directories.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

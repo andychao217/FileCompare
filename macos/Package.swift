@@ -24,8 +24,16 @@ let package = Package(
     dependencies: [],
     targets: [
         .target(
+            name: "CMacCompareCore",
+            path: "Sources/CMacCompareCore",
+            publicHeadersPath: "include",
+            linkerSettings: [
+                .unsafeFlags(["-LSources/CMacCompareCore/lib", "-lmaccompare_ffi"])
+            ]
+        ),
+        .target(
             name: "MacCompareKit",
-            dependencies: [],
+            dependencies: ["CMacCompareCore"],
             path: "Sources/MacCompareKit"
         ),
         .executableTarget(

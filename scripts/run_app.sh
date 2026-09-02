@@ -13,6 +13,12 @@ if command -v xcrun &> /dev/null; then
     SWIFT_BIN="xcrun swift"
 fi
 
+# Build Rust static library if cargo is available
+if command -v cargo &> /dev/null && [ -f "${SCRIPT_DIR}/build_universal_lib.sh" ]; then
+    echo "=== Building Rust Universal Core ==="
+    bash "${SCRIPT_DIR}/build_universal_lib.sh"
+fi
+
 echo "=== Building MacCompare Application & CLI ==="
 cd "${ROOT_DIR}/macos"
 ${SWIFT_BIN} build

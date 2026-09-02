@@ -27,13 +27,21 @@ echo "[2/3] Compiling for Intel Mac (x86_64)..."
 cargo build --manifest-path "${ROOT_DIR}/core/Cargo.toml" --release --target x86_64-apple-darwin --package maccompare-ffi
 
 echo "[3/3] Creating Universal Binary 2 with lipo..."
-OUTPUT_DIR="${ROOT_DIR}/macos/Sources/MacCompareKit/Generated/lib"
+OUTPUT_DIR="${ROOT_DIR}/macos/Sources/CMacCompareCore/lib"
 mkdir -p "${OUTPUT_DIR}"
 
 lipo -create \
     "${ROOT_DIR}/core/target/aarch64-apple-darwin/release/libmaccompare_ffi.a" \
     "${ROOT_DIR}/core/target/x86_64-apple-darwin/release/libmaccompare_ffi.a" \
     -output "${OUTPUT_DIR}/libmaccompare_ffi.a"
+
+# Also copy dylib if needed
+if [ -f "${ROOT_DIR}/core/target/aarch64-apple-darwin/release/libmaccompare_ffi.dylib" ] && [ -f "${ROOT_DIR}/core/target/x86_64-apple-darwin/release/libmaccompare_ffi.dylib" ]; then
+    lipo -create \
+        "${ROOT_DIR}/core/target/aarch64-apple-darwin/release/libmaccompare_ffi.dylib" \
+        "${ROOT_DIR}/core/target/x86_64-apple-darwin/release/libmaccompare_ffi.dylib" \
+        -output "${OUTPUT_DIR}/libmaccompare_ffi.dylib"
+fi
 
 echo "=== Universal static library created successfully! ==="
 lipo -info "${OUTPUT_DIR}/libmaccompare_ffi.a"

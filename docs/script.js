@@ -1,8 +1,8 @@
 const i18n = {
   zh: {
-    badge: "⚡ macOS 原生架构 • Intel & Apple Silicon 通用二进制 v0.3.0",
+    badge: "⚡ macOS 原生架构 • Rust 双引擎架构 • Universal Binary 2 v0.4.0",
     heroTitle: "下一代 macOS <span class='gradient-text'>文件比对与合并套件</span>",
-    heroSubtitle: "基于 Rust 高性能差分引擎与原生 SwiftUI 深度构建。专为 macOS 开发者和专业用户打造的极致比对工具。",
+    heroSubtitle: "基于 Rust 高吞吐差分引擎与原生 SwiftUI 深度构建。内置海量数据流式视口分页与双引擎调度，专为 macOS 打造。",
     downloadBtn: "免费下载 DMG",
     githubBtn: "GitHub 源代码",
     welcomeTab: "启动主页",
@@ -13,16 +13,22 @@ const i18n = {
     threeWayMergeTab: "三向合并",
     themeDark: "深色界面",
     themeLight: "浅色界面",
+    themeDarkLabel: "深色界面",
+    themeLightLabel: "浅色界面",
+    sliderHint: "左右拖拽竖线实时对比深浅外观",
+    presetSplit: "⚖️ 对半",
+    presetDark: "🌙",
+    presetLight: "☀️",
     featuresTitle: "为极速与优雅而生",
     featuresSubtitle: "原生级响应速度，兼顾直观的视觉反馈与强大的生产力工具。",
-    featExcelTitle: "Excel 与表格结构化比对",
-    featExcelDesc: "支持 .xlsx/.xls/.csv/.tsv 多工作表自动对齐、主键列映射、单元格字符级高亮与数值容差。",
+    feat1Title: "Rust 核心与双引擎架构",
+    feat1Desc: "支持在偏好设置中自由切换 Rust 高性能核心或 Swift 原生引擎，支持 Myers 算法与并发 Rayon 扫描。",
+    featExcelTitle: "海量表格与多工作表比对",
+    featExcelDesc: "集成 Calamine 与 Memmap2 流式解析，64位行哈希秒级筛选，视口分页保持 30MB 极低内存，表头双向像素级锁定同步滚动。",
     featWordTitle: "Word 结构化全要素比对",
     featWordDesc: "支持 .docx/.doc 段落富文本样式、原生内嵌表格网格、多媒体指纹与矢量图形 Shape 深度对比。",
     featHomeTitle: "启动欢迎主页与历史记录",
     featHomeDesc: "2x2 黄金对称四大模式直达、全局持久化历史会话一键恢复与单侧文件即时预览。",
-    feat1Title: "Rust 差分内核",
-    feat1Desc: "基于 Myers 算法与 SIMD 加速哈希，瞬间完成百万行文本及大型目录树的精准对比。",
     feat2Title: "对齐幻影行 (Phantom Lines)",
     feat2Desc: "直观的空白对齐与字符级高亮，差异块一目了然，支持左右双向差异合并采纳。",
     feat3Title: "双向目录同步",
@@ -40,9 +46,9 @@ const i18n = {
     footerDesc: "基于 MIT / Apache-2.0 许可证开源。"
   },
   en: {
-    badge: "⚡ macOS Native • Universal Binary (Intel & Apple Silicon) v0.3.0",
+    badge: "⚡ macOS Native • Rust Dual-Engine Architecture • Universal Binary 2 v0.4.0",
     heroTitle: "Next-Gen File Comparison <span class='gradient-text'>& 3-Way Merge for macOS</span>",
-    heroSubtitle: "Engineered with a high-performance Rust core and native SwiftUI. The ultimate diff & merge suite built for macOS developers.",
+    heroSubtitle: "Engineered with a high-throughput Rust core and native SwiftUI. Featuring Viewport Paging for big-data spreadsheets and dual-engine flexibility.",
     downloadBtn: "Download DMG",
     githubBtn: "View on GitHub",
     welcomeTab: "Welcome Hub",
@@ -53,16 +59,22 @@ const i18n = {
     threeWayMergeTab: "3-Way Merge",
     themeDark: "Dark UI",
     themeLight: "Light UI",
+    themeDarkLabel: "Dark UI",
+    themeLightLabel: "Light UI",
+    sliderHint: "Drag vertical divider to compare Dark & Light",
+    presetSplit: "⚖️ 50/50",
+    presetDark: "🌙",
+    presetLight: "☀️",
     featuresTitle: "Built for Speed & Elegance",
     featuresSubtitle: "Native responsiveness with intuitive visual diffing and powerful productivity workflows.",
-    featExcelTitle: "Excel & Spreadsheet Diff",
-    featExcelDesc: "Multi-sheet sync for .xlsx/.xls/.csv/.tsv, Key-based alignment, intra-cell inline diffing & numeric tolerance.",
+    feat1Title: "Rust Core & Dual-Engine",
+    feat1Desc: "Toggle between high-performance Rust core and Swift native engine seamlessly in Settings with live status.",
+    featExcelTitle: "Big-Data Excel & Spreadsheet Diff",
+    featExcelDesc: "Multi-sheet parsing via Calamine & Memmap2, 64-bit row hash filtering, Viewport Paging with tiny 30MB memory, and pixel-perfect synchronized scrolling.",
     featWordTitle: "Word Structured Diff",
     featWordDesc: "Deep diffing for .docx/.doc with rich styles, native table grids, media fingerprints, and vector shapes.",
     featHomeTitle: "Welcome Hub & History",
     featHomeDesc: "Sleek 2x2 launcher dashboard, persistent session history, and single-file instant previews.",
-    feat1Title: "Rust Diff Engine",
-    feat1Desc: "Powered by Myers algorithm and SIMD hashing, diffing millions of lines instantaneously.",
     feat2Title: "Phantom Line Alignment",
     feat2Desc: "Smart empty line synchronization and token-level highlighting with bidirectional hunk navigation.",
     feat3Title: "Directory Synchronization",
@@ -80,9 +92,9 @@ const i18n = {
     footerDesc: "Open source under MIT / Apache-2.0 license."
   },
   ja: {
-    badge: "⚡ macOS ネイティブ • Universal Binary (Intel & Apple Silicon) v0.3.0",
+    badge: "⚡ macOS ネイティブ • Rust デュアルエンジン • Universal Binary 2 v0.4.0",
     heroTitle: "次世代 macOS <span class='gradient-text'>ファイル比較＆3方向マージ</span>",
-    heroSubtitle: "高性能 Rust コアとネイティブ SwiftUI で構築。macOS 開発者のための究極の差分比較ツール。",
+    heroSubtitle: "高性能 Rust コアとネイティブ SwiftUI で構築。大容量データに対応した視口ストリーミングと柔軟なエンジン切り替えを搭載。",
     downloadBtn: "DMG をダウンロード",
     githubBtn: "GitHub で見る",
     welcomeTab: "ホーム",
@@ -93,16 +105,22 @@ const i18n = {
     threeWayMergeTab: "3方向マージ",
     themeDark: "ダーク",
     themeLight: "ライト",
-    featuresTitle: "高速性と洗練されたデザイン",
+    themeDarkLabel: "ダーク",
+    themeLightLabel: "ライト",
+    sliderHint: "左右にドラッグして深浅テーマを比較",
+    presetSplit: "⚖️ 50/50",
+    presetDark: "🌙",
+    presetLight: "☀️",
+    featuresTitle: "高速性と洗练されたデザイン",
     featuresSubtitle: "ネイティブの応答性と直感的な視覚差分フィードバックを実現。",
-    featExcelTitle: "Excel テーブル構造化比較",
-    featExcelDesc: ".xlsx/.xls/.csv/.tsv の複数シート自動照合、主キー整列、セル内インライン差分、数値許容誤差に対応。",
+    feat1Title: "Rust コア＆デュアルエンジン",
+    feat1Desc: "設定画面から Rust 高速コアと Swift ネイティブエンジンを自由に切り替え可能。Myers アルゴリズムと並列スキャンを搭載。",
+    featExcelTitle: "大規模 Excel＆テーブル構造化比較",
+    featExcelDesc: "Calamine と Memmap2 による超高速ストリーミング、64bit 行ハッシュ、視口ページング（メモリ消費30MB）、ヘッダー同期スクロールに対応。",
     featWordTitle: "Word 構造化全要素比較",
     featWordDesc: ".docx/.doc のリッチテキスト書式、ネイティブ表グリッド、メディアハッシュ、ベクター図形を高精度に比較。",
     featHomeTitle: "ウェルカムホーム＆履歴",
     featHomeDesc: "2x2 黄金比ランチャー、永続的な比較セッション履歴、単側ファイルの即時プレビューを搭載。",
-    feat1Title: "Rust 差分エンジン",
-    feat1Desc: "Myers アルゴリズムと SIMD ハッシュにより、大規模ファイルやディレクトリを瞬時に比較。",
     feat2Title: "ファントム行アライメント",
     feat2Desc: "空白行の自動同期と単語レベルのハイライトで、差分箇所を一目で把握。",
     feat3Title: "フォルダ双方向同期",
@@ -111,7 +129,7 @@ const i18n = {
     feat4Desc: "Local、Base、Remote ブランチの競合を快適に解決。非競合の自動解決もサポート。",
     feat5Title: "タブ循環切替と結合",
     feat5Desc: "Safari のようにタブをドラッグして分離/結合可能。⌃Tab でスムーズにタブ間を切り替え。",
-    feat6Title: "多言語＆外観テーマ",
+    feat6Title: "多言語＆外观テーマ",
     feat6Desc: "日本語、英語、中国語を標準搭載。macOS の外観モードに完全連動。",
     cliTitle: "CLI & Git 統合",
     cliSubtitle: "Git のデフォルトのマージツールとして簡単に連携設定が可能。",
@@ -123,7 +141,7 @@ const i18n = {
 
 let currentLang = "zh";
 let currentMode = "welcome";
-let currentPreviewTheme = "dark";
+let currentSplitPercent = 50; // 0 to 100
 
 const images = {
   welcome: {
@@ -162,67 +180,163 @@ function updateLanguage(lang) {
   });
 }
 
-function updateShowcase() {
-  const img = document.getElementById("showcase-img");
-  if (img && images[currentMode] && images[currentMode][currentPreviewTheme]) {
-    img.style.opacity = "0.4";
+// Update images for current mode
+function updateShowcaseImages() {
+  const imgLight = document.getElementById("img-light");
+  const imgDark = document.getElementById("img-dark");
+  if (imgLight && imgDark && images[currentMode]) {
+    imgLight.style.opacity = "0.5";
+    imgDark.style.opacity = "0.5";
     setTimeout(() => {
-      img.src = images[currentMode][currentPreviewTheme];
-      img.style.opacity = "1";
-    }, 150);
+      imgLight.src = images[currentMode].light;
+      imgDark.src = images[currentMode].dark;
+      imgLight.style.opacity = "1";
+      imgDark.style.opacity = "1";
+    }, 120);
   }
 }
 
-// Mode tab clicks
+// Split-Slider Logic
+const compareContainer = document.getElementById("image-compare");
+const compareOverlay = document.getElementById("compare-overlay");
+const compareHandle = document.getElementById("compare-handle");
+
+function setSplitPosition(percent, smooth = false) {
+  currentSplitPercent = Math.max(0, Math.min(100, percent));
+
+  if (compareOverlay && compareHandle) {
+    if (smooth) {
+      compareOverlay.style.transition = "clip-path 0.3s cubic-bezier(0.25, 1, 0.5, 1)";
+      compareHandle.style.transition = "left 0.3s cubic-bezier(0.25, 1, 0.5, 1)";
+      setTimeout(() => {
+        compareOverlay.style.transition = "";
+        compareHandle.style.transition = "";
+      }, 300);
+    }
+    compareOverlay.style.clipPath = `polygon(0 0, ${currentSplitPercent}% 0, ${currentSplitPercent}% 100%, 0 100%)`;
+    compareHandle.style.left = `${currentSplitPercent}%`;
+  }
+}
+
+let isDragging = false;
+
+function onDragStart(e) {
+  isDragging = true;
+  if (compareHandle) compareHandle.classList.add("dragging");
+  handleDrag(e);
+}
+
+function onDragEnd() {
+  if (isDragging) {
+    isDragging = false;
+    if (compareHandle) compareHandle.classList.remove("dragging");
+  }
+}
+
+function handleDrag(e) {
+  if (!isDragging || !compareContainer) return;
+  const rect = compareContainer.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const x = clientX - rect.left;
+  const percent = (x / rect.width) * 100;
+  setSplitPosition(percent);
+}
+
+if (compareContainer) {
+  // Mouse drag
+  compareContainer.addEventListener("mousedown", (e) => {
+    onDragStart(e);
+  });
+  window.addEventListener("mousemove", (e) => {
+    if (isDragging) handleDrag(e);
+  });
+  window.addEventListener("mouseup", onDragEnd);
+
+  // Touch drag
+  compareContainer.addEventListener("touchstart", (e) => {
+    onDragStart(e);
+  }, { passive: true });
+  window.addEventListener("touchmove", (e) => {
+    if (isDragging) handleDrag(e);
+  }, { passive: true });
+  window.addEventListener("touchend", onDragEnd);
+}
+
+// Preset Buttons
+document.querySelectorAll(".theme-opt-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".theme-opt-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const presetVal = parseFloat(btn.getAttribute("data-preset"));
+    setSplitPosition(presetVal, true);
+  });
+});
+
+// Mode Tabs
 document.querySelectorAll(".showcase-tab").forEach(tab => {
   tab.addEventListener("click", () => {
     document.querySelectorAll(".showcase-tab").forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
     currentMode = tab.getAttribute("data-mode");
-    updateShowcase();
-  });
-});
-
-// Theme preview toggle clicks
-document.querySelectorAll(".theme-opt-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".theme-opt-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    currentPreviewTheme = btn.getAttribute("data-theme-opt");
-    updateShowcase();
+    updateShowcaseImages();
   });
 });
 
 // Global Theme Toggle
 const themeToggleBtn = document.getElementById("theme-toggle-btn");
-themeToggleBtn.addEventListener("click", () => {
-  const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
-  const newTheme = currentTheme === "dark" ? "light" : "dark";
-  document.documentElement.setAttribute("data-theme", newTheme);
-  themeToggleBtn.textContent = newTheme === "dark" ? "🌙" : "☀️";
-});
+if (themeToggleBtn) {
+  themeToggleBtn.addEventListener("click", () => {
+    const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
+    const newTheme = currentTheme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", newTheme);
+    themeToggleBtn.textContent = newTheme === "dark" ? "🌙" : "☀️";
+    localStorage.setItem("mc_theme", newTheme);
+  });
+}
 
 // Language Select
 const langSelect = document.getElementById("lang-select");
-langSelect.addEventListener("change", (e) => {
-  updateLanguage(e.target.value);
-});
+if (langSelect) {
+  langSelect.addEventListener("change", (e) => {
+    const selectedLang = e.target.value;
+    updateLanguage(selectedLang);
+    localStorage.setItem("mc_lang", selectedLang);
+  });
+}
 
-// Copy CLI Code
+// Clipboard copy helper
 function copyCli() {
-  const code = document.getElementById("cli-code").innerText;
+  const codeEl = document.getElementById("cli-code");
+  if (!codeEl) return;
+  const code = codeEl.innerText;
   navigator.clipboard.writeText(code).then(() => {
     const btn = document.getElementById("copy-btn");
+    if (!btn) return;
     btn.textContent = "Copied!";
+    btn.classList.add("copied");
     setTimeout(() => {
       btn.textContent = "Copy";
+      btn.classList.remove("copied");
     }, 2000);
   });
 }
 
-// Initial setup
-document.addEventListener("DOMContentLoaded", () => {
-  document.documentElement.setAttribute("data-theme", "dark");
-  updateLanguage("zh");
-  updateShowcase();
+// Init
+window.addEventListener("DOMContentLoaded", () => {
+  // Load saved theme
+  const savedTheme = localStorage.getItem("mc_theme") || "dark";
+  document.documentElement.setAttribute("data-theme", savedTheme);
+  if (themeToggleBtn) {
+    themeToggleBtn.textContent = savedTheme === "dark" ? "🌙" : "☀️";
+  }
+
+  // Load saved language
+  const savedLang = localStorage.getItem("mc_lang") || "zh";
+  if (langSelect) {
+    langSelect.value = savedLang;
+  }
+  updateLanguage(savedLang);
+
+  // Initialize Split position at 50%
+  setSplitPosition(50);
 });

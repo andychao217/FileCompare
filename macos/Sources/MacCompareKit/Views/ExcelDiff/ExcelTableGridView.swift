@@ -6,6 +6,9 @@ public struct ExcelTableGridView: View {
     @State private var hoveredRowId: UUID?
     @State private var themeManager = ThemeManager.shared
 
+    private let columnWidth: CGFloat = 140
+    private let rowHeaderWidth: CGFloat = 44
+
     public init(viewModel: ExcelDiffViewModel) {
         self.viewModel = viewModel
     }
@@ -57,50 +60,9 @@ public struct ExcelTableGridView: View {
         columnHeaders: [String],
         rows: [AlignedExcelRow]
     ) -> some View {
-        VStack(spacing: 0) {
-            // Column Headers Row (Sticky Header)
-            HStack(spacing: 0) {
-                // Row Number Header Column
-                Text("#")
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundColor(.secondary)
-                    .frame(width: 44, alignment: .center)
-                    .padding(.vertical, 6)
-                    .background(Color(nsColor: .controlBackgroundColor))
-
-                Divider()
-
-                // Data Column Headers
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 0) {
-                        ForEach(Array(columnHeaders.enumerated()), id: \.offset) { colIdx, headerName in
-                            HStack(spacing: 4) {
-                                Text(ExcelModelsHelper.columnLetter(for: colIdx))
-                                    .font(.system(size: 10, weight: .bold, design: .monospaced))
-                                    .foregroundColor(.secondary)
-                                Text(headerName)
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundColor(.primary)
-                                    .lineLimit(1)
-                            }
-                            .padding(.horizontal, 8)
-                            .frame(width: 130, alignment: .leading)
-                            .padding(.vertical, 6)
-                            .background(Color(nsColor: .controlBackgroundColor))
-
-                            Divider()
-                        }
-                    }
-                }
-            }
-            .frame(height: 28)
-            .background(Color(nsColor: .controlBackgroundColor))
-
-            Divider()
-
-            // Table Rows
-            ScrollView([.vertical, .horizontal]) {
-                LazyVStack(spacing: 0) {
+        ScrollView([.horizontal, .vertical]) {
+            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                Section {
                     ForEach(rows) { row in
                         tableRowView(isLeft: isLeft, row: row, columnHeaders: columnHeaders)
                             .id(row.id)
@@ -112,10 +74,54 @@ public struct ExcelTableGridView: View {
                                 else if hoveredRowId == row.id { hoveredRowId = nil }
                             }
                     }
+                } header: {
+                    headerRowView(columnHeaders: columnHeaders)
                 }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    @ViewBuilder
+    private func headerRowView(columnHeaders: [String]) -> some View {
+        HStack(spacing: 0) {
+            // Row Number Header Column
+            Text("#")
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundColor(.secondary)
+                .frame(width: rowHeaderWidth, alignment: .center)
+                .padding(.vertical, 6)
+                .background(Color(nsColor: .controlBackgroundColor))
+
+            Divider()
+
+            // Data Column Headers
+            ForEach(Array(columnHeaders.enumerated()), id: \.offset) { colIdx, headerName in
+                HStack(spacing: 4) {
+                    Text(ExcelModelsHelper.columnLetter(for: colIdx))
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundColor(.secondary)
+                    Text(headerName)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+                }
+                .padding(.horizontal, 8)
+                .frame(width: columnWidth, alignment: .leading)
+                .padding(.vertical, 6)
+                .background(Color(nsColor: .controlBackgroundColor))
+
+                Divider()
+            }
+        }
+        .frame(height: 28)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .overlay(
+            Rectangle()
+                .frame(height: 1)
+                .foregroundColor(Color(nsColor: .separatorColor)),
+            alignment: .bottom
+        )
     }
 
     @ViewBuilder
@@ -141,7 +147,7 @@ public struct ExcelTableGridView: View {
                     .font(.system(size: 11, weight: .medium, design: .monospaced))
                     .foregroundColor(isPhantom ? .secondary.opacity(0.3) : .secondary)
             }
-            .frame(width: 44, alignment: .center)
+            .frame(width: rowHeaderWidth, alignment: .center)
             .frame(maxHeight: .infinity)
             .background(rowNumberBackground(isSelected: isSelected, isHovered: isHovered, diffType: row.rowDiffType))
 
@@ -160,9 +166,9 @@ public struct ExcelTableGridView: View {
                             rowDiffType: row.rowDiffType,
                             isSelected: isSelected
                         )
-                        .frame(width: 130, alignment: .leading)
-                        .padding(.vertical, 5)
                         .padding(.horizontal, 8)
+                        .frame(width: columnWidth, alignment: .leading)
+                        .padding(.vertical, 5)
 
                         Divider()
                     }
@@ -219,9 +225,9 @@ public struct ExcelTableGridView: View {
         HStack(spacing: 0) {
             ForEach(0..<columnCount, id: \.self) { _ in
                 Text("")
-                    .frame(width: 130)
-                    .padding(.vertical, 5)
                     .padding(.horizontal, 8)
+                    .frame(width: columnWidth, alignment: .leading)
+                    .padding(.vertical, 5)
                 Divider()
             }
         }

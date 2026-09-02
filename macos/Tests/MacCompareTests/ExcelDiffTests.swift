@@ -82,4 +82,34 @@ final class ExcelDiffTests: XCTestCase {
         XCTAssertEqual(diffResult.sameRowCount, 1)
         XCTAssertEqual(diffResult.status, .same)
     }
+
+    func testRustBigDataExcelSession() throws {
+        let tempA = FileManager.default.temporaryDirectory.appendingPathComponent("excel_a_\(UUID().uuidString).csv")
+        let tempB = FileManager.default.temporaryDirectory.appendingPathComponent("excel_b_\(UUID().uuidString).csv")
+
+        let csvA = "ID,Name,Salary\n1,Alice,5000\n2,Bob,6000\n3,Charlie,7000"
+        let csvB = "ID,Name,Salary\n1,Alice,5000\n2,Bob,6500\n3,Charlie,7000\n4,David,8000"
+
+        try csvA.write(to: tempA, atomically: true, encoding: .utf8)
+        try csvB.write(to: tempB, atomically: true, encoding: .utf8)
+        defer {
+            try? FileManager.default.removeItem(at: tempA)
+            try? FileManager.default.removeItem(at: tempB)
+        }
+
+        let session = RustExcelSession(leftPath: tempA.path, rightPath: tempB.path)
+        XCTAssertNotNil(session)
+
+        let summary = session?.getSummary()
+        XCTAssertNotNil(summary)
+        XCTAssertEqual(summary?.sheetSummaries.count, 1)
+        XCTAssertEqual(summary?.totalDifferences, 2) // Row 2 (modified) + Row 4 (right only)
+
+        let viewport = session?.getViewport(sheetIndex: 0, startRow: 0, count: 5)
+        XCTAssertNotNil(viewport)
+        XCTAssertEqual(viewport?.count, 5) // Header + 4 rows
+
+        let nextDiff = session?.findNextDiffRow(sheetIndex: 0, currentRow: 0)
+        XCTAssertNotNil(nextDiff)
+    }
 }

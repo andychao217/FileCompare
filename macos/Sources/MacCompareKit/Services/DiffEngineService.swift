@@ -10,9 +10,46 @@ public protocol DiffEngineProtocol: Sendable {
     func executeSyncPlan(items: [SyncPlanItem]) async throws -> (successCount: Int, errorCount: Int)
 }
 
-/// Unified Diff Engine Service with high-speed Myers Diff, SIMD CRC32, and safe file I/O.
+/// Unified Diff Engine Service with Dual-Engine Architecture (Rust High-Performance Core + Swift Native Fallback).
 public final class DiffEngineService: DiffEngineProtocol, @unchecked Sendable {
     public static let shared = DiffEngineService()
+
+    private let userDefaults = UserDefaults.standard
+    private let enginePrefKey = "mc_diff_engine_preference"
+
+    /// Current user preference for calculation engine.
+    public var enginePreference: DiffEnginePreference {
+        get {
+            if let saved = userDefaults.string(forKey: enginePrefKey) {
+                if saved == "Auto (Rust First)" || saved == "auto" { return .auto }
+                if saved == "Rust High-Performance" || saved == "rust" { return .rust }
+                if saved == "Swift Native" || saved == "swift" { return .swift }
+                if let pref = DiffEnginePreference(rawValue: saved) { return pref }
+            }
+            return .auto
+        }
+        set {
+            userDefaults.set(newValue.rawValue, forKey: enginePrefKey)
+            NotificationCenter.default.post(name: .mcEngineChanged, object: nil)
+        }
+    }
+
+    /// Whether Rust engine is currently available and operational.
+    public var isRustAvailable: Bool {
+        RustDiffBridge.isAvailable
+    }
+
+    /// Active engine descriptive info.
+    public var activeEngineDescription: String {
+        switch enginePreference {
+        case .swift:
+            return "Swift Native Engine"
+        case .rust:
+            return isRustAvailable ? "\(RustDiffBridge.version) [Rust]" : "Swift Native (Rust Unavailable)"
+        case .auto:
+            return isRustAvailable ? "\(RustDiffBridge.version) [Auto / Rust]" : "Swift Native [Auto / Fallback]"
+        }
+    }
 
     public init() {}
 
@@ -50,7 +87,7 @@ public final class DiffEngineService: DiffEngineProtocol, @unchecked Sendable {
         try data.write(to: resolvedURL, options: .atomic)
     }
 
-    // MARK: - Text Diff Engine (Two-Stage Myers + Token LCS)
+    // MARK: - Text Diff Engine (Rust Myers Core + Swift Native Fallback)
 
     public func compareText(
         left: String,
@@ -58,6 +95,19 @@ public final class DiffEngineService: DiffEngineProtocol, @unchecked Sendable {
         ignoreWhitespace: Bool = false,
         ignoreCase: Bool = false
     ) async -> TextDiffResult {
+        // 1. Check if Rust engine should be invoked
+        if enginePreference != .swift && isRustAvailable {
+            if let result = RustDiffBridge.compareText(
+                left: left,
+                right: right,
+                ignoreWhitespace: ignoreWhitespace,
+                ignoreCase: ignoreCase
+            ) {
+                return result
+            }
+        }
+
+        // 2. Swift Native Fallback (Two-Stage Myers + Token LCS)
         let leftLines = left.components(separatedBy: .newlines)
         let rightLines = right.components(separatedBy: .newlines)
 
@@ -246,14 +296,40 @@ public final class DiffEngineService: DiffEngineProtocol, @unchecked Sendable {
         return tokens
     }
 
-    // MARK: - Folder Diff & CRC32 Hash Engine
+    // MARK: - Folder Diff & CRC32 Hash Engine (Rust Parallel Scanner + Swift Native Fallback)
 
     public func compareFolders(
         leftPath: String,
         rightPath: String,
         mode: Int = 0,
-        excludePatterns: [String] = [".git", ".DS_Store", "node_modules", "target", "build"]
+        excludePatterns: [String] = [".git/**", ".DS_Store", "node_modules/**", "target/**", "build/**"]
     ) async -> [FolderDiffEntry] {
+        // 1. Rust Parallel Folder Scanner (Rayon + SIMD CRC32)
+        if enginePreference != .swift && isRustAvailable {
+            if let rustEntries = RustDiffBridge.compareFolders(
+                leftPath: leftPath,
+                rightPath: rightPath,
+                mode: mode,
+                excludePatterns: excludePatterns
+            ) {
+                let leftURL = URL(fileURLWithPath: leftPath).resolvingSymlinksInPath()
+                let rightURL = URL(fileURLWithPath: rightPath).resolvingSymlinksInPath()
+
+                // Attach URL metadata
+                return rustEntries.map { entry in
+                    var e = entry
+                    if entry.status != .rightOnly {
+                        e.leftURL = leftURL.appendingPathComponent(entry.relativePath)
+                    }
+                    if entry.status != .leftOnly {
+                        e.rightURL = rightURL.appendingPathComponent(entry.relativePath)
+                    }
+                    return e
+                }
+            }
+        }
+
+        // 2. Swift Native Fallback
         return await withCheckedContinuation { continuation in
             let entries = self.performFolderScan(
                 leftPath: leftPath,
@@ -291,7 +367,7 @@ public final class DiffEngineService: DiffEngineProtocol, @unchecked Sendable {
                 let resolvedItem = item.resolvingSymlinksInPath()
                 let rootPrefix = rootURL.path.hasSuffix("/") ? rootURL.path : rootURL.path + "/"
                 let rel = resolvedItem.path.replacingOccurrences(of: rootPrefix, with: "")
-                if excludePatterns.contains(where: { rel.contains($0) }) {
+                if excludePatterns.contains(where: { rel.contains($0.replacingOccurrences(of: "/**", with: "")) }) {
                     continue
                 }
                 allRelPaths.insert(rel)
@@ -460,13 +536,21 @@ public final class DiffEngineService: DiffEngineProtocol, @unchecked Sendable {
         return (success, errorCount)
     }
 
-    // MARK: - 3-Way Merge Engine
+    // MARK: - 3-Way Merge Engine (Rust Core + Swift Native Fallback)
 
     public func mergeThreeWay(
         local: String,
         base: String,
         remote: String
     ) async -> MergeResult {
+        // 1. Rust 3-Way Merge Engine
+        if enginePreference != .swift && isRustAvailable {
+            if let result = RustDiffBridge.mergeThreeWay(local: local, base: base, remote: remote) {
+                return result
+            }
+        }
+
+        // 2. Swift Native Fallback
         let localLines = local.components(separatedBy: .newlines)
         let baseLines = base.components(separatedBy: .newlines)
         let remoteLines = remote.components(separatedBy: .newlines)

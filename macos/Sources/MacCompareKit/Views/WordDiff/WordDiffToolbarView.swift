@@ -130,6 +130,7 @@ public struct WordDiffToolbarView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
         .background(Color(nsColor: .windowBackgroundColor))
+        .focusEffectDisabled()
         .alert(LanguageManager.shared.text(.exportReport), isPresented: $isShowingExportAlert) {
             Button(LanguageManager.shared.text(.done), role: .cancel) {}
         } message: {

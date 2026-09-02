@@ -90,6 +90,7 @@ public struct SyncActionSheet: View {
                 .disabled(viewModel.pendingSyncPlan.isEmpty || isExecuting)
             }
         }
+        .focusEffectDisabled()
         .padding(20)
         .frame(width: 520, height: 340)
     }

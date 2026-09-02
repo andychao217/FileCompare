@@ -284,6 +284,14 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case recentComparisons
     case openExisting
     case noRecentComparisons
+
+    // Core Engine Specific
+    case coreEngineSection
+    case diffEngine
+    case currentEngineStatus
+    case engineStatusSwift
+    case engineStatusRustUnavailable
+    case engineStatusAutoFallback
 }
 
 @MainActor
@@ -746,7 +754,13 @@ public final class LanguageManager {
         .welcomeFolderDiffDesc: "Fast CRC32 scan & bidirectional safe sync",
         .recentComparisons: "Recent Comparisons",
         .openExisting: "Open Existing...",
-        .noRecentComparisons: "No recent comparisons yet"
+        .noRecentComparisons: "No recent comparisons yet",
+        .coreEngineSection: "Core Engine",
+        .diffEngine: "Diff Core Engine",
+        .currentEngineStatus: "Current Engine Status",
+        .engineStatusSwift: "Swift Native Engine",
+        .engineStatusRustUnavailable: "Swift Native (Rust Unavailable)",
+        .engineStatusAutoFallback: "Swift Native [Auto / Fallback]"
     ]
 
     private let zhHansDictionary: [L10nKey: String] = [
@@ -973,7 +987,13 @@ public final class LanguageManager {
         .welcomeFolderDiffDesc: "目录结构毫秒级扫描、CRC32 哈希与双向同步",
         .recentComparisons: "最近对比记录",
         .openExisting: "打开本地文件...",
-        .noRecentComparisons: "暂无历史比对记录"
+        .noRecentComparisons: "暂无历史比对记录",
+        .coreEngineSection: "核心计算引擎",
+        .diffEngine: "差分核心引擎",
+        .currentEngineStatus: "当前引擎状态",
+        .engineStatusSwift: "原生 Swift 引擎",
+        .engineStatusRustUnavailable: "原生 Swift (Rust 核心不可用)",
+        .engineStatusAutoFallback: "原生 Swift [自动降级]"
     ]
 
     private let jaDictionary: [L10nKey: String] = [
@@ -1200,6 +1220,12 @@ public final class LanguageManager {
         .welcomeFolderDiffDesc: "高速 CRC32 スキャンと安全な双方向同期",
         .recentComparisons: "最近の比較履歴",
         .openExisting: "既存ファイルを開く...",
-        .noRecentComparisons: "比較履歴はありません"
+        .noRecentComparisons: "比較履歴はありません",
+        .coreEngineSection: "コア計算エンジン",
+        .diffEngine: "差分計算エンジン",
+        .currentEngineStatus: "現在のエンジン状態",
+        .engineStatusSwift: "Swift ネイティブエンジン",
+        .engineStatusRustUnavailable: "Swift ネイティブ (Rust 利用不可)",
+        .engineStatusAutoFallback: "Swift ネイティブ [自動フォールバック]"
     ]
 }

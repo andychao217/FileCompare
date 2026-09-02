@@ -37,4 +37,5 @@ macos/Sources/MacCompare/Generated/lib/
 .cache/
 dist/
 /slides_xml
+/docs/assets/output
 

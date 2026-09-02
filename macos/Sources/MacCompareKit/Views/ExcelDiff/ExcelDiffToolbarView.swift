@@ -239,6 +239,7 @@ public struct ExcelDiffToolbarView: View {
 
             Divider()
         }
+        .focusEffectDisabled()
     }
 
     @ViewBuilder

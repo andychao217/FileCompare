@@ -6,7 +6,7 @@ set -e
 # Architecture: Universal Binary 2 (arm64 + x86_64)
 # ========================================================
 
-VERSION="${1:-0.3.0}"
+VERSION="${1:-0.4.0}"
 APP_NAME="MacCompare"
 BUNDLE_ID="com.andychao217.MacCompare"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -21,6 +21,12 @@ echo "📦 Packaging ${APP_NAME} v${VERSION} (Universal Binary 2)"
 echo "========================================================"
 
 SWIFT_BIN="xcrun --toolchain default swift"
+
+# 0. Compile Rust Universal Binary Core
+if [ -f "${SCRIPT_DIR}/build_universal_lib.sh" ]; then
+    echo "[0/4] Building Rust Universal Binary 2 Static Core..."
+    bash "${SCRIPT_DIR}/build_universal_lib.sh"
+fi
 
 # 1. Compile Universal Binary 2 (Dual Architecture: arm64 + x86_64)
 echo "[1/4] Compiling Universal Binary 2 (arm64 + x86_64)..."

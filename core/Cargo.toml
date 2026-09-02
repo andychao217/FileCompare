@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/diff-core",
     "crates/fs-scanner",
+    "crates/excel-diff-core",
     "crates/syntax-highlighter",
     "crates/maccompare-ffi",
 ]
@@ -25,4 +26,7 @@ strip = true
 opt-level = 3
 
 [profile.release.package.diff-core]
+opt-level = 3
+
+[profile.release.package.excel-diff-core]
 opt-level = 3

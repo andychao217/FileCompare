@@ -1,0 +1,4 @@
+module CMacCompareCore {
+    header "maccompare_core.h"
+    export *
+}

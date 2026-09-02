@@ -15,17 +15,43 @@ final class MacCompareTests: XCTestCase {
         super.tearDown()
     }
 
+    func testRustDiffBridgeDirect() {
+        XCTAssertTrue(RustDiffBridge.isAvailable)
+        XCTAssertTrue(RustDiffBridge.version.contains("MacCompare Core"))
+
+        let left = "Alpha\nBeta\nGamma"
+        let right = "Alpha\nBeta Modified\nGamma\nDelta"
+        let diff = RustDiffBridge.compareText(left: left, right: right)
+        XCTAssertNotNil(diff)
+        XCTAssertEqual(diff?.totalModifications, 1)
+        XCTAssertEqual(diff?.totalAdditions, 1)
+        XCTAssertEqual(diff?.hunks.count, 2)
+    }
+
     func testTwoWayTextDiff() async {
         let left = "line 1\nline 2\nline 3"
         let right = "line 1\nline 2 modified\nline 3"
 
-        let result = await DiffEngineService.shared.compareText(left: left, right: right)
-        XCTAssertEqual(result.lines.count, 3)
-        XCTAssertEqual(result.lines[0].changeType, .unchanged)
-        XCTAssertEqual(result.lines[1].changeType, .modified)
-        XCTAssertEqual(result.lines[2].changeType, .unchanged)
-        XCTAssertEqual(result.totalModifications, 1)
-        XCTAssertEqual(result.hunks.count, 1)
+        // Test with Rust engine
+        DiffEngineService.shared.enginePreference = .rust
+        let resultRust = await DiffEngineService.shared.compareText(left: left, right: right)
+        XCTAssertEqual(resultRust.lines.count, 3)
+        XCTAssertEqual(resultRust.lines[0].changeType, .unchanged)
+        XCTAssertEqual(resultRust.lines[1].changeType, .modified)
+        XCTAssertEqual(resultRust.lines[2].changeType, .unchanged)
+        XCTAssertEqual(resultRust.totalModifications, 1)
+
+        // Test with Swift fallback engine
+        DiffEngineService.shared.enginePreference = .swift
+        let resultSwift = await DiffEngineService.shared.compareText(left: left, right: right)
+        XCTAssertEqual(resultSwift.lines.count, 3)
+        XCTAssertEqual(resultSwift.lines[0].changeType, .unchanged)
+        XCTAssertEqual(resultSwift.lines[1].changeType, .modified)
+        XCTAssertEqual(resultSwift.lines[2].changeType, .unchanged)
+        XCTAssertEqual(resultSwift.totalModifications, 1)
+
+        // Restore Auto
+        DiffEngineService.shared.enginePreference = .auto
     }
 
     func testThreeWayMergeClean() async {

@@ -175,70 +175,73 @@ public struct SingleExcelTableView: View {
     public var body: some View {
         VStack(spacing: 0) {
             if let sheet = currentSheet {
-                // Table Headers
-                HStack(spacing: 0) {
-                    Text("#")
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundColor(.secondary)
-                        .frame(width: 44, alignment: .center)
-                        .padding(.vertical, 6)
-                        .background(Color(nsColor: .controlBackgroundColor))
-
-                    Divider()
-
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 0) {
-                            ForEach(0..<sheet.maxColumns, id: \.self) { colIdx in
-                                Text(ExcelModelsHelper.columnLetter(for: colIdx))
-                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                    .foregroundColor(.secondary)
-                                    .padding(.horizontal, 8)
-                                    .frame(width: 130, alignment: .leading)
-                                    .padding(.vertical, 6)
-                                    .background(Color(nsColor: .controlBackgroundColor))
-                                Divider()
-                            }
-                        }
-                    }
-                }
-                .frame(height: 28)
-                .background(Color(nsColor: .controlBackgroundColor))
-
-                Divider()
-
-                // Rows
-                ScrollView([.vertical, .horizontal]) {
-                    LazyVStack(spacing: 0) {
-                        ForEach(sheet.rows) { row in
-                            HStack(spacing: 0) {
-                                Text("\(row.rowIndex)")
-                                    .font(.system(size: 11, weight: .medium, design: .monospaced))
-                                    .foregroundColor(.secondary)
-                                    .frame(width: 44, alignment: .center)
-                                    .padding(.vertical, 5)
-                                    .background(Color(nsColor: .controlBackgroundColor).opacity(0.4))
-
-                                Divider()
-
+                // Table Grid with synchronized horizontal scrolling & pinned header
+                ScrollView([.horizontal, .vertical]) {
+                    LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                        Section {
+                            ForEach(sheet.rows) { row in
                                 HStack(spacing: 0) {
-                                    ForEach(0..<sheet.maxColumns, id: \.self) { colIdx in
-                                        let cell = row.cell(at: colIdx)
-                                        Text(cell?.rawValue ?? "")
-                                            .font(.system(size: 11, design: .monospaced))
-                                            .foregroundColor(.primary)
-                                            .lineLimit(1)
-                                            .frame(width: 130, alignment: .leading)
-                                            .padding(.vertical, 5)
-                                            .padding(.horizontal, 8)
-                                        Divider()
+                                    Text("\(row.rowIndex)")
+                                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                        .foregroundColor(.secondary)
+                                        .frame(width: 44, alignment: .center)
+                                        .padding(.vertical, 5)
+                                        .background(Color(nsColor: .controlBackgroundColor).opacity(0.4))
+
+                                    Divider()
+
+                                    HStack(spacing: 0) {
+                                        ForEach(0..<sheet.maxColumns, id: \.self) { colIdx in
+                                            let cell = row.cell(at: colIdx)
+                                            Text(cell?.rawValue ?? "")
+                                                .font(.system(size: 11, design: .monospaced))
+                                                .foregroundColor(.primary)
+                                                .lineLimit(1)
+                                                .padding(.horizontal, 8)
+                                                .frame(width: 140, alignment: .leading)
+                                                .padding(.vertical, 5)
+
+                                            Divider()
+                                        }
                                     }
                                 }
+                                .frame(minHeight: 24)
+                                .overlay(
+                                    Rectangle()
+                                        .frame(height: 1)
+                                        .foregroundColor(Color(nsColor: .separatorColor).opacity(0.4)),
+                                    alignment: .bottom
+                                )
                             }
-                            .frame(minHeight: 24)
+                        } header: {
+                            HStack(spacing: 0) {
+                                Text("#")
+                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                    .foregroundColor(.secondary)
+                                    .frame(width: 44, alignment: .center)
+                                    .padding(.vertical, 6)
+                                    .background(Color(nsColor: .controlBackgroundColor))
+
+                                Divider()
+
+                                ForEach(0..<sheet.maxColumns, id: \.self) { colIdx in
+                                    Text(ExcelModelsHelper.columnLetter(for: colIdx))
+                                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                        .foregroundColor(.secondary)
+                                        .padding(.horizontal, 8)
+                                        .frame(width: 140, alignment: .leading)
+                                        .padding(.vertical, 6)
+                                        .background(Color(nsColor: .controlBackgroundColor))
+
+                                    Divider()
+                                }
+                            }
+                            .frame(height: 28)
+                            .background(Color(nsColor: .controlBackgroundColor))
                             .overlay(
                                 Rectangle()
                                     .frame(height: 1)
-                                    .foregroundColor(Color(nsColor: .separatorColor).opacity(0.4)),
+                                    .foregroundColor(Color(nsColor: .separatorColor)),
                                 alignment: .bottom
                             )
                         }

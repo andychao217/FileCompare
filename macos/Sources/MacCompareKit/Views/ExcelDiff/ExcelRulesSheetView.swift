@@ -72,7 +72,9 @@ public struct ExcelRulesSheetView: View {
                 }
             }
             .formStyle(.grouped)
+            .focusEffectDisabled()
         }
+        .focusEffectDisabled()
         .padding(20)
         .frame(minWidth: 420, minHeight: 400)
     }

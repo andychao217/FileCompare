@@ -44,6 +44,39 @@ public extension Notification.Name {
     static let mcNewWindow = Notification.Name("MCNewWindow")
     static let mcOpenHelp = Notification.Name("MCOpenHelp")
     static let mcCheckForUpdates = Notification.Name("MCCheckForUpdates")
+    static let mcEngineChanged = Notification.Name("MCEngineChanged")
+}
+
+/// Preferred diff execution engine.
+public enum DiffEnginePreference: String, CaseIterable, Identifiable, Codable, Sendable {
+    case auto = "auto"
+    case rust = "rust"
+    case swift = "swift"
+
+    public var id: String { rawValue }
+
+    public func localizedName(for language: AppLanguage) -> String {
+        switch self {
+        case .auto:
+            switch language {
+            case .zhHans: return "自动选择 (优先 Rust)"
+            case .ja: return "自動 (Rust 優先)"
+            default: return "Auto (Rust First)"
+            }
+        case .rust:
+            switch language {
+            case .zhHans: return "Rust 高性能引擎"
+            case .ja: return "Rust 高性能エンジン"
+            default: return "Rust High-Performance"
+            }
+        case .swift:
+            switch language {
+            case .zhHans: return "原生 Swift 引擎"
+            case .ja: return "Swift ネイティブ"
+            default: return "Swift Native"
+            }
+        }
+    }
 }
 
 /// Type of change for line or token diff.
