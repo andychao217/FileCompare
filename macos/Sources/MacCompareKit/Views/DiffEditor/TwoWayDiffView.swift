@@ -20,6 +20,23 @@ public struct TwoWayDiffView: View {
             // Top Toolbar
             DiffToolbarView(viewModel: viewModel)
 
+            // AI Summary Banner
+            if viewModel.isAISummaryVisible {
+                AISummaryCardView(
+                    result: viewModel.aiSummaryResult,
+                    isGenerating: viewModel.isAIGenerating,
+                    onReanalyze: { viewModel.generateAISummary() },
+                    onClose: {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            viewModel.isAISummaryVisible = false
+                        }
+                    }
+                )
+                .transition(.move(edge: .top).combined(with: .opacity))
+
+                Divider()
+            }
+
             Divider()
 
             // File Headers
@@ -32,6 +49,10 @@ public struct TwoWayDiffView: View {
                     onSave: { viewModel.saveLeftFile() }
                 )
                 .frame(maxWidth: .infinity)
+                .background(isLeftDropTargeted ? Color.accentColor.opacity(0.12) : Color.clear)
+                .onDrop(of: [.fileURL], isTargeted: $isLeftDropTargeted) { providers in
+                    handleDrop(providers: providers, isLeft: true)
+                }
 
                 Divider().frame(height: 28)
 
@@ -43,6 +64,10 @@ public struct TwoWayDiffView: View {
                     onSave: { viewModel.saveRightFile() }
                 )
                 .frame(maxWidth: .infinity)
+                .background(isRightDropTargeted ? Color.accentColor.opacity(0.12) : Color.clear)
+                .onDrop(of: [.fileURL], isTargeted: $isRightDropTargeted) { providers in
+                    handleDrop(providers: providers, isLeft: false)
+                }
 
                 // Minimap Header Spacer (only visible when diff is active across both files)
                 if viewModel.hasBothFiles {
@@ -127,10 +152,23 @@ public struct TwoWayDiffView: View {
                                 }
                             }
                             .frame(width: availableWidth, height: geometry.size.height)
-                            .background(isLeftDropTargeted || isRightDropTargeted ? Color.accentColor.opacity(0.05) : Color.clear)
-                            .onDrop(of: [.fileURL], isTargeted: $isLeftDropTargeted) { providers in
-                                handleDrop(providers: providers, isLeft: true)
-                            }
+                            .background(
+                                HStack(spacing: 0) {
+                                    (isLeftDropTargeted ? Color.accentColor.opacity(0.08) : Color.clear)
+                                        .frame(width: paneWidth)
+                                    Divider().opacity(0)
+                                    (isRightDropTargeted ? Color.accentColor.opacity(0.08) : Color.clear)
+                                        .frame(width: paneWidth)
+                                }
+                            )
+                            .onDrop(of: [.fileURL], delegate: DualDiffDropDelegate(
+                                availableWidth: availableWidth,
+                                onDrop: { providers, isLeft in
+                                    handleDrop(providers: providers, isLeft: isLeft)
+                                },
+                                isLeftTargeted: $isLeftDropTargeted,
+                                isRightTargeted: $isRightDropTargeted
+                            ))
 
                             Divider()
 
@@ -384,5 +422,32 @@ public struct TwoWayDiffView: View {
         case .modified:
             return Color.orange.opacity(0.15)
         }
+    }
+}
+
+private struct DualDiffDropDelegate: DropDelegate {
+    let availableWidth: CGFloat
+    let onDrop: ([NSItemProvider], Bool) -> Bool
+    @Binding var isLeftTargeted: Bool
+    @Binding var isRightTargeted: Bool
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        let isLeft = info.location.x < (availableWidth / 2.0)
+        isLeftTargeted = isLeft
+        isRightTargeted = !isLeft
+        return DropProposal(operation: .copy)
+    }
+
+    func dropExited(info: DropInfo) {
+        isLeftTargeted = false
+        isRightTargeted = false
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        let isLeft = info.location.x < (availableWidth / 2.0)
+        isLeftTargeted = false
+        isRightTargeted = false
+        let providers = info.itemProviders(for: [.fileURL])
+        return onDrop(providers, isLeft)
     }
 }

@@ -6,7 +6,7 @@ set -e
 # Architecture: Universal Binary 2 (arm64 + x86_64)
 # ========================================================
 
-VERSION="${1:-0.4.0}"
+VERSION="${1:-0.5.0}"
 APP_NAME="MacCompare"
 BUNDLE_ID="com.andychao217.MacCompare"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -91,6 +91,41 @@ if [ -n "${MCDIFF_BIN}" ] && [ -f "${MCDIFF_BIN}" ]; then
     chmod +x "${APP_BUNDLE}/Contents/MacOS/mcdiff"
 fi
 chmod +x "${APP_BUNDLE}/Contents/MacOS/MacCompare"
+
+# Bundle standalone mc-llama helper for local offline AI inference (Self-contained)
+SYSTEM_LLAMA_CLI="$(which llama-cli 2>/dev/null || true)"
+if [ -n "${SYSTEM_LLAMA_CLI}" ] && [ -x "${SYSTEM_LLAMA_CLI}" ]; then
+    echo "Creating and bundling self-contained mc-llama into MacCompare.app..."
+    mkdir -p "${APP_BUNDLE}/Contents/Frameworks"
+    cp "${SYSTEM_LLAMA_CLI}" "${APP_BUNDLE}/Contents/MacOS/mc-llama"
+    chmod 755 "${APP_BUNDLE}/Contents/MacOS/mc-llama"
+
+    # Copy dependent dylibs into Frameworks
+    LLAMA_PREFIX="$(brew --prefix llama.cpp 2>/dev/null || true)"
+    GGML_PREFIX="$(brew --prefix ggml 2>/dev/null || true)"
+
+    if [ -d "${LLAMA_PREFIX}/lib" ] && [ -d "${GGML_PREFIX}/lib" ]; then
+        for lib in "${LLAMA_PREFIX}"/lib/*.dylib "${GGML_PREFIX}"/lib/*.dylib; do
+            if [ -f "${lib}" ]; then
+                lib_base=$(basename "${lib}")
+                cp -L "${lib}" "${APP_BUNDLE}/Contents/Frameworks/${lib_base}"
+                chmod 755 "${APP_BUNDLE}/Contents/Frameworks/${lib_base}"
+            fi
+        done
+
+        # Re-link mc-llama dependencies to @executable_path/../Frameworks
+        install_name_tool -add_rpath "@executable_path/../Frameworks" "${APP_BUNDLE}/Contents/MacOS/mc-llama" 2>/dev/null || true
+        install_name_tool -change "/usr/local/opt/ggml/lib/libggml.0.dylib" "@executable_path/../Frameworks/libggml.0.dylib" "${APP_BUNDLE}/Contents/MacOS/mc-llama" 2>/dev/null || true
+        install_name_tool -change "/usr/local/opt/ggml/lib/libggml-base.0.dylib" "@executable_path/../Frameworks/libggml-base.0.dylib" "${APP_BUNDLE}/Contents/MacOS/mc-llama" 2>/dev/null || true
+
+        # Re-link internal dylibs
+        for fw in "${APP_BUNDLE}"/Contents/Frameworks/*.dylib; do
+            install_name_tool -change "/usr/local/opt/ggml/lib/libggml.0.dylib" "@loader_path/libggml.0.dylib" "${fw}" 2>/dev/null || true
+            install_name_tool -change "/usr/local/opt/ggml/lib/libggml-base.0.dylib" "@loader_path/libggml-base.0.dylib" "${fw}" 2>/dev/null || true
+        done
+        echo "Successfully bundled self-contained mc-llama and dynamic libraries."
+    fi
+fi
 
 # Copy App Icon
 if [ -f "${ROOT_DIR}/macos/Resources/AppIcon.icns" ]; then

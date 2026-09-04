@@ -12,7 +12,7 @@ public struct HelpView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.4.0"
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.5.0"
     }
 
     public var body: some View {
@@ -136,6 +136,15 @@ public struct HelpView: View {
                 detail: nil,
                 codeSnippet: nil
             )
+
+            // 7. Local Offline AI (Gemma 3) Assistant Card
+            guideCard(
+                icon: "sparkles",
+                title: languageManager.text(.aiFeatureHelpTitle),
+                summary: languageManager.text(.aiFeatureHelpSummary),
+                detail: languageManager.text(.aiFeatureHelpDetail),
+                codeSnippet: nil
+            )
         }
     }
 
@@ -223,6 +232,7 @@ public struct HelpView: View {
             shortcutRow(key: "⌥ ⌘ →", desc: languageManager.text(.takeRight))
             shortcutRow(key: "⌥ ⌘ W", desc: languageManager.text(.ignoreWhitespace))
             shortcutRow(key: "⌥ ⌘ C", desc: languageManager.text(.ignoreCase))
+            shortcutRow(key: "⌥ ⌘ I", desc: languageManager.text(.aiSummary))
             shortcutRow(key: "ESC", desc: languageManager.text(.cancelTabDragDesc))
         }
     }

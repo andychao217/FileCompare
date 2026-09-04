@@ -31,6 +31,11 @@ public final class TextDiffViewModel {
     public var isLoading: Bool = false
     public var statusMessage: String?
 
+    // AI Summary State
+    public var isAISummaryVisible: Bool = false
+    public var isAIGenerating: Bool = false
+    public var aiSummaryResult: AISummaryResult?
+
     public var ignoreWhitespace: Bool = false {
         didSet { Task { await recomputeDiff() } }
     }
@@ -87,6 +92,8 @@ public final class TextDiffViewModel {
         statusMessage = nil
         currentHunkIndex = 0
         scrollToLineIndex = nil
+        isAISummaryVisible = false
+        aiSummaryResult = nil
     }
 
     public func loadSingleFile(from url: URL, isLeft: Bool) {
@@ -318,6 +325,36 @@ public final class TextDiffViewModel {
                 totalModifications: 0,
                 hunks: []
             )
+        }
+    }
+
+    // MARK: - AI Actions
+
+    public func toggleAISummary() {
+        if isAISummaryVisible {
+            isAISummaryVisible = false
+        } else {
+            isAISummaryVisible = true
+            if aiSummaryResult == nil {
+                generateAISummary()
+            }
+        }
+    }
+
+    public func generateAISummary() {
+        guard hasBothFiles else { return }
+        isAISummaryVisible = true
+        isAIGenerating = true
+        Task {
+            let res = await AIService.shared.summarizeDiff(
+                leftContent: leftContent,
+                rightContent: rightContent,
+                leftTitle: leftTitle,
+                rightTitle: rightTitle,
+                language: LanguageManager.shared.effectiveLanguage
+            )
+            self.aiSummaryResult = res
+            self.isAIGenerating = false
         }
     }
 }

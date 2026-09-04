@@ -49,13 +49,13 @@
     <!-- Hero Section -->
     <section class="hero">
       <div class="pill-badge" data-i18n="badge">
-        ⚡ macOS 原生架构 • Rust 双引擎架构 • Universal Binary 2 v0.4.0
+        ⚡ macOS 原生架构 • Rust 双引擎 • 端侧离线与云端双模 AI • Universal Binary 2 v0.5.0
       </div>
       <h1 class="hero-title" data-i18n="heroTitle">
         下一代 macOS <span class="gradient-text">文件比对与合并套件</span>
       </h1>
       <p class="hero-subtitle" data-i18n="heroSubtitle">
-        基于 Rust 高吞吐差分引擎与原生 SwiftUI 深度构建。内置海量数据流式视口分页与双引擎调度，专为 macOS 打造。
+        基于 Rust 高吞吐差分引擎与原生 SwiftUI 深度构建。内置双模 AI 代码意图分析、海量数据流式视口分页与双引擎调度，专为 macOS 打造。
       </p>
 
       <div class="hero-actions">
@@ -83,7 +83,7 @@
           <button class="showcase-tab active" data-mode="welcome" data-i18n="welcomeTab">启动主页</button>
           <button class="showcase-tab" data-mode="excel" data-i18n="excelDiffTab">Excel 对比</button>
           <button class="showcase-tab" data-mode="word" data-i18n="wordDiffTab">Word 对比</button>
-          <button class="showcase-tab" data-mode="text" data-i18n="textDiffTab">文本对比</button>
+          <button class="showcase-tab" data-mode="text" data-i18n="textDiffTab">文本与 AI 对比</button>
           <button class="showcase-tab" data-mode="folder" data-i18n="folderDiffTab">文件夹对比</button>
           <button class="showcase-tab" data-mode="merge" data-i18n="threeWayMergeTab">三向合并</button>
         </div>
@@ -156,6 +156,12 @@
       </div>
 
       <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <h3 class="feature-title" data-i18n="featAITitle">端侧离线与云端双模 AI 智能助手</h3>
+          <p class="feature-desc" data-i18n="featAIDesc">内置 Google Gemma 3 端侧模型（100% 本地离线隐私保护）并兼容 DeepSeek、OpenAI 与本地 Ollama。秒级提炼代码改动意图，生成规范 Git 提交信息。</p>
+        </div>
+
         <div class="feature-card">
           <div class="feature-icon">🏎️</div>
           <h3 class="feature-title" data-i18n="feat1Title">Rust 核心与双引擎架构</h3>

@@ -4,6 +4,8 @@ public struct DiffToolbarView: View {
     @Bindable public var viewModel: TextDiffViewModel
     @State private var languageManager = LanguageManager.shared
     @State private var showClearConfirmation = false
+    @State private var showDownloadPopover = false
+    @State private var aiModelManager = AIModelManager.shared
 
     public init(viewModel: TextDiffViewModel) {
         self.viewModel = viewModel
@@ -80,6 +82,41 @@ public struct DiffToolbarView: View {
                 .controlSize(.small)
                 .disabled(!viewModel.hasBothFiles)
                 .help("Copy current diff hunk from right to left")
+            }
+
+            Divider().frame(height: 16)
+
+            // AI Summary Button
+            Button {
+                if aiModelManager.isDefaultModelReady {
+                    viewModel.toggleAISummary()
+                } else {
+                    showDownloadPopover = true
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 11, weight: .semibold))
+                    Text(languageManager.text(.aiSummary))
+                        .font(.system(size: 11, weight: .medium))
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(
+                LinearGradient(
+                    colors: [Color.purple.opacity(0.85), Color.indigo.opacity(0.85)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .controlSize(.small)
+            .disabled(!viewModel.hasBothFiles)
+            .help(languageManager.text(.aiToolbarHelp))
+            .popover(isPresented: $showDownloadPopover, arrowEdge: .bottom) {
+                InlineModelDownloadPopover {
+                    showDownloadPopover = false
+                    viewModel.generateAISummary()
+                }
             }
 
             Divider().frame(height: 16)

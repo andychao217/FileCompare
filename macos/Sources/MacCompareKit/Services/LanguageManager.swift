@@ -292,6 +292,65 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case engineStatusSwift
     case engineStatusRustUnavailable
     case engineStatusAutoFallback
+
+    // AI & Gemma Specific
+    case aiEngine
+    case aiSummary
+    case aiModeSection
+    case aiModeLocal
+    case aiModeCloud
+    case aiModelLibrary
+    case aiModelGemma3_1B
+    case aiModelGemma3_1BDesc
+    case aiModelGemma3_4B
+    case aiModelGemma3_4BDesc
+    case aiDownloadModel
+    case aiDownloading
+    case aiReady
+    case aiModelInUse
+    case aiModelSetDefault
+    case aiCleanModel
+    case aiEngineMode
+    case aiEngineModeLocal
+    case aiEngineModeCloud
+    case aiCloudPreset
+    case aiCloudBaseURL
+    case aiCloudAPIKey
+    case aiCloudModelName
+    case aiCloudTestConnection
+    case aiCloudTesting
+    case aiCloudTestSuccess
+    case aiCloudTestFailed
+    case aiCloudBadge
+    case aiAutoReleaseMemory
+    case aiAutoReleaseMemoryDesc
+    case aiSummaryTitle
+    case aiOneLineIntent
+    case aiKeyChanges
+    case aiCopyCommitMessage
+    case aiCopyText
+    case aiReanalyze
+    case aiEnableOfflineTitle
+    case aiEnableOfflineSubtitle
+    case aiEnableOfflineFeature1
+    case aiEnableOfflineFeature2
+    case aiDownloadAndEnable
+    case aiCopied
+    case aiAnalyzing
+    case aiAnalyzingHint
+    case aiLocalOfflineBadge
+    case aiExperienceNow
+    case aiToolbarHelp
+    case aiPreparing
+    case aiEstimating
+    case aiCalculating
+    case aiRemainingSeconds
+    case aiRemainingMinutes
+    case aiSaveModelFailed
+    case aiDownloadFailed
+    case aiFeatureHelpTitle
+    case aiFeatureHelpSummary
+    case aiFeatureHelpDetail
 }
 
 @MainActor
@@ -384,7 +443,16 @@ public final class LanguageManager {
     }
 
     public func text(_ key: L10nKey) -> String {
-        switch effectiveLanguage {
+        text(key, language: effectiveLanguage)
+    }
+
+    public func text(_ key: L10nKey, _ args: CVarArg...) -> String {
+        let format = text(key)
+        return String(format: format, arguments: args)
+    }
+
+    public func text(_ key: L10nKey, language: AppLanguage) -> String {
+        switch language {
         case .zhHans:
             return zhHansDictionary[key] ?? enDictionary[key] ?? key.rawValue
         case .ja:
@@ -397,7 +465,7 @@ public final class LanguageManager {
     // MARK: - Dynamic AppKit Main Menu Localization
 
     public func localizeSystemMenu() {
-        guard let mainMenu = NSApp.mainMenu, !isUpdatingMenu else { return }
+        guard let app = NSApp, let mainMenu = app.mainMenu, !isUpdatingMenu else { return }
         isUpdatingMenu = true
         defer { isUpdatingMenu = false }
 
@@ -760,7 +828,64 @@ public final class LanguageManager {
         .currentEngineStatus: "Current Engine Status",
         .engineStatusSwift: "Swift Native Engine",
         .engineStatusRustUnavailable: "Swift Native (Rust Unavailable)",
-        .engineStatusAutoFallback: "Swift Native [Auto / Fallback]"
+        .engineStatusAutoFallback: "Swift Native [Auto / Fallback]",
+        .aiEngine: "AI Engine",
+        .aiSummary: "AI Summary",
+        .aiModeSection: "AI Execution Mode",
+        .aiModeLocal: "Local Offline Inference (Recommended · Zero Data Leakage · Offline)",
+        .aiModeCloud: "Cloud LLM API (BYOK · Custom API Key)",
+        .aiModelLibrary: "Local Model Library (Google Gemma 3)",
+        .aiModelGemma3_1B: "Gemma 3 1B-IT (Recommended · Blazing Fast)",
+        .aiModelGemma3_1BDesc: "On-device ultra-lightweight · 32K context · 780 MB disk",
+        .aiModelGemma3_4B: "Gemma 3 4B-IT (Advanced · Complex Merges)",
+        .aiModelGemma3_4BDesc: "High intelligence code understanding · 128K context · 2.5 GB disk",
+        .aiDownloadModel: "Download",
+        .aiDownloading: "Downloading...",
+        .aiReady: "Ready",
+        .aiModelInUse: "In Use",
+        .aiModelSetDefault: "Use Model",
+        .aiCleanModel: "Remove",
+        .aiEngineMode: "Inference Engine",
+        .aiEngineModeLocal: "Local Offline (Gemma 3)",
+        .aiEngineModeCloud: "Custom Cloud API (OpenAI Compatible)",
+        .aiCloudPreset: "Provider Preset",
+        .aiCloudBaseURL: "API Base URL",
+        .aiCloudAPIKey: "API Key",
+        .aiCloudModelName: "Model Name",
+        .aiCloudTestConnection: "Test Connection",
+        .aiCloudTesting: "Testing...",
+        .aiCloudTestSuccess: "Connected",
+        .aiCloudTestFailed: "Connection Failed",
+        .aiCloudBadge: "Cloud API",
+        .aiAutoReleaseMemory: "Auto-release model VRAM after 5 mins of inactivity",
+        .aiAutoReleaseMemoryDesc: "Prevents memory contention with system resources when AI is idle.",
+        .aiSummaryTitle: "AI Change Intent Summary",
+        .aiOneLineIntent: "Intent Summary",
+        .aiKeyChanges: "Key Modifications",
+        .aiCopyCommitMessage: "Copy Commit Message",
+        .aiCopyText: "Copy Plain Text",
+        .aiReanalyze: "Reanalyze",
+        .aiEnableOfflineTitle: "Enable Offline AI Assistant",
+        .aiEnableOfflineSubtitle: "Powered by Google Gemma 3 1B-IT on-device model",
+        .aiEnableOfflineFeature1: "100% on-device computation, your code never leaves your Mac",
+        .aiEnableOfflineFeature2: "Fully offline, generates instant diff intention summaries in seconds",
+        .aiDownloadAndEnable: "Download & Enable (780 MB)",
+        .aiCopied: "Copied",
+        .aiAnalyzing: "Analyzing...",
+        .aiAnalyzingHint: "%@ is analyzing code diff intent...",
+        .aiLocalOfflineBadge: "Local Offline",
+        .aiExperienceNow: "Try Now",
+        .aiToolbarHelp: "Generate diff intent summary and commit message with AI",
+        .aiPreparing: "Preparing...",
+        .aiEstimating: "Estimating...",
+        .aiCalculating: "Calculating...",
+        .aiRemainingSeconds: "%d seconds remaining",
+        .aiRemainingMinutes: "%d minutes remaining",
+        .aiSaveModelFailed: "Failed to save model",
+        .aiDownloadFailed: "Download failed",
+        .aiFeatureHelpTitle: "Local Offline AI Assistant (Google Gemma 3)",
+        .aiFeatureHelpSummary: "On-device Gemma 3 lightweight model, 100% offline and privacy-preserving, instantly summarizing diff intent and generating commit messages.",
+        .aiFeatureHelpDetail: "• Intent Analysis: Click '✨ AI Summary' on the toolbar in text diff mode to analyze code logic, extract key modifications, and generate Conventional Commits messages.\n• High-Speed Download: Easily download models in-place on first use via public ModelScope CDN mirrors without any API keys or logins required.\n• Smart Memory Management: Configure model libraries in 'Settings → AI Engine', with support for auto-releasing VRAM after 5 minutes of inactivity."
     ]
 
     private let zhHansDictionary: [L10nKey: String] = [
@@ -993,7 +1118,64 @@ public final class LanguageManager {
         .currentEngineStatus: "当前引擎状态",
         .engineStatusSwift: "原生 Swift 引擎",
         .engineStatusRustUnavailable: "原生 Swift (Rust 核心不可用)",
-        .engineStatusAutoFallback: "原生 Swift [自动降级]"
+        .engineStatusAutoFallback: "原生 Swift [自动降级]",
+        .aiEngine: "AI 引擎",
+        .aiSummary: "AI 摘要",
+        .aiModeSection: "AI 运行模式",
+        .aiModeLocal: "本地离线推理 (推荐 · 零数据泄露 · 断网可用)",
+        .aiModeCloud: "云端大模型 API (BYOK · 自定义 Key)",
+        .aiModelLibrary: "本地模型库 (Google Gemma 3)",
+        .aiModelGemma3_1B: "Gemma 3 1B-IT (推荐 · 极速)",
+        .aiModelGemma3_1BDesc: "端侧超轻量 · 32K 上下文 · 磁盘占用 780 MB",
+        .aiModelGemma3_4B: "Gemma 3 4B-IT (进阶 · 复杂合并)",
+        .aiModelGemma3_4BDesc: "高智力代码理解 · 128K 上下文 · 磁盘占用 2.5 GB",
+        .aiDownloadModel: "下载",
+        .aiDownloading: "下载中...",
+        .aiReady: "已就绪",
+        .aiModelInUse: "使用中",
+        .aiModelSetDefault: "启用此模型",
+        .aiCleanModel: "清除",
+        .aiEngineMode: "推理引擎",
+        .aiEngineModeLocal: "本地离线模型 (Gemma 3)",
+        .aiEngineModeCloud: "自定义云端 API (OpenAI 兼容)",
+        .aiCloudPreset: "服务商预设",
+        .aiCloudBaseURL: "API Base URL",
+        .aiCloudAPIKey: "API Key",
+        .aiCloudModelName: "模型名称",
+        .aiCloudTestConnection: "测试连接",
+        .aiCloudTesting: "测试中...",
+        .aiCloudTestSuccess: "连接成功",
+        .aiCloudTestFailed: "连接失败",
+        .aiCloudBadge: "云端 API",
+        .aiAutoReleaseMemory: "空闲 5 分钟后自动释放模型显存",
+        .aiAutoReleaseMemoryDesc: "避免空闲时持续占用系统内存与显存资源。",
+        .aiSummaryTitle: "AI 变更意图摘要",
+        .aiOneLineIntent: "变更意图",
+        .aiKeyChanges: "核心变动",
+        .aiCopyCommitMessage: "复制 Git 提交说明",
+        .aiCopyText: "复制纯文本",
+        .aiReanalyze: "重新分析",
+        .aiEnableOfflineTitle: "开启离线 AI 助手",
+        .aiEnableOfflineSubtitle: "基于 Google Gemma 3 1B-IT 端侧轻量模型",
+        .aiEnableOfflineFeature1: "100% 本地运算，代码绝不上云",
+        .aiEnableOfflineFeature2: "断网完全可用，秒级生成改动意图摘要",
+        .aiDownloadAndEnable: "立即下载并开启 (780 MB)",
+        .aiCopied: "已复制",
+        .aiAnalyzing: "分析中...",
+        .aiAnalyzingHint: "正在由 %@ 理解代码差异意图...",
+        .aiLocalOfflineBadge: "本地离线",
+        .aiExperienceNow: "立即体验",
+        .aiToolbarHelp: "基于 AI 模型生成变更意图摘要与提交信息",
+        .aiPreparing: "准备中...",
+        .aiEstimating: "估算中...",
+        .aiCalculating: "计算中...",
+        .aiRemainingSeconds: "剩余 %d 秒",
+        .aiRemainingMinutes: "剩余 %d 分钟",
+        .aiSaveModelFailed: "保存模型失败",
+        .aiDownloadFailed: "下载失败",
+        .aiFeatureHelpTitle: "本地离线 AI 助手 (Google Gemma 3)",
+        .aiFeatureHelpSummary: "内置 Gemma 3 端侧轻量模型，100% 本地运行保护隐私，一键提炼变更意图并生成 Commit 提交说明。",
+        .aiFeatureHelpDetail: "• 变更意图解析：在文本比对界面点击工具栏「✨ AI 摘要」，可一键分析差异逻辑，提取核心变动点，并生成标准 Conventional Commits 格式。\n• 免登录高速下载：首次使用点击即可就地下载离线模型（已接入 ModelScope 高速 CDN 镜像，无需 API Key 或账号）。\n• 显存智能调度：在「设置 → AI 引擎」中可配置模型库，支持闲置 5 分钟后自动释放显存，零后台内存打扰。"
     ]
 
     private let jaDictionary: [L10nKey: String] = [
@@ -1226,6 +1408,63 @@ public final class LanguageManager {
         .currentEngineStatus: "現在のエンジン状態",
         .engineStatusSwift: "Swift ネイティブエンジン",
         .engineStatusRustUnavailable: "Swift ネイティブ (Rust 利用不可)",
-        .engineStatusAutoFallback: "Swift ネイティブ [自動フォールバック]"
+        .engineStatusAutoFallback: "Swift ネイティブ [自動フォールバック]",
+        .aiEngine: "AI エンジン",
+        .aiSummary: "AI 要約",
+        .aiModeSection: "AI 実行モード",
+        .aiModeLocal: "ローカルオフライン推論 (推奨 · データ流出ゼロ · オフライン対応)",
+        .aiModeCloud: "クラウド LLM API (BYOK · カスタム API キー)",
+        .aiModelLibrary: "ローカルモデルライブラリ (Google Gemma 3)",
+        .aiModelGemma3_1B: "Gemma 3 1B-IT (推奨 · 超高速)",
+        .aiModelGemma3_1BDesc: "オンデバイス超軽量 · 32K コンテキスト · 容量 780 MB",
+        .aiModelGemma3_4B: "Gemma 3 4B-IT (高度 · 複雑なマージ対応)",
+        .aiModelGemma3_4BDesc: "高度なコード理解 · 128K コンテキスト · 容量 2.5 GB",
+        .aiDownloadModel: "ダウンロード",
+        .aiDownloading: "ダウンロード中...",
+        .aiReady: "準備完了",
+        .aiModelInUse: "使用中",
+        .aiModelSetDefault: "このモデルを使用",
+        .aiCleanModel: "削除",
+        .aiEngineMode: "推論エンジン",
+        .aiEngineModeLocal: "ローカルオフライン (Gemma 3)",
+        .aiEngineModeCloud: "カスタムクラウド API (OpenAI 互換)",
+        .aiCloudPreset: "プロバイダープリセット",
+        .aiCloudBaseURL: "API Base URL",
+        .aiCloudAPIKey: "API Key",
+        .aiCloudModelName: "モデル名",
+        .aiCloudTestConnection: "接続テスト",
+        .aiCloudTesting: "テスト中...",
+        .aiCloudTestSuccess: "接続成功",
+        .aiCloudTestFailed: "接続失敗",
+        .aiCloudBadge: "クラウド API",
+        .aiAutoReleaseMemory: "アイドル5分後にVRAMメモリを自動解放",
+        .aiAutoReleaseMemoryDesc: "AI アイドル時のシステムメモリ占有を防止します。",
+        .aiSummaryTitle: "AI 変更意図の要約",
+        .aiOneLineIntent: "意図の要約",
+        .aiKeyChanges: "主な変更点",
+        .aiCopyCommitMessage: "コミットメッセージをコピー",
+        .aiCopyText: "テキストをコピー",
+        .aiReanalyze: "再分析",
+        .aiEnableOfflineTitle: "オフライン AI アシスタントを有効化",
+        .aiEnableOfflineSubtitle: "Google Gemma 3 1B-IT オンデバイスモデルを搭載",
+        .aiEnableOfflineFeature1: "100% ローカル処理、コードが外部に送信されることはありません",
+        .aiEnableOfflineFeature2: "完全オフライン対応、数秒で変更要約を生成",
+        .aiDownloadAndEnable: "ダウンロードして有効化 (780 MB)",
+        .aiCopied: "コピーしました",
+        .aiAnalyzing: "分析中...",
+        .aiAnalyzingHint: "%@ がコードの差分意図を解析中...",
+        .aiLocalOfflineBadge: "ローカルオフライン",
+        .aiExperienceNow: "今すぐ体験",
+        .aiToolbarHelp: "AI モデルで変更要約とコミットメッセージを生成",
+        .aiPreparing: "準備中...",
+        .aiEstimating: "計算中...",
+        .aiCalculating: "計算中...",
+        .aiRemainingSeconds: "残り %d 秒",
+        .aiRemainingMinutes: "残り %d 分",
+        .aiSaveModelFailed: "モデルの保存に失敗しました",
+        .aiDownloadFailed: "ダウンロードに失敗しました",
+        .aiFeatureHelpTitle: "ローカルオフライン AI アシスタント (Google Gemma 3)",
+        .aiFeatureHelpSummary: "オンデバイス Gemma 3 モデルを搭載。100% ローカル処理でプライバシーを保護し、変更意図の要約とコミットメッセージを即座に生成。",
+        .aiFeatureHelpDetail: "• 変更意図の解析：テキスト比較ツールバーの「✨ AI 要約」をクリックすると、コード論理を解析し、主要な変更点を抽出して Conventional Commits 形式で生成します。\n• 高速ダウンロード：初回利用時は ModelScope の高速 CDN からログイン不要で直接ダウンロード可能です。\n• スマートなメモリ管理：「設定 → AI エンジン」でモデルを管理可能。5分間アイドル時に自動で VRAM を解放し、システムリソースを圧迫しません。"
     ]
 }

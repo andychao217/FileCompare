@@ -4,7 +4,8 @@ import UniformTypeIdentifiers
 
 public struct WordDiffView: View {
     @Bindable public var viewModel: WordDiffViewModel
-    @State private var isDropTargeted: Bool = false
+    @State private var isLeftDropTargeted: Bool = false
+    @State private var isRightDropTargeted: Bool = false
     @State private var showOutlineSidebar: Bool = true
 
     public init(viewModel: WordDiffViewModel) {
@@ -12,40 +13,59 @@ public struct WordDiffView: View {
     }
 
     public var body: some View {
-        VStack(spacing: 0) {
-            // Top Toolbar
-            WordDiffToolbarView(viewModel: viewModel)
-            Divider()
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                // Top Toolbar
+                WordDiffToolbarView(viewModel: viewModel)
+                Divider()
 
-            // Main Content Area (Sidebar + Canvas)
-            HStack(spacing: 0) {
-                if showOutlineSidebar && viewModel.viewMode == .structuredContent {
-                    WordOutlineSidebarView(viewModel: viewModel) {
-                        withAnimation(.easeInOut(duration: 0.15)) {
-                            showOutlineSidebar = false
+                // Main Content Area (Sidebar + Canvas)
+                HStack(spacing: 0) {
+                    if showOutlineSidebar && viewModel.viewMode == .structuredContent {
+                        WordOutlineSidebarView(viewModel: viewModel) {
+                            withAnimation(.easeInOut(duration: 0.15)) {
+                                showOutlineSidebar = false
+                            }
+                        }
+                        Divider()
+                    }
+
+                    // View Switcher based on viewMode
+                    Group {
+                        switch viewModel.viewMode {
+                        case .structuredContent, .formattingDiff:
+                            WordParagraphDiffPane(viewModel: viewModel)
+                        case .tableDiff:
+                            WordTableDiffView(viewModel: viewModel)
+                        case .metadataDiff:
+                            WordMetadataDiffView(viewModel: viewModel)
                         }
                     }
-                    Divider()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-
-                // View Switcher based on viewMode
-                Group {
-                    switch viewModel.viewMode {
-                    case .structuredContent, .formattingDiff:
-                        WordParagraphDiffPane(viewModel: viewModel)
-                    case .tableDiff:
-                        WordTableDiffView(viewModel: viewModel)
-                    case .metadataDiff:
-                        WordMetadataDiffView(viewModel: viewModel)
+                .background(
+                    HStack(spacing: 0) {
+                        (isLeftDropTargeted ? Color.accentColor.opacity(0.08) : Color.clear)
+                            .frame(maxWidth: .infinity)
+                        Divider().opacity(0)
+                        (isRightDropTargeted ? Color.accentColor.opacity(0.08) : Color.clear)
+                            .frame(maxWidth: .infinity)
                     }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                )
+                .onDrop(of: [.fileURL], delegate: DualWordDiffDropDelegate(
+                    availableWidth: geometry.size.width,
+                    onDrop: { providers, isLeft in
+                        handleDrop(providers: providers, isLeft: isLeft)
+                    },
+                    isLeftTargeted: $isLeftDropTargeted,
+                    isRightTargeted: $isRightDropTargeted
+                ))
+
+                Divider()
+
+                // Bottom Status Bar
+                statusBar
             }
-
-            Divider()
-
-            // Bottom Status Bar
-            statusBar
         }
         .overlay {
             if viewModel.isLoading {
@@ -63,9 +83,6 @@ public struct WordDiffView: View {
                     .shadow(radius: 10)
                 }
             }
-        }
-        .onDrop(of: [.fileURL], isTargeted: $isDropTargeted) { providers in
-            handleDrop(providers: providers)
         }
     }
 
@@ -157,7 +174,7 @@ public struct WordDiffView: View {
         .background(Color(nsColor: .windowBackgroundColor).opacity(0.8))
     }
 
-    private func handleDrop(providers: [NSItemProvider]) -> Bool {
+    private func handleDrop(providers: [NSItemProvider], isLeft: Bool) -> Bool {
         for provider in providers {
             _ = provider.loadObject(ofClass: URL.self) { url, _ in
                 guard let url = url else { return }
@@ -165,16 +182,37 @@ public struct WordDiffView: View {
                 guard ["docx", "doc", "rtf"].contains(ext) else { return }
 
                 DispatchQueue.main.async {
-                    if self.viewModel.leftDocument == nil {
-                        self.viewModel.loadSingleFile(from: url, isLeft: true)
-                    } else if self.viewModel.rightDocument == nil {
-                        self.viewModel.loadSingleFile(from: url, isLeft: false)
-                    } else {
-                        self.viewModel.loadSingleFile(from: url, isLeft: true)
-                    }
+                    self.viewModel.loadSingleFile(from: url, isLeft: isLeft)
                 }
             }
         }
         return true
+    }
+}
+
+private struct DualWordDiffDropDelegate: DropDelegate {
+    let availableWidth: CGFloat
+    let onDrop: ([NSItemProvider], Bool) -> Bool
+    @Binding var isLeftTargeted: Bool
+    @Binding var isRightTargeted: Bool
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        let isLeft = info.location.x < (availableWidth / 2.0)
+        isLeftTargeted = isLeft
+        isRightTargeted = !isLeft
+        return DropProposal(operation: .copy)
+    }
+
+    func dropExited(info: DropInfo) {
+        isLeftTargeted = false
+        isRightTargeted = false
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        let isLeft = info.location.x < (availableWidth / 2.0)
+        isLeftTargeted = false
+        isRightTargeted = false
+        let providers = info.itemProviders(for: [.fileURL])
+        return onDrop(providers, isLeft)
     }
 }

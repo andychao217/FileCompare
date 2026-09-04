@@ -99,15 +99,34 @@ public struct ExcelDiffView: View {
                 .background(Color(nsColor: .textBackgroundColor))
             } else {
                 // Full Dual Diff Mode
-                VStack(spacing: 0) {
-                    // Side-by-side Table Grid
-                    ExcelTableGridView(viewModel: viewModel)
+                GeometryReader { geometry in
+                    VStack(spacing: 0) {
+                        // Side-by-side Table Grid
+                        ExcelTableGridView(viewModel: viewModel)
 
-                    // Bottom Row Detail Inspector
-                    ExcelRowDetailInspectorView(viewModel: viewModel)
+                        // Bottom Row Detail Inspector
+                        ExcelRowDetailInspectorView(viewModel: viewModel)
 
-                    // Bottom Sheet Tabs & Status Bar
-                    ExcelSheetTabBarView(viewModel: viewModel)
+                        // Bottom Sheet Tabs & Status Bar
+                        ExcelSheetTabBarView(viewModel: viewModel)
+                    }
+                    .background(
+                        HStack(spacing: 0) {
+                            (isLeftDropTargeted ? Color.accentColor.opacity(0.08) : Color.clear)
+                                .frame(maxWidth: .infinity)
+                            Divider().opacity(0)
+                            (isRightDropTargeted ? Color.accentColor.opacity(0.08) : Color.clear)
+                                .frame(maxWidth: .infinity)
+                        }
+                    )
+                    .onDrop(of: [.fileURL], delegate: DualExcelDiffDropDelegate(
+                        availableWidth: geometry.size.width,
+                        onDrop: { providers, isLeft in
+                            handleDrop(providers: providers, isLeft: isLeft)
+                        },
+                        isLeftTargeted: $isLeftDropTargeted,
+                        isRightTargeted: $isRightDropTargeted
+                    ))
                 }
             }
         }
@@ -289,5 +308,32 @@ public struct SingleExcelTableView: View {
             }
         }
         .background(Color(nsColor: .textBackgroundColor))
+    }
+}
+
+private struct DualExcelDiffDropDelegate: DropDelegate {
+    let availableWidth: CGFloat
+    let onDrop: ([NSItemProvider], Bool) -> Bool
+    @Binding var isLeftTargeted: Bool
+    @Binding var isRightTargeted: Bool
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        let isLeft = info.location.x < (availableWidth / 2.0)
+        isLeftTargeted = isLeft
+        isRightTargeted = !isLeft
+        return DropProposal(operation: .copy)
+    }
+
+    func dropExited(info: DropInfo) {
+        isLeftTargeted = false
+        isRightTargeted = false
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        let isLeft = info.location.x < (availableWidth / 2.0)
+        isLeftTargeted = false
+        isRightTargeted = false
+        let providers = info.itemProviders(for: [.fileURL])
+        return onDrop(providers, isLeft)
     }
 }

@@ -18,6 +18,11 @@
 
 ### 🌟 Key Features
 
+- **🤖 Dual-Mode AI Assistant: Local Offline (Google Gemma 3) & Cloud/Ollama API**:
+  - **100% On-Device Local AI (Google Gemma 3)**: Integrated on-device inference using Google Gemma 3 (1B-IT blazing fast & 4B-IT advanced). Completely offline, guaranteeing zero code leaks and strict privacy, with automatic memory cleanup after generation.
+  - **OpenAI-Compatible Cloud & LAN LLMs**: Built-in presets for DeepSeek, OpenAI, Ollama (Local/LAN, e.g., `qwen2.5-coder`, `qwen3.5`, `llama3.2`), and any custom OpenAI-compatible endpoint. Includes 1-click latency and connectivity testing.
+  - **Smart Change Intent Summary**: Instantly distills the overarching purpose of paired diffs into a concise one-line summary and extracts structured key modification bullet points with precise variable names.
+  - **Automated Conventional Commits**: Generates standardized Git commit messages (e.g. `feat(core): ...`, `fix(ui): ...`) with 1-click clipboard copy.
 - **⚡ High-Throughput Rust Core & Dual-Engine Architecture**:
   - **Dual-Engine Dispatcher (`Rust First + Swift Fallback`)**: Configurable engine mode (`Auto`, `Rust Core`, `Swift Native`) in Preferences with live engine health status.
   - **Myers & Token LCS Diff (`diff-core`)**: Sub-millisecond text diffing and 3-way merge conflict resolution.
@@ -64,15 +69,19 @@
 | :---: | :---: |
 | ![Word Diff Dark](docs/assets/word_diff_dark_ui.png) | ![Word Diff Light](docs/assets/word_diff_light_ui.png) |
 
-#### 4. Fine-Grained Text & Code Comparison (Text Diff)
+#### 4. Fine-Grained Text & Code Comparison with AI Summary (Text Diff)
 
-| 2-Way Text Diff | 3-Way Merge |
+| Dark UI (AI Intent Summary) | Light UI (AI Intent Summary) |
 | :---: | :---: |
-| ![Text Diff](docs/assets/text_diff_ui.jpg) | ![3-Way Merge](docs/assets/three_way_merge_ui.jpg) |
+| ![Text Diff AI Dark](docs/assets/text_diff_ai_dark_ui.png) | ![Text Diff AI Light](docs/assets/text_diff_ai_light_ui.png) |
 
-#### 5. Folder Fast Diff & Sync (Folder Diff)
+#### 5. Git 3-Way Conflict Merge
 
-![Folder Diff](docs/assets/folder_diff_ui.jpg)
+![3-Way Merge](docs/assets/three_way_merge_ui.jpg)
+
+#### 6. Folder Fast Diff & Sync (Folder Diff)
+
+![Folder Diff](docs/assets/folder_diff_ui.png)
 
 ### 📁 Project Structure
 
@@ -151,7 +160,7 @@ git config --global difftool.maccompare.cmd 'mcdiff "$LOCAL" "$REMOTE"'
 #### Package Universal DMG Release (Universal Binary 2)
 
 ```bash
-bash scripts/package_dmg.sh 0.4.0
+bash scripts/package_dmg.sh 0.5.0
 ```
 
 ### 📄 License
@@ -167,6 +176,11 @@ This project is licensed under the [MIT License](LICENSE).
 
 ### 🌟 核心特性
 
+- **🤖 端侧离线与云端双模 AI 智能助手 (Dual-Mode AI: Local Offline & Cloud/Ollama API)**：
+  - **100% 端侧离线模型 (Google Gemma 3)**：内置 Google Gemma 3 1B-IT（推荐·极速）与 4B-IT（进阶·复杂合并）轻量模型。100% 本地运算，断网完全可用，代码与差异绝不上云，保护数据隐私，并在推理后自动释放显存；
+  - **云端与局域网大模型兼容 API**：预设深度适配 DeepSeek、OpenAI 以及本地/局域网 Ollama（如 `qwen2.5-coder`、`qwen3.5`、`llama3.2`）与自定义端点，提供一键连通性测试与毫秒级延迟检测；
+  - **变更意图智能提炼 (Change Intent Summary)**：自动分析成对代码差异，秒级提炼「一句话修改目的」并输出准确匹配变量名的「核心变更要点清单」；
+  - **规范化 Git Commit 提交说明生成**：自动生成符合规范的 Git Conventional Commit 提交信息（如 `feat(core): ...`、`fix(parser): ...`），支持一键复制到剪贴板。
 - **⚡ Rust 高性能核心与双引擎架构 (Dual-Engine Architecture)**：
   - **双引擎智能分发 (`Rust First + Swift Fallback`)**：支持在偏好设置中自由切换引擎模式（`自动选择`、`Rust 核心`、`原生 Swift`），并实时展示 Rust 引擎运行状态；
   - **Myers 与 Token LCS 差分 (`diff-core`)**：毫秒级完成行级差分与 Git 三向冲突合并；
@@ -213,15 +227,19 @@ This project is licensed under the [MIT License](LICENSE).
 | :---: | :---: |
 | ![Word Diff Dark](docs/assets/word_diff_dark_ui.png) | ![Word Diff Light](docs/assets/word_diff_light_ui.png) |
 
-#### 4. 文本与代码精细对比 (Text Diff)
+#### 4. 文本与代码精细对比（内置 AI 智能意图摘要）(Text Diff with AI)
 
-| 双向文本对比 | Git 三向合并 |
+| 深色模式 (Dark) | 浅色模式 (Light) |
 | :---: | :---: |
-| ![Text Diff](docs/assets/text_diff_ui.jpg) | ![3-Way Merge](docs/assets/three_way_merge_ui.jpg) |
+| ![Text Diff AI Dark](docs/assets/text_diff_ai_dark_ui.png) | ![Text Diff AI Light](docs/assets/text_diff_ai_light_ui.png) |
 
-#### 5. 文件夹极速对比与同步 (Folder Diff)
+#### 5. Git 三向冲突合并 (3-Way Merge)
 
-![Folder Diff](docs/assets/folder_diff_ui.jpg)
+![3-Way Merge](docs/assets/three_way_merge_ui.jpg)
+
+#### 6. 文件夹极速对比与同步 (Folder Diff)
+
+![Folder Diff](docs/assets/folder_diff_dark_ui.png)
 
 ### 🚀 快速上手
 
@@ -257,7 +275,7 @@ mcdiff --merge local.py base.py remote.py -o merged.py
 #### 打包 Universal DMG 安装包 (Universal Binary 2)
 
 ```bash
-bash scripts/package_dmg.sh 0.4.0
+bash scripts/package_dmg.sh 0.5.0
 ```
 
 ### 📄 开源许可证
