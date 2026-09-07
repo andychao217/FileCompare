@@ -48,6 +48,11 @@
 - **🔀 Git 3-Way Conflict Merge**: Visual 3-way conflict resolution across Local vs. Base vs. Remote, intelligent auto-merging of non-conflicting sections, and one-click conflict resolution.
 - **📁 Blazing-Fast Folder Diff & Sync**: Quick timestamp/size checks and deep CRC32 hash comparison, featuring rule-based bidirectional synchronization with safe Dry-Run preview.
 - **🛠️ Developer Ecosystem & CLI Integration**: Built-in `mcdiff` terminal CLI tool, with out-of-the-box integration for `git difftool` and `git mergetool`.
+- **🔄 In-App Seamless Auto-Update & Homebrew Ecosystem**:
+  - **4-Stage Native In-App Updater**: WeChat/Sparkle-inspired seamless in-app updater with streamed progress download, automatic background extraction via `ditto`, and one-click restart replacement.
+  - **Multi-Language Release Notes**: Automatically senses system locale to deliver release notes in English, Simplified Chinese, or Japanese.
+  - **Official Homebrew Tap**: 1-line terminal installation via `brew install andychao217/tap/maccompare`.
+  - **Multi-Asset Distribution**: DMG installer, portable `.zip` bundle, and standalone `mcdiff` universal CLI archive.
 
 ### 📸 Screenshots & UI Preview
 
@@ -116,6 +121,14 @@ FileCompare/
 ```
 
 ### 🚀 Quick Start
+
+#### Installation via Homebrew (Recommended)
+
+```bash
+brew install andychao217/tap/maccompare
+```
+
+*Or download prebuilt packages (`.dmg`, `.zip`) from [GitHub Releases](https://github.com/andychao217/FileCompare/releases/latest).*
 
 #### Build & Run Tests
 
@@ -206,6 +219,11 @@ This project is licensed under the [MIT License](LICENSE).
 - **🔀 Git 三向冲突合并 (3-Way Merge)**：直观解决 Local vs Base vs Remote 冲突，智能自动解决非冲突部分，一键解决冲突。
 - **📁 毫秒级文件夹对比与同步**：支持时间戳/大小快速检查与深度 CRC32 哈希对比，规则化双向同步并提供演练预览 (Dry-Run) 安全机制。
 - **🛠️ 开发者生态与 CLI 命令行集成**：内置 `mcdiff` 终端命令行工具，完美无缝对接 `git difftool` 与 `git mergetool`。
+- **🔄 应用内就地自动更新与 Homebrew 生态**：
+  - **4 阶段原生就地热更新**：微信/Sparkle 体验，支持流式进度下载、macOS 原生 `ditto` 自动解压与一键重启覆盖，无需浏览器往返；
+  - **多语言更新日志感知**：自动识别用户偏好语言，智能切片展示中、英、日三语更新说明；
+  - **Homebrew 官方专属源**：终端一行流极速安装与自动软链 `brew install andychao217/tap/maccompare`；
+  - **多形态发布资产**：提供标准 DMG、解压即用便携 Zip 以及独立 `mcdiff` 终端 CLI 压缩包。
 
 ### 📸 软件截图与界面预览
 
@@ -242,6 +260,14 @@ This project is licensed under the [MIT License](LICENSE).
 ![Folder Diff](docs/assets/folder_diff_dark_ui.png)
 
 ### 🚀 快速上手
+
+#### 通过 Homebrew 安装（推荐）
+
+```bash
+brew install andychao217/tap/maccompare
+```
+
+*或从 [GitHub Releases](https://github.com/andychao217/FileCompare/releases/latest) 下载 DMG 安装包或免安装 Zip 压缩包。*
 
 #### 编译并运行单元测试
 

@@ -106,16 +106,18 @@ body {
   text-decoration: none;
 }
 
-.app-badge-icon {
+.app-badge-icon,
+.app-brand-icon {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: var(--accent-gradient);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  box-shadow: 0 4px 12px var(--accent-glow);
+  object-fit: contain;
+  box-shadow: 0 4px 14px var(--accent-glow);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.nav-brand:hover .app-brand-icon {
+  transform: scale(1.1);
 }
 
 .nav-links {
@@ -226,8 +228,56 @@ body {
   display: flex;
   justify-content: center;
   gap: 16px;
-  margin-bottom: 48px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
+}
+
+.brew-install-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.92rem;
+  margin: 0 auto 44px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.brew-tag {
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+}
+
+.brew-install-banner code {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.brew-copy-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  opacity: 0.7;
+}
+
+.brew-copy-btn:hover {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 .btn-primary {

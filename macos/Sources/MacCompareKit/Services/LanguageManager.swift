@@ -215,6 +215,15 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case autoCheckUpdatesOnLaunch
     case lastChecked
     case checkFailed
+    case updatingApp
+    case skipThisVersion
+    case installUpdate
+    case downloadingUpdate
+    case extractingUpdate
+    case readyToInstall
+    case installAndRelaunch
+    case updateFailed
+    case softwareUpdateTitle
 
     // Word Diff Specific
     case wordDiff
@@ -759,6 +768,15 @@ public final class LanguageManager {
         .autoCheckUpdatesOnLaunch: "Automatically check for updates on launch",
         .lastChecked: "Last checked",
         .checkFailed: "Failed to check for updates. Please check your network connection.",
+        .updatingApp: "Updating MacCompare",
+        .skipThisVersion: "Skip This Version",
+        .installUpdate: "Install Update",
+        .downloadingUpdate: "Downloading update...",
+        .extractingUpdate: "Extracting update...",
+        .readyToInstall: "Ready to Install",
+        .installAndRelaunch: "Install and Relaunch",
+        .updateFailed: "Update Failed",
+        .softwareUpdateTitle: "Software Update",
         .newWordCompare: "New Word Compare",
         .wordDiff: "Word Document Diff",
         .structuredContent: "Structured Content",
@@ -1049,6 +1067,15 @@ public final class LanguageManager {
         .autoCheckUpdatesOnLaunch: "启动时自动检查更新",
         .lastChecked: "上次检查时间",
         .checkFailed: "检查更新失败，请检查您的网络连接。",
+        .updatingApp: "正在更新 MacCompare",
+        .skipThisVersion: "跳过此版本",
+        .installUpdate: "下载并安装",
+        .downloadingUpdate: "正在下载更新...",
+        .extractingUpdate: "正在解压更新...",
+        .readyToInstall: "准备就绪",
+        .installAndRelaunch: "安装并重启",
+        .updateFailed: "更新失败",
+        .softwareUpdateTitle: "软件更新",
         .newWordCompare: "新建 Word 对比",
         .wordDiff: "Word 文档比对",
         .structuredContent: "结构化内容比对",
@@ -1339,6 +1366,15 @@ public final class LanguageManager {
         .autoCheckUpdatesOnLaunch: "起動時に自動的にアップデートを確認",
         .lastChecked: "最終確認日時",
         .checkFailed: "アップデートの確認に失敗しました。ネットワーク接続を確認してください。",
+        .updatingApp: "MacCompare をアップデート中",
+        .skipThisVersion: "このバージョンをスキップ",
+        .installUpdate: "アップデートをインストール",
+        .downloadingUpdate: "アップデートをダウンロード中...",
+        .extractingUpdate: "アップデートを展開中...",
+        .readyToInstall: "インストールの準備が完了しました",
+        .installAndRelaunch: "インストールして再起動",
+        .updateFailed: "アップデートに失敗しました",
+        .softwareUpdateTitle: "ソフトウェアアップデート",
         .newWordCompare: "新規 Word 比較",
         .wordDiff: "Word ドキュメント比較",
         .structuredContent: "構造化コンテンツ比較",

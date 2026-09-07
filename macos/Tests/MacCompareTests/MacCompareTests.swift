@@ -146,4 +146,74 @@ final class MacCompareTests: XCTestCase {
         XCTAssertFalse(checker.isNewerVersion(latest: "0.1.0", current: "0.1.0"))
         XCTAssertFalse(checker.isNewerVersion(latest: "0.0.9", current: "0.1.0"))
     }
+
+    @MainActor
+    func testUpdateStagesAndSkipVersion() {
+        let checker = UpdateCheckerService.shared
+        checker.stage = .prompt
+        XCTAssertEqual(checker.stage, .prompt)
+
+        checker.stage = .downloading(progress: 0.5, downloadedBytes: 50, totalBytes: 100)
+        if case .downloading(let p, let d, let t) = checker.stage {
+            XCTAssertEqual(p, 0.5)
+            XCTAssertEqual(d, 50)
+            XCTAssertEqual(t, 100)
+        } else {
+            XCTFail("Expected downloading stage")
+        }
+
+        checker.stage = .extracting
+        XCTAssertEqual(checker.stage, .extracting)
+
+        let mockApp = URL(fileURLWithPath: "/tmp/MacCompare.app")
+        checker.stage = .readyToInstall(extractedAppPath: mockApp)
+        if case .readyToInstall(let url) = checker.stage {
+            XCTAssertEqual(url, mockApp)
+        } else {
+            XCTFail("Expected readyToInstall stage")
+        }
+
+        checker.latestReleaseVersion = "9.9.9"
+        checker.skipVersion()
+        XCTAssertEqual(checker.skippedVersion, "9.9.9")
+        XCTAssertEqual(checker.stage, .prompt)
+        checker.skippedVersion = nil
+    }
+
+    @MainActor
+    func testLocalizedReleaseNotesParsing() {
+        let checker = UpdateCheckerService.shared
+        let sampleNotes = """
+        <!-- zh-Hans -->
+        - 中文新特性 1
+        - 中文新特性 2
+
+        <!-- en -->
+        - English feature 1
+        - English feature 2
+
+        <!-- ja -->
+        - 日本語機能 1
+        - 日本語機能 2
+        """
+
+        checker.latestReleaseNotes = sampleNotes
+
+        let zh = checker.localizedReleaseNotes(for: .zhHans)
+        XCTAssertTrue(zh.contains("中文新特性 1"))
+        XCTAssertFalse(zh.contains("English feature 1"))
+
+        let en = checker.localizedReleaseNotes(for: .en)
+        XCTAssertTrue(en.contains("English feature 1"))
+        XCTAssertFalse(en.contains("日本語機能 1"))
+
+        let ja = checker.localizedReleaseNotes(for: .ja)
+        XCTAssertTrue(ja.contains("日本語機能 1"))
+        XCTAssertFalse(ja.contains("中文新特性 1"))
+
+        // Untagged plain text fallback test
+        checker.latestReleaseNotes = "Plain notes without language tags."
+        XCTAssertEqual(checker.localizedReleaseNotes(for: .zhHans), "Plain notes without language tags.")
+        XCTAssertEqual(checker.localizedReleaseNotes(for: .en), "Plain notes without language tags.")
+    }
 }

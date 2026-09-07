@@ -8,8 +8,7 @@
   <meta name="description"
     content="A high-performance macOS native file comparison and 3-way merge tool built with Rust and SwiftUI. Supports Text, Excel, Word, and Folders.">
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon"
-    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚖️</text></svg>">
+  <link rel="icon" type="image/png" href="assets/app_icon.png">
 </head>
 
 <body>
@@ -20,7 +19,7 @@
   <header>
     <nav class="navbar">
       <a href="#" class="nav-brand">
-        <div class="app-badge-icon">⚖️</div>
+        <img src="assets/app_icon.png" alt="MacCompare Icon" class="app-brand-icon">
         <span>MacCompare</span>
       </a>
 
@@ -73,6 +72,12 @@
           </svg>
           <span data-i18n="githubBtn">GitHub 源代码</span>
         </a>
+      </div>
+
+      <div class="brew-install-banner">
+        <span class="brew-tag">Homebrew</span>
+        <code id="brew-cmd">brew install andychao217/tap/maccompare</code>
+        <button class="brew-copy-btn" onclick="copyBrewCmd()" title="Copy to Clipboard">📋</button>
       </div>
     </section>
 
@@ -215,6 +220,12 @@
           <div class="feature-icon">🌓</div>
           <h3 class="feature-title" data-i18n="feat6Title">原生多语言与深浅外观</h3>
           <p class="feature-desc" data-i18n="feat6Desc">内置中文、英文、日文支持，完美适配 macOS 全局系统主题自适应与快捷切换。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🔄</div>
+          <h3 class="feature-title" data-i18n="featUpdateTitle">就地热更新与 Homebrew 生态</h3>
+          <p class="feature-desc" data-i18n="featUpdateDesc">支持微信同款流式下载与一键重启覆盖，多语言更新日志自动呈现，提供 Homebrew 终端极速分发。</p>
         </div>
       </div>
     </section>

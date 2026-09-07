@@ -30,6 +30,11 @@ Cargo.lock
 macos/MacCompare/Generated/lib/
 macos/Sources/MacCompare/Generated/lib/
 
+# Core Compiled Static & Dynamic Libraries
+macos/Sources/CMacCompareCore/lib/*.a
+macos/Sources/CMacCompareCore/lib/*.dylib
+!macos/Sources/CMacCompareCore/lib/.gitkeep
+
 # Temporary files & Logs
 *.log
 *.tmp

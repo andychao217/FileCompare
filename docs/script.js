@@ -41,6 +41,8 @@ const i18n = {
     feat5Desc: "支持像 Safari 一样自由拖拽拆分与合并窗口，支持 ⌃Tab 快捷键无缝循环切换多任务标签。",
     feat6Title: "原生多语言与深浅外观",
     feat6Desc: "内置中文、英文、日文支持，完美适配 macOS 全局系统主题自适应与快捷切换。",
+    featUpdateTitle: "就地热更新与 Homebrew 生态",
+    featUpdateDesc: "支持微信同款流式下载与一键重启覆盖，多语言更新日志自动呈现，提供 Homebrew 终端极速分发。",
     cliTitle: "终端命令行与 Git 工具集成",
     cliSubtitle: "一键配置为 Git 默认合并与比对工具，在终端中随时唤起。",
     ctaTitle: "即刻体验极致流畅的比对体验",
@@ -89,6 +91,8 @@ const i18n = {
     feat5Desc: "Safari-style drag-to-split and merge windows, with ⌃Tab hotkeys for rapid tab cycling.",
     feat6Title: "Theme & Multilingual",
     feat6Desc: "Built-in English, Chinese, and Japanese with automatic macOS system appearance synchronization.",
+    featUpdateTitle: "In-App Auto-Update & Homebrew",
+    featUpdateDesc: "WeChat-inspired 4-stage streamed auto-update with one-click restart, multi-language release notes, and official Homebrew Tap.",
     cliTitle: "CLI & Git Mergetool Integration",
     cliSubtitle: "Configure MacCompare as your default git diff and mergetool in seconds.",
     ctaTitle: "Experience Seamless File Comparison Today",
@@ -137,6 +141,8 @@ const i18n = {
     feat5Desc: "Safari のようにタブをドラッグして分離/結合可能。⌃Tab でスムーズにタブ間を切り替え。",
     feat6Title: "多言語＆外观テーマ",
     feat6Desc: "日本語、英語、中国語を標準搭載。macOS の外観モードに完全連動。",
+    featUpdateTitle: "アプリ内自動更新＆Homebrew エコシステム",
+    featUpdateDesc: "ストリーミングダウンロード、自動展開、ワンクリック再起動による原地更新。多言語リリースノートと公式 Homebrew Tap をサポート。",
     cliTitle: "CLI & Git 統合",
     cliSubtitle: "Git のデフォルトのマージツールとして簡単に連携設定が可能。",
     ctaTitle: "今すぐ MacCompare を体験しましょう",
@@ -324,6 +330,19 @@ function copyCli() {
       btn.textContent = "Copy";
       btn.classList.remove("copied");
     }, 2000);
+  });
+}
+
+function copyBrewCmd() {
+  const cmd = "brew install andychao217/tap/maccompare";
+  navigator.clipboard.writeText(cmd).then(() => {
+    const btn = document.querySelector(".brew-copy-btn");
+    if (btn) {
+      btn.innerText = "✅";
+      setTimeout(() => {
+        btn.innerText = "📋";
+      }, 2000);
+    }
   });
 }
 

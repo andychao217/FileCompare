@@ -15,14 +15,22 @@ jobs:
     runs-on: macos-15
     steps:
       - name: Checkout Code
-        run: |
-          REF="${GITHUB_REF_NAME:-main}"
-          git clone --depth 1 --branch "$REF" "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" .
+        uses: actions/checkout@v4
 
       - name: Select Xcode Version
         run: |
           sudo xcode-select -s /Applications/Xcode.app || true
           xcodebuild -version
+
+      - name: Set up Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin, x86_64-apple-darwin
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "core -> target"
 
       - name: Extract Tag Version
         id: get_version
@@ -34,16 +42,79 @@ jobs:
           fi
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
-      - name: Package DMG
+      - name: Package DMG & Extra Assets
         run: |
           chmod +x scripts/*.sh
           ./scripts/package_dmg.sh "${{ steps.get_version.outputs.version }}"
+          VERSION="${{ steps.get_version.outputs.version }}"
+          cd dist
+          # Compress MacCompare.app into zip using ditto (preserves macOS permissions & resource forks)
+          if [ -d "MacCompare.app" ]; then
+            ditto -c -k --keepParent MacCompare.app "MacCompare-${VERSION}-macos.zip"
+          fi
+          # Package standalone mcdiff CLI binary into tar.gz
+          if [ -f "mcdiff" ]; then
+            tar -czf "mcdiff-${VERSION}-macos-universal.tar.gz" mcdiff
+          fi
 
       - name: Create GitHub Release & Upload Asset
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${{ github.ref_name }}" dist/*.dmg \
+          NOTES_FLAG="--generate-notes"
+          if [ -f "RELEASE_NOTES.md" ]; then
+            NOTES_FLAG="--notes-file RELEASE_NOTES.md"
+          fi
+
+          gh release create "${{ github.ref_name }}" \
+            dist/*.dmg \
+            dist/*.zip \
+            dist/*.tar.gz \
             --title "MacCompare v${{ steps.get_version.outputs.version }}" \
-            --generate-notes || \
-          gh release upload "${{ github.ref_name }}" dist/*.dmg --clobber
+            $NOTES_FLAG || \
+          gh release upload "${{ github.ref_name }}" \
+            dist/*.dmg \
+            dist/*.zip \
+            dist/*.tar.gz \
+            --clobber
+
+      - name: Update Homebrew Tap Cask
+        env:
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          if [ -z "$TAP_TOKEN" ]; then
+            echo "HOMEBREW_TAP_TOKEN not set, skipping Homebrew Tap update"
+            exit 0
+          fi
+
+          VERSION="${{ steps.get_version.outputs.version }}"
+          DMG_FILE="dist/MacCompare-${VERSION}.dmg"
+          if [ ! -f "$DMG_FILE" ]; then
+            DMG_FILE=$(ls dist/MacCompare-*.dmg 2>/dev/null | head -n 1)
+          fi
+
+          if [ -z "$DMG_FILE" ] || [ ! -f "$DMG_FILE" ]; then
+            echo "DMG file not found, skipping Homebrew Tap update"
+            exit 0
+          fi
+
+          SHA256=$(shasum -a 256 "$DMG_FILE" | awk '{print $1}')
+          echo "Updating Homebrew Tap: Version=${VERSION}, SHA256=${SHA256}"
+
+          rm -rf /tmp/homebrew-tap
+          git clone "https://x-access-token:${TAP_TOKEN}@github.com/andychao217/homebrew-tap.git" /tmp/homebrew-tap
+          cd /tmp/homebrew-tap
+
+          if [ -f "Casks/maccompare.rb" ]; then
+            sed -i '' -E "s/version \".*\"/version \"${VERSION}\"/" Casks/maccompare.rb
+            sed -i '' -E "s/sha256 \".*\"/sha256 \"${SHA256}\"/" Casks/maccompare.rb
+
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add Casks/maccompare.rb
+            git commit -m "chore(cask): bump maccompare to v${VERSION}" || echo "No changes to commit"
+            git push origin main
+            echo "Homebrew Tap successfully updated to v${VERSION}!"
+          else
+            echo "Warning: Casks/maccompare.rb not found in homebrew-tap repository"
+          fi
