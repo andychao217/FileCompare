@@ -1,0 +1,198 @@
+﻿<Page
+    x:Class="WinCompare.UI.Views.WordDiffPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- CommandBar -->
+        <CommandBar Grid.Row="0" DefaultLabelPosition="Right" Background="Transparent">
+            <AppBarButton x:Name="OpenFileBtn" Icon="OpenFile" Label="打开 Word 文件">
+                <AppBarButton.Flyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem x:Name="PickLeftDocItem" Text="选择左侧文档 (.docx)..." Click="OnPickLeftDocClicked" />
+                        <MenuFlyoutItem x:Name="PickRightDocItem" Text="选择右侧文档 (.docx)..." Click="OnPickRightDocClicked" />
+                    </MenuFlyout>
+                </AppBarButton.Flyout>
+            </AppBarButton>
+            <AppBarButton x:Name="PrevDiffBtn" Icon="Back" Label="上一处差异" Click="OnPrevDiffClicked" />
+            <AppBarButton x:Name="NextDiffBtn" Icon="Forward" Label="下一处差异" Click="OnNextDiffClicked" />
+            <AppBarSeparator />
+            <AppBarButton x:Name="ToggleSidebarBtn" Icon="List" Label="大纲结构" Click="OnToggleSidebarClicked" />
+            <AppBarElementContainer VerticalAlignment="Center">
+                <ComboBox x:Name="ViewModeBox" SelectedIndex="0" SelectionChanged="OnViewModeChanged" Width="140" Margin="4,0">
+                    <ComboBoxItem x:Name="ViewModeItem0" Content="正文结构比对" />
+                    <ComboBoxItem x:Name="ViewModeItem1" Content="表格比对" />
+                    <ComboBoxItem x:Name="ViewModeItem2" Content="文档元数据" />
+                </ComboBox>
+            </AppBarElementContainer>
+            <AppBarSeparator />
+            <AppBarElementContainer VerticalAlignment="Center">
+                <AutoSuggestBox x:Name="WordSearchBox" PlaceholderText="搜索段落内容..." QueryIcon="Find" Width="180" Height="32" VerticalAlignment="Center" Margin="4,0" TextChanged="OnSearchTextChanged" />
+            </AppBarElementContainer>
+            <AppBarSeparator />
+            <AppBarButton x:Name="SwapSidesBtn" Icon="Switch" Label="交换左右" Click="OnSwapSidesClicked" />
+            <AppBarButton x:Name="ExportReportBtn" Icon="SaveLocal" Label="导出差异" Click="OnExportDiffClicked" />
+            <AppBarButton x:Name="ClearAllBtn" Icon="Delete" Label="清空" Click="OnClearAllClicked" />
+
+            <CommandBar.Content>
+                <Grid Height="48" VerticalAlignment="Center" Margin="12,0,0,0">
+                    <Border Background="#203B82F6" CornerRadius="12" Padding="10,4" VerticalAlignment="Center">
+                        <TextBlock x:Name="DiffBadge" Text="0 处段落差异" FontSize="12" FontWeight="SemiBold" Foreground="#3B82F6" />
+                    </Border>
+                </Grid>
+            </CommandBar.Content>
+        </CommandBar>
+
+        <!-- Dual Doc Headers with Drag & Drop -->
+        <Grid Grid.Row="1" Padding="16,6" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="2" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left Header -->
+            <Border Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="10,6"
+                    AllowDrop="True" DragOver="OnLeftDocDragOver" Drop="OnLeftDocDrop">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE8A5;" Foreground="#3B82F6" FontSize="14" />
+                        <TextBlock x:Name="LeftDocPathText" Text="拖入或选择左侧原文档 (.docx)" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <Button x:Name="LeftBrowseBtn" HorizontalAlignment="Right" Content="浏览" FontSize="11" Padding="8,2" Click="OnPickLeftDocClicked" />
+                </Grid>
+            </Border>
+
+            <Rectangle Grid.Column="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+            <!-- Right Header -->
+            <Border Grid.Column="2" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="10,6"
+                    AllowDrop="True" DragOver="OnRightDocDragOver" Drop="OnRightDocDrop">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE8A5;" Foreground="#3B82F6" FontSize="14" />
+                        <TextBlock x:Name="RightDocPathText" Text="拖入或选择右侧修订文档 (.docx)" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <Button x:Name="RightBrowseBtn" HorizontalAlignment="Right" Content="浏览" FontSize="11" Padding="8,2" Click="OnPickRightDocClicked" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Main Workspace -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="SidebarCol" Width="220" />
+                <ColumnDefinition Width="1" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left Outline Sidebar -->
+            <Border Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock x:Name="OutlineHeader" Text="文档大纲结构" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,0,0,8" />
+                    <TreeView x:Name="OutlineTree" Grid.Row="1" ItemInvoked="OnOutlineItemInvoked" />
+                </Grid>
+            </Border>
+
+            <Rectangle Grid.Column="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+            <!-- Paragraph / Table / Metadata View Container -->
+            <Grid Grid.Column="2">
+                <!-- Mode 1: Aligned Paragraphs List -->
+                <ListView x:Name="ParagraphsList" SelectionMode="Single" Padding="0" Visibility="Visible">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid MinHeight="36" Padding="0,4" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="1" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Left Paragraph -->
+                                <Border Grid.Column="0" Background="{Binding LeftBgBrush}" Padding="12,6">
+                                    <StackPanel Spacing="4">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="{Binding LeftIndexText}" FontSize="10" Foreground="{ThemeResource TextFillColorTertiaryBrush}" FontFamily="{StaticResource CodeFontFamily}" />
+                                            <Border Background="{Binding StatusBgBrush}" CornerRadius="3" Padding="4,1" Visibility="{Binding LeftBadgeVisibility}">
+                                                <TextBlock Text="{Binding StatusText}" FontSize="9" FontWeight="SemiBold" Foreground="{Binding StatusFgBrush}" />
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding LeftText}" FontSize="12" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextWrapping="Wrap" LineHeight="18" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Rectangle Grid.Column="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                                <!-- Right Paragraph -->
+                                <Border Grid.Column="2" Background="{Binding RightBgBrush}" Padding="12,6">
+                                    <StackPanel Spacing="4">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="{Binding RightIndexText}" FontSize="10" Foreground="{ThemeResource TextFillColorTertiaryBrush}" FontFamily="{StaticResource CodeFontFamily}" />
+                                            <Border Background="{Binding StatusBgBrush}" CornerRadius="3" Padding="4,1" Visibility="{Binding RightBadgeVisibility}">
+                                                <TextBlock Text="{Binding StatusText}" FontSize="9" FontWeight="SemiBold" Foreground="{Binding StatusFgBrush}" />
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding RightText}" FontSize="12" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextWrapping="Wrap" LineHeight="18" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <!-- Mode 2: Table Diff View -->
+                <ScrollViewer x:Name="TableDiffView" Padding="16" Visibility="Collapsed">
+                    <StackPanel x:Name="TableDiffContainer" Spacing="16" />
+                </ScrollViewer>
+
+                <!-- Mode 3: Metadata View -->
+                <ScrollViewer x:Name="MetadataDiffView" Padding="20" Visibility="Collapsed">
+                    <StackPanel Spacing="16" MaxWidth="600" HorizontalAlignment="Left">
+                        <TextBlock x:Name="MetadataHeader" Text="文档属性与元数据对比" FontWeight="Bold" FontSize="14" />
+                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
+                            <TextBlock x:Name="MetadataDetailsText" Text="尚未载入文档" FontFamily="{StaticResource CodeFontFamily}" FontSize="12" TextWrapping="Wrap" />
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Empty State -->
+                <StackPanel x:Name="EmptyStatePanel" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" Visibility="Visible">
+                    <FontIcon Glyph="&#xE8A5;" FontSize="48" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    <TextBlock x:Name="EmptyPromptText" Text="请选择左侧和右侧 Word (.docx) 文档以开始比对" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                    <Button x:Name="EmptyActionBtn" Content="选择文档" HorizontalAlignment="Center" Click="OnPickLeftDocClicked" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <!-- Bottom Status Bar -->
+        <Border Grid.Row="3" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="16,6" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+            <Grid>
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                    <TextBlock x:Name="StatusBarText" Text="未比对" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+                <TextBlock HorizontalAlignment="Right" Text="OpenXML DOM + Myers LCS Engine" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

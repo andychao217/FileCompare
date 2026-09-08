@@ -1,0 +1,459 @@
+﻿<UserControl
+    x:Class="WinCompare.UI.Views.HelpControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <UserControl.RenderTransform>
+        <TranslateTransform x:Name="DragTransform" X="0" Y="0" />
+    </UserControl.RenderTransform>
+
+    <Border Width="690" Height="580"
+            Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="12">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Draggable Header -->
+            <Grid x:Name="DragHeader" Grid.Row="0" Margin="20,14,16,10" Background="Transparent">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <Border Background="#208B5CF6" CornerRadius="8" Width="36" Height="36" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE897;" FontSize="18" Foreground="#8B5CF6" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Spacing="2" VerticalAlignment="Center">
+                        <TextBlock x:Name="HelpTitleText" Text="WinCompare 帮助与用户指南" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock x:Name="HelpSubtitleText" Text="WinCompare v1.0.0 • 快捷键与核心功能说明" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Prominent Close Button X -->
+                <Button x:Name="CloseButton" Grid.Column="1" Click="OnCloseClicked"
+                        Background="Transparent" BorderThickness="0" CornerRadius="6"
+                        Width="34" Height="34" Padding="0" VerticalAlignment="Center"
+                        ToolTipService.ToolTip="关闭 (Close)">
+                    <FontIcon Glyph="&#xE711;" FontSize="14" Foreground="{ThemeResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+            </Grid>
+
+        <!-- Tabs -->
+        <TabView x:Name="HelpTabs" Grid.Row="1" IsAddTabButtonVisible="False">
+            <TabView.TabItems>
+                <!-- 1. 核心功能说明 (Core Features) -->
+                <TabViewItem x:Name="FeaturesTabItem" Header="核心功能说明" IsClosable="False">
+                    <TabViewItem.IconSource>
+                        <FontIconSource Glyph="&#xE8A5;" />
+                    </TabViewItem.IconSource>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="18,12">
+                        <StackPanel Spacing="14">
+                            <!-- 1. 文本对比 -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                                <StackPanel Spacing="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Background="#150078D4" CornerRadius="6" Width="28" Height="28">
+                                            <FontIcon Glyph="&#xE8A5;" FontSize="14" Foreground="#0078D4" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <StackPanel VerticalAlignment="Center" Spacing="1">
+                                            <TextBlock x:Name="TextDiffTitleText" Text="文本对比 (Text Diff)" FontWeight="SemiBold" FontSize="13" />
+                                            <TextBlock x:Name="TextDiffDescText" Text="双向代码 Myers 差异对比、字符级高亮、行内编辑与 3-Way 冲突合并" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <TextBlock x:Name="TextDiffDetailText" Text="• 文件添加：直接拖入两份文件至左右面板，或点击选择。单侧加载保持中性无色，双侧加载后自动触发比对。&#x0a;• 差异采纳：点击采纳左/右箭头快速合并差异块，按 Ctrl + S 保存修改。&#x0a;• 规则切换：支持快速切换「忽略空白字符」与「忽略大小写」，并在设置中开启自动创建 .bak 备份。"
+                                               FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" LineHeight="17" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 2. 表格对比 -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                                <StackPanel Spacing="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Background="#15107C41" CornerRadius="6" Width="28" Height="28">
+                                            <FontIcon Glyph="&#xF0EC;" FontSize="14" Foreground="#107C41" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <StackPanel VerticalAlignment="Center" Spacing="1">
+                                            <TextBlock x:Name="ExcelDiffTitleText" Text="表格对比 (Excel Diff)" FontWeight="SemiBold" FontSize="13" />
+                                            <TextBlock x:Name="ExcelDiffDescText" Text="支持 .xlsx / .csv 大数据流式分页视口与单元格级智能着色" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <TextBlock x:Name="ExcelDiffDetailText" Text="• 多 Sheet 对齐：自动识别并对齐工作簿（.xlsx / .xls / .csv / .tsv）中的所有工作表。&#x0a;• 高性能流式视口：针对海量大表格流式分页渲染，占用极低内存。支持主键对齐与 Myers LCS 行级智能对齐。&#x0a;• 单元格内联高亮：精准着色差异单元格，支持配置浮点数容差与底部明细检查器。"
+                                               FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" LineHeight="17" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 3. Word 对比 -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                                <StackPanel Spacing="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Background="#15185ABD" CornerRadius="6" Width="28" Height="28">
+                                            <FontIcon Glyph="&#xE8A5;" FontSize="14" Foreground="#185ABD" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <StackPanel VerticalAlignment="Center" Spacing="1">
+                                            <TextBlock x:Name="WordDiffTitleText" Text="Word 对比 (Word Diff)" FontWeight="SemiBold" FontSize="13" />
+                                            <TextBlock x:Name="WordDiffDescText" Text="智能解析 .docx 段落、图文混排、大纲树与嵌套表格对比" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <TextBlock x:Name="WordDiffDetailText" Text="• 富文本段落流对比：精准解析 .docx 文档的段落文字、文字样式（加粗/倾斜/下划线/颜色）与结构变动。&#x0a;• 多维可视化差异：支持文档大纲树比对、嵌入表格单元格网格对比、以及基于图片哈希的配图变动检测。"
+                                               FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" LineHeight="17" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 4. 文件夹对比 -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                                <StackPanel Spacing="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Background="#15E88100" CornerRadius="6" Width="28" Height="28">
+                                            <FontIcon Glyph="&#xED25;" FontSize="14" Foreground="#E88100" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <StackPanel VerticalAlignment="Center" Spacing="1">
+                                            <TextBlock x:Name="FolderDiffHelpTitleText" Text="文件夹对比 (Folder Diff)" FontWeight="SemiBold" FontSize="13" />
+                                            <TextBlock x:Name="FolderDiffHelpDescText" Text="多线程快速、哈希与全字节扫描，支持双向一键同步与过滤" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <TextBlock x:Name="FolderDiffDetailText" Text="• 目录拖拽添加：直接拖入文件夹或在侧边栏选择。支持快速模式（大小与修改时间）与深度哈希模式（CRC32）。&#x0a;• 安全演练预演：在物理执行同步前可开启演练预览（Dry-Run），清晰查看所有文件变更计划，防止误删。"
+                                               FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" LineHeight="17" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 5. 三向合并与 Git 集成 -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                                <StackPanel Spacing="10">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Background="#158B5CF6" CornerRadius="6" Width="28" Height="28">
+                                            <FontIcon Glyph="&#xE8D7;" FontSize="14" Foreground="#8B5CF6" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <StackPanel VerticalAlignment="Center" Spacing="1">
+                                            <TextBlock x:Name="MergeHelpTitleText" Text="三向合并与 Git 集成 (3-Way Merge &amp; Git Integration)" FontWeight="SemiBold" FontSize="13" />
+                                            <TextBlock x:Name="MergeHelpDescText" Text="本地 Base、Left、Right 三方合并，支持一键配置为 Git 全局 mergetool" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <TextBlock x:Name="MergeDetailText" Text="• 区域划分：顶部左侧为「本地分支 (Local)」、中间为「基准祖先 (Base)」、右侧为「远程分支 (Remote)」，底部为最终产物。&#x0a;• 智能冲突合并：点击「自动解决无冲突项」可自动融合单侧修改，仅需人工审核真正的代码冲突块。&#x0a;• Git 终端联动：配置 git mergetool 后，在命令行执行 git mergetool 即可自动唤起并载入文件，轻松化解 rebase 冲突。"
+                                               FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" LineHeight="17" />
+
+                                    <!-- Git Mergetool Config Code Block -->
+                                    <Border Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="12,10">
+                                        <StackPanel Spacing="6">
+                                            <Grid>
+                                                <TextBlock x:Name="GitConfigLabel" Text="Git mergetool 全局配置命令（在 PowerShell / CMD 中运行）：" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                                <Button x:Name="CopyGitCmdBtn" HorizontalAlignment="Right" VerticalAlignment="Center" Padding="8,3" CornerRadius="4" Click="OnCopyGitCmdClicked">
+                                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                                        <FontIcon Glyph="&#xE8C8;" FontSize="11" />
+                                                        <TextBlock x:Name="CopyBtnText" Text="复制命令" FontSize="11" />
+                                                    </StackPanel>
+                                                </Button>
+                                            </Grid>
+                                            <TextBlock x:Name="GitCmdSnippet" Text="git config --global merge.tool wincompare&#x0a;git config --global mergetool.wincompare.cmd &quot;wincompare.exe merge \&quot;$LOCAL\&quot; \&quot;$BASE\&quot; \&quot;$REMOTE\&quot; -o \&quot;$MERGED\&quot;&quot;&#x0a;git config --global mergetool.wincompare.trustExitCode true"
+                                                       FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" Foreground="#0078D4" IsTextSelectionEnabled="True" LineHeight="16" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 6. AI 助手 -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                                <StackPanel Spacing="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Background="#158B5CF6" CornerRadius="6" Width="28" Height="28">
+                                            <FontIcon Glyph="&#xE945;" FontSize="14" Foreground="#8B5CF6" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <StackPanel VerticalAlignment="Center" Spacing="1">
+                                            <TextBlock x:Name="AiHelpTitleText" Text="本地端侧与云端 AI 助手 (AI Assistant)" FontWeight="SemiBold" FontSize="13" />
+                                            <TextBlock x:Name="AiHelpDescText" Text="基于 Google Gemma 3 本地端侧离线模型或云端大模型，一键解析差异意图并生成 Commit 建议" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <TextBlock x:Name="AiDetailText" Text="• 本地 100% 隐私安全：集成 Google Gemma 3 端侧离线大模型，零网络请求，商业敏感代码放心分析。&#x0a;• 智能语义摘要：自动提炼代码改动背后的业务意图，一键生成规范的 Conventional Commits 提交信息。"
+                                               FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" LineHeight="17" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabViewItem>
+
+                <!-- 2. 快捷键清单 (Shortcuts) -->
+                <TabViewItem x:Name="ShortcutsTabItem" Header="快捷键清单" IsClosable="False">
+                    <TabViewItem.IconSource>
+                        <FontIconSource Glyph="&#xE765;" />
+                    </TabViewItem.IconSource>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="18,12">
+                        <StackPanel Spacing="8">
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="新建文本对比" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Ctrl + N" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="新建表格对比" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Ctrl + Shift + E" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="新建 Word 对比" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Ctrl + Shift + D" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="新建文件夹对比" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Ctrl + Shift + N" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="新建三向合并" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Ctrl + Shift + M" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="切换到下一个标签页" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Ctrl + Tab" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="切换到上一个标签页" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Ctrl + Shift + Tab" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="打开文件..." FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Ctrl + O" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="保存当前修改" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Ctrl + S" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="关闭当前标签页" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Ctrl + W" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="刷新对比" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="F5  /  Ctrl + R" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="跳转到下一个差异" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Ctrl + ]  /  Ctrl + ↓" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="跳转到上一个差异" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Ctrl + [  /  Ctrl + ↑" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="采用左侧修改 (Take Left)" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Alt + ←" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="采用右侧修改 (Take Right)" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Alt + →" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="切换忽略空白字符" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Ctrl + Shift + W" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="切换忽略大小写" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Ctrl + Shift + C" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="生成 AI 改动总结" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Ctrl + I" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" Foreground="#8B5CF6" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabViewItem>
+
+                <!-- 3. 架构与关于 (About) -->
+                <TabViewItem x:Name="AboutTabItem" Header="架构与关于" IsClosable="False">
+                    <TabViewItem.IconSource>
+                        <FontIconSource Glyph="&#xE946;" />
+                    </TabViewItem.IconSource>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,24">
+                        <StackPanel Spacing="14" HorizontalAlignment="Center" MaxWidth="460">
+                            <Border CornerRadius="16" Width="64" Height="64" HorizontalAlignment="Center">
+                                <Image Source="ms-appx:///Assets/AppIcon.png" Width="64" Height="64" />
+                            </Border>
+
+                            <StackPanel Spacing="2" HorizontalAlignment="Center">
+                                <TextBlock Text="WinCompare" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" />
+                                <TextBlock Text="版本 1.0.0 (Windows 11 Fluent Edition)" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                            </StackPanel>
+
+                            <!-- Native Architecture Capsule Badge -->
+                            <Border Background="#1510B981" BorderBrush="#3010B981" BorderThickness="1" CornerRadius="12" Padding="10,3" HorizontalAlignment="Center">
+                                <TextBlock Text="x64 / ARM64 Windows Native · Rust Driven" FontSize="11" Foreground="#10B981" FontWeight="Medium" />
+                            </Border>
+
+                            <TextBlock Text="WinCompare 是与 macOS 原生 MacCompare 保持 100% 体验与功能对齐的现代化代码与文档差分利器。底层采用 Rust 原生核心驱动，实现高吞吐 Myers 差分算法；上层深度结合 Windows 11 Fluent Design 与 Mica 材质。"
+                                       FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" TextAlignment="Center" LineHeight="18" />
+
+                            <MenuFlyoutSeparator Margin="0,4" />
+
+                            <HyperlinkButton Content="GitHub: https://github.com/andychao217/FileCompare"
+                                             NavigateUri="https://github.com/andychao217/FileCompare"
+                                             HorizontalAlignment="Center" FontSize="11" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabViewItem>
+            </TabView.TabItems>
+        </TabView>
+        </Grid>
+    </Border>
+</UserControl>

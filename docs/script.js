@@ -157,28 +157,28 @@ let currentSplitPercent = 50; // 0 to 100
 
 const images = {
   welcome: {
-    dark: "assets/welcome_home_dark_ui.png",
-    light: "assets/welcome_home_light_ui.png"
+    dark: "assets/macos/welcome_home_dark_ui.png",
+    light: "assets/macos/welcome_home_light_ui.png"
   },
   excel: {
-    dark: "assets/excel_diff_dark_ui.png",
-    light: "assets/excel_diff_light_ui.png"
+    dark: "assets/macos/excel_diff_dark_ui.png",
+    light: "assets/macos/excel_diff_light_ui.png"
   },
   word: {
-    dark: "assets/word_diff_dark_ui.png",
-    light: "assets/word_diff_light_ui.png"
+    dark: "assets/macos/word_diff_dark_ui.png",
+    light: "assets/macos/word_diff_light_ui.png"
   },
   text: {
-    dark: "assets/text_diff_ai_dark_ui.png",
-    light: "assets/text_diff_ai_light_ui.png"
+    dark: "assets/macos/text_diff_ai_dark_ui.png",
+    light: "assets/macos/text_diff_ai_light_ui.png"
   },
   folder: {
-    dark: "assets/folder_diff_dark_ui.png",
-    light: "assets/folder_diff_light_ui.png"
+    dark: "assets/macos/folder_diff_dark_ui.png",
+    light: "assets/macos/folder_diff_light_ui.png"
   },
   merge: {
-    dark: "assets/three_way_merge_ui.jpg",
-    light: "assets/three_way_merge_light_ui.jpg"
+    dark: "assets/macos/three_way_merge_ui.jpg",
+    light: "assets/macos/three_way_merge_light_ui.jpg"
   }
 };
 

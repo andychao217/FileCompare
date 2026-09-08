@@ -1,0 +1,245 @@
+﻿<Page
+    x:Class="WinCompare.UI.Views.TextDiffPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- CommandBar -->
+        <CommandBar Grid.Row="0" DefaultLabelPosition="Right" Background="Transparent">
+            <AppBarButton x:Name="OpenFilesBtn" Icon="OpenFile" Label="打开文件">
+                <AppBarButton.Flyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem x:Name="MenuPickLeft" Text="选择左侧文件 (Left)..." Click="OnPickLeftFileClicked" />
+                        <MenuFlyoutItem x:Name="MenuPickRight" Text="选择右侧文件 (Right)..." Click="OnPickRightFileClicked" />
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem x:Name="MenuSaveLeft" Text="保存左侧文件" Click="OnSaveLeftFileClicked" />
+                        <MenuFlyoutItem x:Name="MenuSaveRight" Text="保存右侧文件" Click="OnSaveRightFileClicked" />
+                    </MenuFlyout>
+                </AppBarButton.Flyout>
+            </AppBarButton>
+            <AppBarSeparator />
+            <AppBarButton x:Name="ViewModeBtn" Icon="Switch" Label="视图: 对齐差异" Click="OnToggleViewModeClicked" />
+            <AppBarSeparator />
+            <AppBarElementContainer VerticalAlignment="Center">
+                <ToggleSwitch x:Name="WhitespaceSwitch" Header="忽略空格" OffContent="" OnContent="" Toggled="OnDiffOptionsChanged" Margin="8,0" />
+            </AppBarElementContainer>
+            <AppBarElementContainer VerticalAlignment="Center">
+                <ToggleSwitch x:Name="CaseSwitch" Header="忽略大小写" OffContent="" OnContent="" Toggled="OnDiffOptionsChanged" Margin="8,0" />
+            </AppBarElementContainer>
+            <AppBarSeparator />
+            <AppBarButton x:Name="PrevDiffBtn" Icon="Previous" Label="上一处差异" Click="OnPrevDiffClicked" />
+            <AppBarButton x:Name="NextDiffBtn" Icon="Next" Label="下一处差异" Click="OnNextDiffClicked" />
+            <AppBarSeparator />
+            <AppBarButton x:Name="SwapSidesBtn" Icon="Switch" Label="交换左右" Click="OnSwapSidesClicked" />
+            <AppBarButton x:Name="RefreshBtn" Icon="Sync" Label="刷新比对" Click="OnRefreshClicked" />
+            <AppBarButton x:Name="ExportReportBtn" Icon="SaveLocal" Label="导出差异" Click="OnExportDiffClicked" />
+            <AppBarButton x:Name="ClearAllBtn" Icon="Delete" Label="清空" Click="OnClearAllClicked" />
+
+            <CommandBar.Content>
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" Margin="12,0,0,0">
+                    <Button x:Name="AISummaryButton" Click="OnAISummaryClicked" Background="#8B5CF6" Foreground="White" CornerRadius="6" Padding="12,6">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE945;" FontSize="14" />
+                            <TextBlock x:Name="AIBtnText" Text="AI 改动总结" FontWeight="SemiBold" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </CommandBar.Content>
+        </CommandBar>
+
+        <!-- Main Workspace Area -->
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Dual File Headers with Drag & Drop Hints -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="2" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Left Header -->
+                <Border Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="12,6" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        AllowDrop="True" DragOver="OnLeftDragOver" Drop="OnLeftDrop">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE8A5;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock x:Name="LeftHeader" Text="File 1 (Left / Base)" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                        <Button x:Name="LeftBrowseBtn" HorizontalAlignment="Right" Content="浏览" FontSize="11" Padding="8,2" Click="OnPickLeftFileClicked" />
+                    </Grid>
+                </Border>
+
+                <Rectangle Grid.Column="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                <!-- Right Header -->
+                <Border Grid.Column="2" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="12,6" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        AllowDrop="True" DragOver="OnRightDragOver" Drop="OnRightDrop">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE8A5;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock x:Name="RightHeader" Text="File 2 (Right / Modified)" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                        <Button x:Name="RightBrowseBtn" HorizontalAlignment="Right" Content="浏览" FontSize="11" Padding="8,2" Click="OnPickRightFileClicked" />
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Content Mode 1: Aligned Visual Diff ListView -->
+            <Grid x:Name="DiffListContainer" Grid.Row="1" Visibility="Visible">
+                <ListView x:Name="DiffListView" SelectionMode="Single" Padding="0">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="MinHeight" Value="20" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Height="20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="1" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Left Diff Cell -->
+                                <Grid Grid.Column="0" Background="{Binding LeftBgBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="42" />
+                                        <ColumnDefinition Width="16" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <!-- Line number gutter -->
+                                    <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" Padding="0,0,6,0">
+                                        <TextBlock Text="{Binding LeftLineNumText}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                   FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </Border>
+                                    <!-- Change indicator -->
+                                    <TextBlock Grid.Column="1" Text="{Binding LeftSign}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               FontSize="11" FontWeight="Bold" FontFamily="{StaticResource CodeFontFamily}" Foreground="{Binding LeftFgBrush}" />
+                                    <!-- Line text -->
+                                    <TextBlock Grid.Column="2" Text="{Binding LeftText}" VerticalAlignment="Center" Padding="4,0,0,0"
+                                               FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextWrapping="NoWrap" />
+                                </Grid>
+
+                                <Rectangle Grid.Column="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                                <!-- Right Diff Cell -->
+                                <Grid Grid.Column="2" Background="{Binding RightBgBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="42" />
+                                        <ColumnDefinition Width="16" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <!-- Line number gutter -->
+                                    <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" Padding="0,0,6,0">
+                                        <TextBlock Text="{Binding RightLineNumText}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                   FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </Border>
+                                    <!-- Change indicator -->
+                                    <TextBlock Grid.Column="1" Text="{Binding RightSign}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               FontSize="11" FontWeight="Bold" FontFamily="{StaticResource CodeFontFamily}" Foreground="{Binding RightFgBrush}" />
+                                    <!-- Line text -->
+                                    <TextBlock Grid.Column="2" Text="{Binding RightText}" VerticalAlignment="Center" Padding="4,0,0,0"
+                                               FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextWrapping="NoWrap" />
+                                </Grid>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+
+            <!-- Content Mode 2: Direct Editable Editors -->
+            <Grid x:Name="EditorsContainer" Grid.Row="1" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="2" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <TextBox x:Name="LeftEditor" Grid.Column="0" AcceptsReturn="True" TextWrapping="NoWrap"
+                         FontFamily="{StaticResource CodeFontFamily}" FontSize="13"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         BorderThickness="0" Background="Transparent" TextChanged="OnTextChanged" />
+
+                <Rectangle Grid.Column="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                <TextBox x:Name="RightEditor" Grid.Column="2" AcceptsReturn="True" TextWrapping="NoWrap"
+                         FontFamily="{StaticResource CodeFontFamily}" FontSize="13"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         BorderThickness="0" Background="Transparent" TextChanged="OnTextChanged" />
+            </Grid>
+
+            <!-- Floating AI Summary Card (Acrylic) -->
+            <Border x:Name="AICard" Grid.Row="1"
+                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Margin="0,16,24,0" Width="460"
+                    Background="{ThemeResource CardAcrylicBackground}"
+                    BorderBrush="{ThemeResource CardBorderBrush}"
+                    BorderThickness="1" CornerRadius="12" Padding="18"
+                    Visibility="Collapsed">
+                <StackPanel Spacing="10">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE945;" Foreground="#A78BFA" FontSize="16" VerticalAlignment="Center" />
+                            <TextBlock x:Name="AICardTitle" Text="AI 改动意图总结" FontWeight="Bold" FontSize="14" Foreground="{ThemeResource AICardTextBrush}" VerticalAlignment="Center" />
+                            <Border Background="#158B5CF6" CornerRadius="8" Padding="6,2" VerticalAlignment="Center">
+                                <TextBlock x:Name="AIModelBadge" Text="Gemma 3" FontSize="10" Foreground="#8B5CF6" FontWeight="Medium" />
+                            </Border>
+                        </StackPanel>
+                        <Button HorizontalAlignment="Right" Click="OnCloseAICardClicked" Background="Transparent" BorderThickness="0" Padding="4">
+                            <FontIcon Glyph="&#xE711;" FontSize="12" />
+                        </Button>
+                    </Grid>
+
+                    <TextBlock x:Name="AIOneLineIntent" Text="正在分析改动意图..." FontWeight="SemiBold" FontSize="12" TextWrapping="Wrap" />
+
+                    <ListView x:Name="AIKeyModsList" SelectionMode="None" MaxHeight="140">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="8" Padding="10">
+                        <StackPanel Spacing="6">
+                            <TextBlock x:Name="AICommitPrompt" Text="推荐 Conventional Commit:" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            <TextBlock x:Name="AICommitMessage" Text="chore(diff): update implementation" FontFamily="{StaticResource CodeFontFamily}" FontSize="12" FontWeight="SemiBold" Foreground="#10B981" />
+                        </StackPanel>
+                    </Border>
+
+                    <Button HorizontalAlignment="Right" Click="OnCopyCommitClicked" Background="#8B5CF6" Foreground="White" CornerRadius="6" Padding="12,6">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE8C8;" FontSize="12" />
+                            <TextBlock x:Name="AICopyCommitBtnText" Text="复制 Commit" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Bottom Status Bar -->
+        <Border Grid.Row="2" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="16,6" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+            <Grid>
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                    <TextBlock x:Name="StatsText" Text="0 处新增 · 0 处删除 · 0 处修改" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+                <TextBlock HorizontalAlignment="Right" Text="Rust Myers Core · UTF-8" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

@@ -1,0 +1,120 @@
+﻿<Window
+    x:Class="WinCompare.UI.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:WinCompare.UI.Views"
+    Title="WinCompare">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop Kind="BaseAlt" />
+    </Window.SystemBackdrop>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Custom Extended Title Bar Area -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="44" Padding="8,0,0,0"
+              BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="140" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Main TabView in TitleBar -->
+            <TabView x:Name="MainTabView"
+                     Grid.Column="0"
+                     VerticalAlignment="Stretch"
+                     IsAddTabButtonVisible="False"
+                     TabCloseRequested="OnTabCloseRequested">
+                <TabView.TabItems>
+                    <TabViewItem x:Name="WelcomeTabItem" Header="WinCompare" IsClosable="False">
+                        <TabViewItem.IconSource>
+                            <BitmapIconSource UriSource="ms-appx:///Assets/AppIcon.png" ShowAsMonochrome="False" />
+                        </TabViewItem.IconSource>
+                    </TabViewItem>
+                </TabView.TabItems>
+
+                <!-- Clean Dropdown (v) Button without stretched wide background -->
+                <TabView.TabStripFooter>
+                    <Button x:Name="TabMenuBtn"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Margin="4,0,0,0"
+                            Width="28" Height="28"
+                            Padding="0"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            CornerRadius="4"
+                            ToolTipService.ToolTip="新建对比与更多选项">
+                        <FontIcon Glyph="&#xE70D;" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Button.Flyout>
+                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                <MenuFlyoutItem x:Name="MenuTextDiff" Text="文本对比" Click="OnNewTextDiffMenuClicked" KeyboardAcceleratorTextOverride="Ctrl+N">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE8A5;" />
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem x:Name="MenuExcelDiff" Text="表格对比" Click="OnNewExcelDiffMenuClicked" KeyboardAcceleratorTextOverride="Ctrl+Shift+E">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xF0EC;" />
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem x:Name="MenuWordDiff" Text="Word 对比" Click="OnNewWordDiffMenuClicked" KeyboardAcceleratorTextOverride="Ctrl+Shift+D">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE8A5;" />
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem x:Name="MenuFolderDiff" Text="文件夹对比" Click="OnNewFolderDiffMenuClicked" KeyboardAcceleratorTextOverride="Ctrl+Shift+N">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xED25;" />
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem x:Name="MenuThreeWayMerge" Text="三向合并" Click="OnNewThreeWayMergeMenuClicked" KeyboardAcceleratorTextOverride="Ctrl+Shift+M">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE8D7;" />
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+
+                                <MenuFlyoutSeparator />
+
+                                <!-- Settings (Ctrl+,) -->
+                                <MenuFlyoutItem x:Name="MenuSettings" Text="偏好设置" Click="OnSettingsClicked" KeyboardAcceleratorTextOverride="Ctrl+,">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE713;" />
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+
+                                <MenuFlyoutSeparator />
+
+                                <!-- Help / About (F1) -->
+                                <MenuFlyoutItem x:Name="MenuHelp" Text="帮助与关于" Click="OnHelpClicked" KeyboardAcceleratorTextOverride="F1">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE897;" />
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+                </TabView.TabStripFooter>
+            </TabView>
+
+            <!-- Reserved Right Margin for System Caption Controls (Min/Max/Close) -->
+            <Border Grid.Column="1" Width="140" />
+        </Grid>
+
+        <!-- Main Content Area with Page State Preservation -->
+        <ContentPresenter x:Name="MainContentPresenter" Grid.Row="1" />
+
+        <!-- In-App Draggable Modal Dialog Overlay -->
+        <Grid x:Name="DialogOverlay" Grid.Row="0" Grid.RowSpan="2"
+              Visibility="Collapsed"
+              Background="#4D000000">
+            <ContentPresenter x:Name="DialogContentPresenter"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center" />
+        </Grid>
+    </Grid>
+</Window>

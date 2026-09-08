@@ -1,0 +1,41 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.ThemeDictionaries>
+        <!-- Dark Theme Resources -->
+        <ResourceDictionary x:Key="Default">
+            <SolidColorBrush x:Key="DiffAddedBgBrush" Color="#2522C55E" />
+            <SolidColorBrush x:Key="DiffAddedFgBrush" Color="#4ADE80" />
+            <SolidColorBrush x:Key="DiffDeletedBgBrush" Color="#25EF4444" />
+            <SolidColorBrush x:Key="DiffDeletedFgBrush" Color="#F87171" />
+            <SolidColorBrush x:Key="DiffModifiedBgBrush" Color="#25EAB308" />
+            <SolidColorBrush x:Key="DiffModifiedFgBrush" Color="#FACC15" />
+            <SolidColorBrush x:Key="DiffPhantomBgBrush" Color="#15888888" />
+
+            <SolidColorBrush x:Key="CardAcrylicBackground" Color="#E51E1E2E" />
+            <SolidColorBrush x:Key="CardBorderBrush" Color="#33FFFFFF" />
+            <SolidColorBrush x:Key="AICardTextBrush" Color="#DDD6FE" />
+        </ResourceDictionary>
+
+        <!-- Light Theme Resources -->
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="DiffAddedBgBrush" Color="#2222C55E" />
+            <SolidColorBrush x:Key="DiffAddedFgBrush" Color="#15803D" />
+            <SolidColorBrush x:Key="DiffDeletedBgBrush" Color="#22EF4444" />
+            <SolidColorBrush x:Key="DiffDeletedFgBrush" Color="#B91C1C" />
+            <SolidColorBrush x:Key="DiffModifiedBgBrush" Color="#22EAB308" />
+            <SolidColorBrush x:Key="DiffModifiedFgBrush" Color="#B45309" />
+            <SolidColorBrush x:Key="DiffPhantomBgBrush" Color="#10888888" />
+
+            <SolidColorBrush x:Key="CardAcrylicBackground" Color="#F5FFFFFF" />
+            <SolidColorBrush x:Key="CardBorderBrush" Color="#22000000" />
+            <SolidColorBrush x:Key="AICardTextBrush" Color="#6D28D9" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <!-- Common Accent Brushes -->
+    <SolidColorBrush x:Key="AIAccentBrush" Color="#8B5CF6" />
+    <SolidColorBrush x:Key="AIAccentHoverBrush" Color="#A78BFA" />
+
+</ResourceDictionary>

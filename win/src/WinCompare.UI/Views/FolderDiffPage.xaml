@@ -1,0 +1,163 @@
+﻿<Page
+    x:Class="WinCompare.UI.Views.FolderDiffPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- CommandBar -->
+        <CommandBar Grid.Row="0" DefaultLabelPosition="Right" Background="Transparent">
+            <AppBarButton x:Name="PickLeftBtn" Icon="Folder" Label="选择左侧目录..." Click="OnPickLeftFolderClicked" />
+            <AppBarButton x:Name="PickRightBtn" Icon="Folder" Label="选择右侧目录..." Click="OnPickRightFolderClicked" />
+            <AppBarSeparator />
+            <AppBarButton x:Name="StartScanBtn" Icon="Sync" Label="开始比对" Click="OnStartScanClicked" />
+            <AppBarSeparator />
+            <AppBarElementContainer VerticalAlignment="Center">
+                <ComboBox x:Name="ModeComboBox" SelectedIndex="0" SelectionChanged="OnModeChanged" Width="170" Margin="4,0">
+                    <ComboBoxItem x:Name="ModeComboItem0" Content="快速模式 (大小+时间)" />
+                    <ComboBoxItem x:Name="ModeComboItem1" Content="深度哈希 (CRC32/SHA256)" />
+                </ComboBox>
+            </AppBarElementContainer>
+            <AppBarSeparator />
+            <AppBarButton x:Name="SyncMenuBtn" Icon="Switch" Label="单向/双向同步">
+                <AppBarButton.Flyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem x:Name="SyncLeftRightItem" Text="左侧同步至右侧 (Left -> Right)" Click="OnSyncLeftToRightClicked" />
+                        <MenuFlyoutItem x:Name="SyncRightLeftItem" Text="右侧同步至左侧 (Right -> Left)" Click="OnSyncRightToLeftClicked" />
+                    </MenuFlyout>
+                </AppBarButton.Flyout>
+            </AppBarButton>
+            <AppBarSeparator />
+            <AppBarButton x:Name="ExportReportBtn" Icon="SaveLocal" Label="导出差异" Click="OnExportDiffClicked" />
+            <AppBarButton x:Name="ClearAllBtn" Icon="Delete" Label="清空" Click="OnClearAllClicked" />
+
+            <CommandBar.Content>
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="12,0,0,0">
+                    <RadioButtons x:Name="FilterRadioGroup" SelectionChanged="OnFilterChanged" MaxColumns="5">
+                        <RadioButton x:Name="RadioAll" Content="全部" IsChecked="True" Tag="All" />
+                        <RadioButton x:Name="RadioDiff" Content="仅差异" Tag="DiffOnly" />
+                        <RadioButton x:Name="RadioMod" Content="修改" Tag="Modified" />
+                        <RadioButton x:Name="RadioAdd" Content="新增" Tag="Added" />
+                        <RadioButton x:Name="RadioDel" Content="删除" Tag="Deleted" />
+                    </RadioButtons>
+                </StackPanel>
+            </CommandBar.Content>
+        </CommandBar>
+
+        <!-- Folder Paths Bar with Drag & Drop -->
+        <Grid Grid.Row="1" Padding="16,8" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="32" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left Folder Box -->
+            <Border Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="10,6"
+                    AllowDrop="True" DragOver="OnLeftFolderDragOver" Drop="OnLeftFolderDrop">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xED25;" Foreground="#F59E0B" FontSize="14" />
+                        <TextBlock x:Name="LeftFolderPathText" Text="拖入或选择左侧源目录 (Left Source Folder)" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <Button x:Name="LeftBrowseBtn" HorizontalAlignment="Right" Content="浏览" FontSize="11" Padding="8,2" Click="OnPickLeftFolderClicked" />
+                </Grid>
+            </Border>
+
+            <!-- Swap Button -->
+            <Button x:Name="SwapBtn" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Click="OnSwapFoldersClicked" ToolTipService.ToolTip="交换左右目录">
+                <FontIcon Glyph="&#xE8AB;" FontSize="12" />
+            </Button>
+
+            <!-- Right Folder Box -->
+            <Border Grid.Column="2" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="10,6"
+                    AllowDrop="True" DragOver="OnRightFolderDragOver" Drop="OnRightFolderDrop">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xED25;" Foreground="#F59E0B" FontSize="14" />
+                        <TextBlock x:Name="RightFolderPathText" Text="拖入或选择右侧目标目录 (Right Target Folder)" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <Button x:Name="RightBrowseBtn" HorizontalAlignment="Right" Content="浏览" FontSize="11" Padding="8,2" Click="OnPickRightFolderClicked" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Comparison List View -->
+        <Grid Grid.Row="2">
+            <!-- Vertical Center Divider Line -->
+            <Border HorizontalAlignment="Center" Width="1" Background="{ThemeResource CardStrokeColorDefaultBrush}" VerticalAlignment="Stretch" />
+
+            <!-- Column Header -->
+            <Grid Height="28" VerticalAlignment="Top" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="16,0" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="90" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="120" />
+                    <ColumnDefinition Width="120" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="ColHeaderStatus" Grid.Column="0" Text="状态" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBlock x:Name="ColHeaderPath" Grid.Column="1" Text="相对路径 (双击打开详细比对)" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBlock x:Name="ColHeaderLeftSize" Grid.Column="2" Text="左侧大小" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBlock x:Name="ColHeaderRightSize" Grid.Column="3" Text="右侧大小" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </Grid>
+
+            <!-- File List -->
+            <ListView x:Name="FolderDiffListView" Margin="0,28,0,0" SelectionMode="Single" Padding="0" DoubleTapped="OnItemDoubleTapped">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Height="34" Padding="16,0" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="120" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Status Badge -->
+                            <Border Grid.Column="0" Background="{Binding StatusBgBrush}" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding StatusText}" FontSize="11" FontWeight="SemiBold" Foreground="{Binding StatusFgBrush}" />
+                            </Border>
+
+                            <!-- Relative Path with icon -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon Glyph="{Binding IconGlyph}" Foreground="{Binding IconColorBrush}" FontSize="13" />
+                                <TextBlock Text="{Binding RelativePath}" FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+
+                            <!-- Left Size -->
+                            <TextBlock Grid.Column="2" Text="{Binding LeftSizeFormatted}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" FontSize="11" FontFamily="{StaticResource CodeFontFamily}" />
+
+                            <!-- Right Size -->
+                            <TextBlock Grid.Column="3" Text="{Binding RightSizeFormatted}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" FontSize="11" FontFamily="{StaticResource CodeFontFamily}" />
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <!-- Empty State / Loading State -->
+            <StackPanel x:Name="EmptyStatePanel" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" Visibility="Visible">
+                <FontIcon Glyph="&#xED25;" FontSize="48" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                <TextBlock x:Name="EmptyPromptText" Text="请选择左侧和右侧目录以开始比对" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                <Button x:Name="EmptyActionBtn" Content="选择两端目录并比对" HorizontalAlignment="Center" Click="OnPickLeftFolderClicked" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Bottom Status Bar -->
+        <Border Grid.Row="3" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="16,6" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+            <Grid>
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                    <TextBlock x:Name="StatusBarText" Text="未比对" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+                <TextBlock x:Name="SyncStatusText" HorizontalAlignment="Right" Text="双向就绪" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

@@ -1,0 +1,153 @@
+﻿<Page
+    x:Class="WinCompare.UI.Views.ThreeWayMergePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="3*" />
+            <RowDefinition Height="4" />
+            <RowDefinition Height="2*" />
+        </Grid.RowDefinitions>
+
+        <!-- CommandBar -->
+        <CommandBar Grid.Row="0" DefaultLabelPosition="Right" Background="Transparent">
+            <AppBarButton x:Name="OpenFilesBtn" Icon="OpenFile" Label="打开文件..." Click="OnOpenFilesClicked" />
+            <AppBarSeparator />
+            <AppBarButton x:Name="PrevConflictBtn" Icon="Back" Label="上一个冲突" Click="OnPrevConflictClicked" />
+            <AppBarButton x:Name="NextConflictBtn" Icon="Forward" Label="下一个冲突" Click="OnNextConflictClicked" />
+            <AppBarSeparator />
+            <AppBarButton x:Name="AutoResolveBtn" Icon="Flag" Label="自动解决非冲突" Click="OnAutoResolveClicked" />
+            <AppBarButton x:Name="TakeBothBtn" Icon="Add" Label="保留双方修改" Click="OnTakeBothClicked" />
+            <AppBarButton x:Name="AcceptAllLocalBtn" Icon="Accept" Label="全部采用本地" Click="OnAcceptAllLocalClicked" />
+            <AppBarButton x:Name="AcceptAllRemoteBtn" Icon="Accept" Label="全部采用远端" Click="OnAcceptAllRemoteClicked" />
+            <AppBarSeparator />
+            <AppBarButton x:Name="RecomputeMergeBtn" Icon="Sync" Label="重新合并" Click="OnRecomputeMergeClicked" />
+            <AppBarButton x:Name="SaveMergedBtn" Icon="Save" Label="保存合并结果" Click="OnSaveMergedClicked" />
+            <AppBarButton x:Name="ClearAllBtn" Icon="Delete" Label="清空" Click="OnClearAllClicked" />
+
+            <CommandBar.Content>
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" Margin="12,0,0,0">
+                    <Border x:Name="ConflictBadge" Background="#30EF4444" CornerRadius="4" Padding="8,4" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE783;" Foreground="#EF4444" FontSize="12" />
+                            <TextBlock x:Name="ConflictCountText" Text="0 个冲突待解决" FontSize="11" FontWeight="SemiBold" Foreground="#EF4444" />
+                        </StackPanel>
+                    </Border>
+                    <Border x:Name="ResolvedBadge" Background="#3022C55E" CornerRadius="4" Padding="8,4" Visibility="Visible">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE73E;" Foreground="#22C55E" FontSize="12" />
+                            <TextBlock x:Name="ResolvedText" Text="三向合并就绪" FontSize="11" FontWeight="SemiBold" Foreground="#22C55E" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </CommandBar.Content>
+        </CommandBar>
+
+        <!-- 3-Column Diff Workspace -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="2" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="2" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Local Column -->
+            <Grid Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Border Padding="10,6" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="#153B82F6">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE77B;" FontSize="12" Foreground="#3B82F6" />
+                            <TextBlock x:Name="LocalHeader" Text="本地变更 (Local / Mine)" FontWeight="SemiBold" FontSize="12" Foreground="#3B82F6" />
+                        </StackPanel>
+                        <Button x:Name="LocalBrowseBtn" HorizontalAlignment="Right" Content="浏览" FontSize="11" Padding="8,2" Click="OnPickLocalClicked" />
+                    </Grid>
+                </Border>
+                <TextBox x:Name="LocalEditor" Grid.Row="1" AcceptsReturn="True" TextWrapping="NoWrap"
+                         FontFamily="{StaticResource CodeFontFamily}" FontSize="12"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         BorderThickness="0" Background="Transparent" TextChanged="OnEditorTextChanged" />
+            </Grid>
+
+            <Rectangle Grid.Column="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+            <!-- Base Column -->
+            <Grid Grid.Column="2" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Border Padding="10,6" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE8B7;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock x:Name="BaseHeader" Text="共同基准 (Base / Ancestor)" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                        <Button x:Name="BaseBrowseBtn" HorizontalAlignment="Right" Content="浏览" FontSize="11" Padding="8,2" Click="OnPickBaseClicked" />
+                    </Grid>
+                </Border>
+                <TextBox x:Name="BaseEditor" Grid.Row="1" AcceptsReturn="True" TextWrapping="NoWrap"
+                         FontFamily="{StaticResource CodeFontFamily}" FontSize="12"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         BorderThickness="0" Background="Transparent" TextChanged="OnEditorTextChanged" />
+            </Grid>
+
+            <Rectangle Grid.Column="3" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+            <!-- Remote Column -->
+            <Grid Grid.Column="4" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Border Padding="10,6" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="#1510B981">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE753;" FontSize="12" Foreground="#10B981" />
+                            <TextBlock x:Name="RemoteHeader" Text="远端变更 (Remote / Theirs)" FontWeight="SemiBold" FontSize="12" Foreground="#10B981" />
+                        </StackPanel>
+                        <Button x:Name="RemoteBrowseBtn" HorizontalAlignment="Right" Content="浏览" FontSize="11" Padding="8,2" Click="OnPickRemoteClicked" />
+                    </Grid>
+                </Border>
+                <TextBox x:Name="RemoteEditor" Grid.Row="1" AcceptsReturn="True" TextWrapping="NoWrap"
+                         FontFamily="{StaticResource CodeFontFamily}" FontSize="12"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         BorderThickness="0" Background="Transparent" TextChanged="OnEditorTextChanged" />
+            </Grid>
+        </Grid>
+
+        <!-- Splitter -->
+        <Border Grid.Row="2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+        <!-- Merged Output Pane -->
+        <Grid Grid.Row="3" Background="{ThemeResource LayerFillColorDefaultBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Border Padding="12,6" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE8D7;" Foreground="#8B5CF6" FontSize="13" />
+                        <TextBlock x:Name="OutputHeader" Text="最终合并预览 (Merged Output)" FontWeight="Bold" FontSize="12" />
+                        <TextBlock x:Name="MergeStatusDetail" Text="" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                        <Button x:Name="SaveToFileBtn" Content="保存到文件" FontSize="11" Padding="10,2" Click="OnSaveMergedClicked" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <TextBox x:Name="MergedOutputEditor" Grid.Row="1" AcceptsReturn="True" TextWrapping="NoWrap"
+                     FontFamily="{StaticResource CodeFontFamily}" FontSize="12"
+                     ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     BorderThickness="0" Background="Transparent" />
+        </Grid>
+    </Grid>
+</Page>
