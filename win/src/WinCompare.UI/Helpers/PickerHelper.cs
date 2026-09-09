@@ -1,4 +1,4 @@
-﻿using Windows.Storage;
+using Windows.Storage;
 using Windows.Storage.Pickers;
 using WinRT.Interop;
 using Microsoft.UI.Xaml;
@@ -7,9 +7,18 @@ namespace WinCompare.UI.Helpers;
 
 public static class PickerHelper
 {
+    private static Window? ResolveWindow(Window? parentWindow)
+    {
+        if (parentWindow != null && parentWindow != App.MainWindowInstance)
+        {
+            return parentWindow;
+        }
+        return App.ActiveWindow ?? parentWindow ?? App.MainWindowInstance;
+    }
+
     public static async Task<StorageFile?> PickSingleFileAsync(string[] fileTypeFilters, Window? parentWindow = null)
     {
-        var window = parentWindow ?? App.MainWindowInstance;
+        var window = ResolveWindow(parentWindow);
         var picker = new FileOpenPicker();
 
         if (window != null)
@@ -35,7 +44,7 @@ public static class PickerHelper
 
     public static async Task<StorageFolder?> PickSingleFolderAsync(Window? parentWindow = null)
     {
-        var window = parentWindow ?? App.MainWindowInstance;
+        var window = ResolveWindow(parentWindow);
         var picker = new FolderPicker();
 
         if (window != null)
@@ -50,7 +59,7 @@ public static class PickerHelper
 
     public static async Task<StorageFile?> PickSaveFileAsync(string defaultExtension, Dictionary<string, IList<string>> choices, string suggestedFileName, Window? parentWindow = null)
     {
-        var window = parentWindow ?? App.MainWindowInstance;
+        var window = ResolveWindow(parentWindow);
         var picker = new FileSavePicker();
 
         if (window != null)

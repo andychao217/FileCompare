@@ -1,4 +1,4 @@
-﻿using WinCompare.Core.Models;
+using WinCompare.Core.Models;
 
 namespace WinCompare.Core.Services;
 
@@ -155,11 +155,35 @@ public sealed class LanguageManager
             [AppLanguage.En] = "Language",
             [AppLanguage.Ja] = "言語"
         },
+        ["aiSummary"] = new()
+        {
+            [AppLanguage.ZhHans] = "AI 摘要",
+            [AppLanguage.En] = "AI Summary",
+            [AppLanguage.Ja] = "AI 要約"
+        },
         ["aiSummaryTitle"] = new()
         {
             [AppLanguage.ZhHans] = "AI 改动意图总结 (WinUI 3)",
             [AppLanguage.En] = "AI Change Intent Summary",
             [AppLanguage.Ja] = "AI 変更意図の要約"
+        },
+        ["aiSummaryIdentical"] = new()
+        {
+            [AppLanguage.ZhHans] = "双侧文件内容完全一致，未发现任何差异",
+            [AppLanguage.En] = "Both files are completely identical, no differences found",
+            [AppLanguage.Ja] = "両方のファイルの内容は完全に一致しており、差分は見つかりませんでした"
+        },
+        ["aiSummaryNoChanges"] = new()
+        {
+            [AppLanguage.ZhHans] = "无内容修改",
+            [AppLanguage.En] = "No content modifications",
+            [AppLanguage.Ja] = "変更なし"
+        },
+        ["aiFeatureHelpTitle"] = new()
+        {
+            [AppLanguage.ZhHans] = "AI 智能改动意图分析与总结",
+            [AppLanguage.En] = "AI Intelligent Change Intent Analysis & Summary",
+            [AppLanguage.Ja] = "AI インテリジェントな変更意図の分析と要約"
         },
         ["copyCommitMsg"] = new()
         {
@@ -625,7 +649,7 @@ public sealed class LanguageManager
         },
         ["ignoreWhitespace"] = new()
         {
-            [AppLanguage.ZhHans] = "忽略空格",
+            [AppLanguage.ZhHans] = "忽略空白符",
             [AppLanguage.En] = "Ignore Whitespace",
             [AppLanguage.Ja] = "空白を無視"
         },
@@ -634,6 +658,72 @@ public sealed class LanguageManager
             [AppLanguage.ZhHans] = "忽略大小写",
             [AppLanguage.En] = "Ignore Case",
             [AppLanguage.Ja] = "大文字/小文字を無視"
+        },
+        ["takeLeft"] = new()
+        {
+            [AppLanguage.ZhHans] = "采纳左侧",
+            [AppLanguage.En] = "Take Left",
+            [AppLanguage.Ja] = "左を採用"
+        },
+        ["takeRight"] = new()
+        {
+            [AppLanguage.ZhHans] = "采纳右侧",
+            [AppLanguage.En] = "Take Right",
+            [AppLanguage.Ja] = "右を採用"
+        },
+        ["sourceFile"] = new()
+        {
+            [AppLanguage.ZhHans] = "源文件 (左侧)",
+            [AppLanguage.En] = "Source File (Left)",
+            [AppLanguage.Ja] = "ソースファイル (左)"
+        },
+        ["targetFile"] = new()
+        {
+            [AppLanguage.ZhHans] = "目标文件 (右侧)",
+            [AppLanguage.En] = "Target File (Right)",
+            [AppLanguage.Ja] = "ターゲットファイル (右)"
+        },
+        ["noFileSelected"] = new()
+        {
+            [AppLanguage.ZhHans] = "未选择文件",
+            [AppLanguage.En] = "No File Selected",
+            [AppLanguage.Ja] = "ファイル未選択"
+        },
+        ["dropOrPickFile"] = new()
+        {
+            [AppLanguage.ZhHans] = "拖拽文件至此处或点击下方按钮选择",
+            [AppLanguage.En] = "Drag file here or click button below",
+            [AppLanguage.Ja] = "ここにファイルをドラッグするかボタンをクリック"
+        },
+        ["pickSourceFile"] = new()
+        {
+            [AppLanguage.ZhHans] = "选择源文件...",
+            [AppLanguage.En] = "Choose Source File...",
+            [AppLanguage.Ja] = "ソースファイルを選択..."
+        },
+        ["pickTargetFile"] = new()
+        {
+            [AppLanguage.ZhHans] = "选择目标文件...",
+            [AppLanguage.En] = "Choose Target File...",
+            [AppLanguage.Ja] = "ターゲットファイルを選択..."
+        },
+        ["selectEllipsis"] = new()
+        {
+            [AppLanguage.ZhHans] = "选择...",
+            [AppLanguage.En] = "Choose...",
+            [AppLanguage.Ja] = "選択..."
+        },
+        ["save"] = new()
+        {
+            [AppLanguage.ZhHans] = "保存",
+            [AppLanguage.En] = "Save",
+            [AppLanguage.Ja] = "保存"
+        },
+        ["diffItemCount"] = new()
+        {
+            [AppLanguage.ZhHans] = "{0} 项",
+            [AppLanguage.En] = "{0} items",
+            [AppLanguage.Ja] = "{0} 項目"
         },
         ["viewDiffMode"] = new()
         {
@@ -694,6 +784,12 @@ public sealed class LanguageManager
             [AppLanguage.ZhHans] = "仅差异",
             [AppLanguage.En] = "Diffs Only",
             [AppLanguage.Ja] = "差分のみ"
+        },
+        ["filterSameOnly"] = new()
+        {
+            [AppLanguage.ZhHans] = "仅相同",
+            [AppLanguage.En] = "Same Only",
+            [AppLanguage.Ja] = "一致のみ"
         },
         ["filterModified"] = new()
         {
@@ -1169,6 +1265,66 @@ public sealed class LanguageManager
             [AppLanguage.En] = "Sync Ready",
             [AppLanguage.Ja] = "同期準備完了"
         },
+        ["cancelAction"] = new()
+        {
+            [AppLanguage.ZhHans] = "取消",
+            [AppLanguage.En] = "Cancel",
+            [AppLanguage.Ja] = "キャンセル"
+        },
+        ["confirmAction"] = new()
+        {
+            [AppLanguage.ZhHans] = "确认",
+            [AppLanguage.En] = "Confirm",
+            [AppLanguage.Ja] = "確認"
+        },
+        ["scanningStatus"] = new()
+        {
+            [AppLanguage.ZhHans] = "正在扫描与比对目录...",
+            [AppLanguage.En] = "Scanning and comparing directories...",
+            [AppLanguage.Ja] = "ディレクトリをスキャンおよび比較中..."
+        },
+        ["syncCompleted"] = new()
+        {
+            [AppLanguage.ZhHans] = "同步已顺利完成！",
+            [AppLanguage.En] = "Sync completed successfully!",
+            [AppLanguage.Ja] = "同期が正常に完了しました！"
+        },
+        ["syncConfirmTitle"] = new()
+        {
+            [AppLanguage.ZhHans] = "确认同步操作",
+            [AppLanguage.En] = "Confirm Sync Operation",
+            [AppLanguage.Ja] = "同期操作の確認"
+        },
+        ["syncFailed"] = new()
+        {
+            [AppLanguage.ZhHans] = "同步失败: {0}",
+            [AppLanguage.En] = "Sync failed: {0}",
+            [AppLanguage.Ja] = "同期に失敗しました: {0}"
+        },
+        ["syncInProgress"] = new()
+        {
+            [AppLanguage.ZhHans] = "正在执行文件同步...",
+            [AppLanguage.En] = "Syncing files...",
+            [AppLanguage.Ja] = "ファイルを同期中..."
+        },
+        ["syncLeftToRightConfirm"] = new()
+        {
+            [AppLanguage.ZhHans] = "确定要将左侧所有文件变更同步覆盖到右侧吗？\n源目录: {0}\n目标目录: {1}\n此操作不可逆，请谨慎确认。",
+            [AppLanguage.En] = "Are you sure you want to sync all file changes from Left to Right?\nSource: {0}\nTarget: {1}\nThis action cannot be undone.",
+            [AppLanguage.Ja] = "左側のすべてのファイルの変更を右側に同期して上書きしますか？\nソース: {0}\nターゲット: {1}\nこの操作は取り消せません。"
+        },
+        ["syncRightToLeftConfirm"] = new()
+        {
+            [AppLanguage.ZhHans] = "确定要将右侧所有文件变更同步覆盖到左侧吗？\n源目录: {0}\n目标目录: {1}\n此操作不可逆，请谨慎确认。",
+            [AppLanguage.En] = "Are you sure you want to sync all file changes from Right to Left?\nSource: {0}\nTarget: {1}\nThis action cannot be undone.",
+            [AppLanguage.Ja] = "右側のすべてのファイルの変更を左側に同期して上書きしますか？\nソース: {0}\nターゲット: {1}\nこの操作は取り消せません。"
+        },
+        ["threeWayMergeDesc"] = new()
+        {
+            [AppLanguage.ZhHans] = "三向合并支持基准分支、本地分支与远端分支冲突解决，支持智能三方合并与冲突标记采纳。",
+            [AppLanguage.En] = "Three-Way Merge resolves conflicts across Base, Local, and Remote branches with intelligent merging and conflict resolution.",
+            [AppLanguage.Ja] = "3方向マージは、ベース、ローカル、リモートブランチ間のコンフリクトをインテリジェントに解決します。"
+        },
         ["syncedLeftToRight"] = new()
         {
             [AppLanguage.ZhHans] = "已从左侧同步 {0} 个文件至右侧",
@@ -1576,6 +1732,60 @@ public sealed class LanguageManager
             [AppLanguage.ZhHans] = "右侧",
             [AppLanguage.En] = "Right",
             [AppLanguage.Ja] = "右側"
+        },
+        ["saveAndCompleteMerge"] = new()
+        {
+            [AppLanguage.ZhHans] = "保存并完成合并",
+            [AppLanguage.En] = "Save & Complete Merge",
+            [AppLanguage.Ja] = "マージを保存して完了"
+        },
+        ["noFilesSelected"] = new()
+        {
+            [AppLanguage.ZhHans] = "未选择合并文件",
+            [AppLanguage.En] = "No Files Selected",
+            [AppLanguage.Ja] = "マージファイル未選択"
+        },
+        ["noFileSelected"] = new()
+        {
+            [AppLanguage.ZhHans] = "未选择文件",
+            [AppLanguage.En] = "No File Selected",
+            [AppLanguage.Ja] = "ファイル未選択"
+        },
+        ["conflictCountFormat"] = new()
+        {
+            [AppLanguage.ZhHans] = "冲突项",
+            [AppLanguage.En] = "Conflicts",
+            [AppLanguage.Ja] = "競合"
+        },
+        ["localBranch"] = new()
+        {
+            [AppLanguage.ZhHans] = "本地分支 (Local)",
+            [AppLanguage.En] = "Local Branch (Mine)",
+            [AppLanguage.Ja] = "ローカルブランチ (Local)"
+        },
+        ["baseBranch"] = new()
+        {
+            [AppLanguage.ZhHans] = "共同祖先 (Base)",
+            [AppLanguage.En] = "Base Ancestor",
+            [AppLanguage.Ja] = "共通祖先 (Base)"
+        },
+        ["remoteBranch"] = new()
+        {
+            [AppLanguage.ZhHans] = "远端分支 (Remote)",
+            [AppLanguage.En] = "Remote Branch (Theirs)",
+            [AppLanguage.Ja] = "リモートブランチ (Remote)"
+        },
+        ["mergedOutputResult"] = new()
+        {
+            [AppLanguage.ZhHans] = "合并结果预览",
+            [AppLanguage.En] = "Merged Output Preview",
+            [AppLanguage.Ja] = "マージ結果プレビュー"
+        },
+        ["chooseButton"] = new()
+        {
+            [AppLanguage.ZhHans] = "选择...",
+            [AppLanguage.En] = "Choose...",
+            [AppLanguage.Ja] = "選択..."
         }
     };
 }

@@ -1,4 +1,4 @@
-﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using WinCompare.Core.Models;
 using WinCompare.Core.Services;
@@ -17,6 +17,12 @@ public sealed partial class WelcomePage : Page
         RecentListView.ItemsSource = RecentHistoryManager.Instance.Records;
         UpdateRecentHistoryVisibility();
         RecentHistoryManager.Instance.HistoryChanged += UpdateRecentHistoryVisibility;
+
+        this.Unloaded += (s, e) =>
+        {
+            LanguageManager.Instance.LanguageChanged -= UpdateLocalization;
+            RecentHistoryManager.Instance.HistoryChanged -= UpdateRecentHistoryVisibility;
+        };
     }
 
     private void UpdateLocalization()
@@ -57,47 +63,50 @@ public sealed partial class WelcomePage : Page
         UpdateRecentHistoryVisibility();
     }
 
+    private MainWindow? GetTargetWindow() => (App.GetWindowForElement(this) as MainWindow) ?? App.ActiveWindow ?? App.MainWindowInstance;
+
     private void OnRecentItemClicked(object sender, ItemClickEventArgs e)
     {
         if (e.ClickedItem is RecentCompareRecord record)
         {
+            var target = GetTargetWindow();
             if (record.Type == CompareType.ExcelDiff)
             {
-                App.MainWindowInstance?.OpenExcelDiffTab(record.LeftPath, record.RightPath);
+                target?.OpenExcelDiffTab(record.LeftPath, record.RightPath);
             }
             else if (record.Type == CompareType.FolderDiff)
             {
-                App.MainWindowInstance?.OpenFolderDiffTab(record.LeftPath, record.RightPath);
+                target?.OpenFolderDiffTab(record.LeftPath, record.RightPath);
             }
             else if (record.Type == CompareType.WordDiff)
             {
-                App.MainWindowInstance?.OpenWordDiffTab(record.LeftPath, record.RightPath);
+                target?.OpenWordDiffTab(record.LeftPath, record.RightPath);
             }
             else
             {
-                App.MainWindowInstance?.OpenTextDiffTab(record.LeftPath, record.RightPath);
+                target?.OpenTextDiffTab(record.LeftPath, record.RightPath);
             }
         }
     }
 
     private void OnTextDiffClicked(object sender, RoutedEventArgs e)
     {
-        App.MainWindowInstance?.OpenTextDiffTab();
+        GetTargetWindow()?.OpenTextDiffTab();
     }
 
     private void OnExcelDiffClicked(object sender, RoutedEventArgs e)
     {
-        App.MainWindowInstance?.OpenExcelDiffTab();
+        GetTargetWindow()?.OpenExcelDiffTab();
     }
 
     private void OnWordDiffClicked(object sender, RoutedEventArgs e)
     {
-        App.MainWindowInstance?.OpenWordDiffTab();
+        GetTargetWindow()?.OpenWordDiffTab();
     }
 
     private void OnFolderDiffClicked(object sender, RoutedEventArgs e)
     {
-        App.MainWindowInstance?.OpenFolderDiffTab();
+        GetTargetWindow()?.OpenFolderDiffTab();
     }
 }
 

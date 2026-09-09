@@ -1,5 +1,7 @@
-﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage;
 using WinCompare.Core.Models;
 using WinCompare.Core.Services;
 using WinCompare.UI.Helpers;
@@ -19,82 +21,89 @@ public sealed partial class ThreeWayMergePage : Page
         UpdateLocalization();
         LanguageManager.Instance.LanguageChanged += UpdateLocalization;
 
-        // Initialize empty state without mock data
-        LocalEditor.Text = string.Empty;
-        BaseEditor.Text = string.Empty;
-        RemoteEditor.Text = string.Empty;
-        if (MergedOutputEditor != null) MergedOutputEditor.Text = string.Empty;
-        if (ConflictBadge != null) ConflictBadge.Visibility = Visibility.Collapsed;
-        if (ResolvedBadge != null) ResolvedBadge.Visibility = Visibility.Visible;
-        if (ResolvedText != null) ResolvedText.Text = LanguageManager.Instance.Text("threeWayReady");
+        UpdateTitlesAndVisibility();
+        ComputeMerge();
     }
 
     private void UpdateLocalization()
     {
-        OpenFilesBtn.Label = LanguageManager.Instance.Text("openThreeWayFiles");
-        RecomputeMergeBtn.Label = LanguageManager.Instance.Text("recomputeMerge");
-        SaveMergedBtn.Label = LanguageManager.Instance.Text("saveMergeResult");
-        AcceptAllLocalBtn.Label = LanguageManager.Instance.Text("acceptAllLocal");
-        AcceptAllRemoteBtn.Label = LanguageManager.Instance.Text("acceptAllRemote");
-        if (PrevConflictBtn != null) PrevConflictBtn.Label = LanguageManager.Instance.Text("prevConflict");
-        if (NextConflictBtn != null) NextConflictBtn.Label = LanguageManager.Instance.Text("nextConflict");
-        if (AutoResolveBtn != null) AutoResolveBtn.Label = LanguageManager.Instance.Text("autoResolveNonConflicts");
-        if (TakeBothBtn != null) TakeBothBtn.Label = LanguageManager.Instance.Text("takeBoth");
-        if (ClearAllBtn != null) ClearAllBtn.Label = LanguageManager.Instance.Text("clearAll");
+        if (LocalTitleText != null) LocalTitleText.Text = LanguageManager.Instance.Text("localBranch");
+        if (BaseTitleText != null) BaseTitleText.Text = LanguageManager.Instance.Text("baseBranch");
+        if (RemoteTitleText != null) RemoteTitleText.Text = LanguageManager.Instance.Text("remoteBranch");
 
-        LocalBrowseBtn.Content = LanguageManager.Instance.Text("browse");
-        BaseBrowseBtn.Content = LanguageManager.Instance.Text("browse");
-        RemoteBrowseBtn.Content = LanguageManager.Instance.Text("browse");
-        OutputHeader.Text = LanguageManager.Instance.Text("mergeOutputHeader");
-        SaveToFileBtn.Content = LanguageManager.Instance.Text("saveToFile");
+        if (LocalBrowseBtn != null) LocalBrowseBtn.Content = LanguageManager.Instance.Text("chooseButton");
+        if (BaseBrowseBtn != null) BaseBrowseBtn.Content = LanguageManager.Instance.Text("chooseButton");
+        if (RemoteBrowseBtn != null) RemoteBrowseBtn.Content = LanguageManager.Instance.Text("chooseButton");
 
-        if (string.IsNullOrEmpty(_localPath))
-        {
-            LocalHeader.Text = LanguageManager.Instance.Text("mergeLocalHeader");
-        }
-        if (string.IsNullOrEmpty(_basePath))
-        {
-            BaseHeader.Text = LanguageManager.Instance.Text("mergeBaseHeader");
-        }
-        if (string.IsNullOrEmpty(_remotePath))
-        {
-            RemoteHeader.Text = LanguageManager.Instance.Text("mergeRemoteHeader");
-        }
+        if (LocalEmptyTitle != null) LocalEmptyTitle.Text = LanguageManager.Instance.Text("noFileSelected");
+        if (BaseEmptyTitle != null) BaseEmptyTitle.Text = LanguageManager.Instance.Text("noFileSelected");
+        if (RemoteEmptyTitle != null) RemoteEmptyTitle.Text = LanguageManager.Instance.Text("noFileSelected");
 
+        if (AutoResolveText != null) AutoResolveText.Text = LanguageManager.Instance.Text("autoResolveNonConflicts");
+        if (ClearAllText != null) ClearAllText.Text = LanguageManager.Instance.Text("clearAll");
+        if (SaveMergedText != null) SaveMergedText.Text = LanguageManager.Instance.Text("saveAndCompleteMerge");
+        if (SaveMergedBottomText != null) SaveMergedBottomText.Text = LanguageManager.Instance.Text("saveAndCompleteMerge");
+        if (OutputHeader != null) OutputHeader.Text = LanguageManager.Instance.Text("mergedOutputResult");
+
+        UpdateTitlesAndVisibility();
         ComputeMerge();
+    }
+
+    private void UpdateTitlesAndVisibility()
+    {
+        bool hasLocal = !string.IsNullOrEmpty(_localPath) || !string.IsNullOrEmpty(LocalEditor?.Text);
+        bool hasBase = !string.IsNullOrEmpty(_basePath) || !string.IsNullOrEmpty(BaseEditor?.Text);
+        bool hasRemote = !string.IsNullOrEmpty(_remotePath) || !string.IsNullOrEmpty(RemoteEditor?.Text);
+
+        if (LocalEmptyZone != null) LocalEmptyZone.Visibility = hasLocal ? Visibility.Collapsed : Visibility.Visible;
+        if (LocalEditor != null) LocalEditor.Visibility = hasLocal ? Visibility.Visible : Visibility.Collapsed;
+
+        if (BaseEmptyZone != null) BaseEmptyZone.Visibility = hasBase ? Visibility.Collapsed : Visibility.Visible;
+        if (BaseEditor != null) BaseEditor.Visibility = hasBase ? Visibility.Visible : Visibility.Collapsed;
+
+        if (RemoteEmptyZone != null) RemoteEmptyZone.Visibility = hasRemote ? Visibility.Collapsed : Visibility.Visible;
+        if (RemoteEditor != null) RemoteEditor.Visibility = hasRemote ? Visibility.Visible : Visibility.Collapsed;
+
+        string displayPath = _localPath ?? _remotePath ?? _basePath ?? "";
+        bool hasAnyFile = hasLocal || hasBase || hasRemote;
+        string title = hasAnyFile
+            ? (string.IsNullOrEmpty(displayPath) ? "合并工作区" : System.IO.Path.GetFileName(displayPath))
+            : LanguageManager.Instance.Text("noFilesSelected");
+
+        if (TopFilePathText != null) TopFilePathText.Text = title;
+        if (OutputSubHeader != null) OutputSubHeader.Text = title;
+
+        if (LocalSubText != null) LocalSubText.Text = string.IsNullOrEmpty(_localPath) ? "Local (Current)" : System.IO.Path.GetFileName(_localPath);
+        if (BaseSubText != null) BaseSubText.Text = string.IsNullOrEmpty(_basePath) ? "Base (Ancestor)" : System.IO.Path.GetFileName(_basePath);
+        if (RemoteSubText != null) RemoteSubText.Text = string.IsNullOrEmpty(_remotePath) ? "Remote (Incoming)" : System.IO.Path.GetFileName(_remotePath);
     }
 
     public void LoadFiles(string? localPath, string? basePath, string? remotePath)
     {
         var encoding = SettingsManager.Instance.GetEncoding();
-        if (!string.IsNullOrEmpty(localPath) && File.Exists(localPath))
+        if (!string.IsNullOrEmpty(localPath) && System.IO.File.Exists(localPath))
         {
             _localPath = localPath;
-            LocalHeader.Text = Path.GetFileName(localPath);
-            LocalEditor.Text = File.ReadAllText(localPath, encoding);
+            if (LocalEditor != null) LocalEditor.Text = System.IO.File.ReadAllText(localPath, encoding);
         }
-        if (!string.IsNullOrEmpty(basePath) && File.Exists(basePath))
+        if (!string.IsNullOrEmpty(basePath) && System.IO.File.Exists(basePath))
         {
             _basePath = basePath;
-            BaseHeader.Text = Path.GetFileName(basePath);
-            BaseEditor.Text = File.ReadAllText(basePath, encoding);
+            if (BaseEditor != null) BaseEditor.Text = System.IO.File.ReadAllText(basePath, encoding);
         }
-        if (!string.IsNullOrEmpty(remotePath) && File.Exists(remotePath))
+        if (!string.IsNullOrEmpty(remotePath) && System.IO.File.Exists(remotePath))
         {
             _remotePath = remotePath;
-            RemoteHeader.Text = Path.GetFileName(remotePath);
-            RemoteEditor.Text = File.ReadAllText(remotePath, encoding);
+            if (RemoteEditor != null) RemoteEditor.Text = System.IO.File.ReadAllText(remotePath, encoding);
         }
+
+        UpdateTitlesAndVisibility();
         ComputeMerge();
     }
 
     private void OnEditorTextChanged(object sender, TextChangedEventArgs e)
     {
-        ComputeMerge();
-    }
-
-    private void OnRecomputeMergeClicked(object sender, RoutedEventArgs e)
-    {
+        UpdateTitlesAndVisibility();
         ComputeMerge();
     }
 
@@ -104,26 +113,39 @@ public sealed partial class ThreeWayMergePage : Page
         string @base = BaseEditor?.Text ?? "";
         string remote = RemoteEditor?.Text ?? "";
 
-        var result = DiffEngineService.Instance.MergeThreeWay(local, @base, remote);
+        if (string.IsNullOrEmpty(local) && string.IsNullOrEmpty(@base) && string.IsNullOrEmpty(remote))
+        {
+            if (MergedOutputEditor != null) MergedOutputEditor.Text = "";
+            if (ConflictCountText != null) ConflictCountText.Text = $"{LanguageManager.Instance.Text("conflictCountFormat")} (0 / 0)";
+            if (PrevConflictBtn != null) PrevConflictBtn.IsEnabled = false;
+            if (NextConflictBtn != null) NextConflictBtn.IsEnabled = false;
+            if (MergeStatusDetail != null) MergeStatusDetail.Text = "";
+            return;
+        }
 
+        var result = DiffEngineService.Instance.MergeThreeWay(local, @base, remote);
         if (MergedOutputEditor != null)
         {
             MergedOutputEditor.Text = result.MergedText;
         }
 
+        int totalConflicts = result.Conflicts.Count;
+        int currentNum = totalConflicts > 0 ? (_currentConflictIndex >= 0 ? _currentConflictIndex + 1 : 1) : 0;
+        if (ConflictCountText != null)
+        {
+            ConflictCountText.Text = $"{LanguageManager.Instance.Text("conflictCountFormat")} ({currentNum} / {totalConflicts})";
+        }
+
+        if (PrevConflictBtn != null) PrevConflictBtn.IsEnabled = totalConflicts > 0;
+        if (NextConflictBtn != null) NextConflictBtn.IsEnabled = totalConflicts > 0;
+
         if (result.HasConflicts)
         {
-            if (ConflictBadge != null) ConflictBadge.Visibility = Visibility.Visible;
-            if (ResolvedBadge != null) ResolvedBadge.Visibility = Visibility.Collapsed;
-            if (ConflictCountText != null) ConflictCountText.Text = string.Format(LanguageManager.Instance.Text("conflictCountBadge"), result.Conflicts.Count);
-            if (MergeStatusDetail != null) MergeStatusDetail.Text = $"({result.Conflicts.Count})";
+            if (MergeStatusDetail != null) MergeStatusDetail.Text = $"• {totalConflicts} 个冲突待解决";
         }
         else
         {
-            if (ConflictBadge != null) ConflictBadge.Visibility = Visibility.Collapsed;
-            if (ResolvedBadge != null) ResolvedBadge.Visibility = Visibility.Visible;
-            if (ResolvedText != null) ResolvedText.Text = LanguageManager.Instance.Text("threeWayReady");
-            if (MergeStatusDetail != null) MergeStatusDetail.Text = "";
+            if (MergeStatusDetail != null) MergeStatusDetail.Text = "• 所有冲突已解决";
         }
     }
 
@@ -149,10 +171,10 @@ public sealed partial class ThreeWayMergePage : Page
         int charPos = list[_currentConflictIndex];
         MergedOutputEditor?.Focus(FocusState.Programmatic);
         MergedOutputEditor?.Select(charPos, 7);
+
         if (ConflictCountText != null)
         {
-            string label = LanguageManager.Instance.Text("prevConflict");
-            ConflictCountText.Text = $"{label}: {_currentConflictIndex + 1} / {list.Count}";
+            ConflictCountText.Text = $"{LanguageManager.Instance.Text("conflictCountFormat")} ({_currentConflictIndex + 1} / {list.Count})";
         }
     }
 
@@ -184,29 +206,7 @@ public sealed partial class ThreeWayMergePage : Page
             MergedOutputEditor.Text = result.MergedText;
         }
 
-        if (!result.HasConflicts)
-        {
-            if (ConflictBadge != null) ConflictBadge.Visibility = Visibility.Collapsed;
-            if (ResolvedBadge != null) ResolvedBadge.Visibility = Visibility.Visible;
-            if (ResolvedText != null) ResolvedText.Text = LanguageManager.Instance.Text("threeWayReady");
-        }
-    }
-
-    private void OnTakeBothClicked(object sender, RoutedEventArgs e)
-    {
-        string text = MergedOutputEditor?.Text ?? "";
-        var regex = new System.Text.RegularExpressions.Regex(@"<<<<<<< LOCAL\r?\n(.*?)\r?\n=======\r?\n(.*?)\r?\n>>>>>>> REMOTE", System.Text.RegularExpressions.RegexOptions.Singleline);
-        string resolved = regex.Replace(text, match =>
-        {
-            string loc = match.Groups[1].Value;
-            string rem = match.Groups[2].Value;
-            return $"{loc}\n{rem}";
-        });
-
-        if (MergedOutputEditor != null) MergedOutputEditor.Text = resolved;
-        if (ConflictBadge != null) ConflictBadge.Visibility = Visibility.Collapsed;
-        if (ResolvedBadge != null) ResolvedBadge.Visibility = Visibility.Visible;
-        if (ResolvedText != null) ResolvedText.Text = LanguageManager.Instance.Text("takeBoth");
+        ComputeMerge();
     }
 
     private void OnClearAllClicked(object sender, RoutedEventArgs e)
@@ -215,38 +215,14 @@ public sealed partial class ThreeWayMergePage : Page
         _basePath = null;
         _remotePath = null;
         _currentConflictIndex = -1;
-        if (LocalHeader != null) LocalHeader.Text = LanguageManager.Instance.Text("mergeLocalHeader");
-        if (BaseHeader != null) BaseHeader.Text = LanguageManager.Instance.Text("mergeBaseHeader");
-        if (RemoteHeader != null) RemoteHeader.Text = LanguageManager.Instance.Text("mergeRemoteHeader");
+
         if (LocalEditor != null) LocalEditor.Text = string.Empty;
         if (BaseEditor != null) BaseEditor.Text = string.Empty;
         if (RemoteEditor != null) RemoteEditor.Text = string.Empty;
         if (MergedOutputEditor != null) MergedOutputEditor.Text = string.Empty;
-        if (ConflictBadge != null) ConflictBadge.Visibility = Visibility.Collapsed;
-        if (ResolvedBadge != null) ResolvedBadge.Visibility = Visibility.Visible;
-        if (ResolvedText != null) ResolvedText.Text = LanguageManager.Instance.Text("threeWayReady");
-    }
 
-    private void OnAcceptAllLocalClicked(object sender, RoutedEventArgs e)
-    {
-        if (MergedOutputEditor != null && LocalEditor != null)
-        {
-            MergedOutputEditor.Text = LocalEditor.Text;
-            if (ConflictBadge != null) ConflictBadge.Visibility = Visibility.Collapsed;
-            if (ResolvedBadge != null) ResolvedBadge.Visibility = Visibility.Visible;
-            if (ResolvedText != null) ResolvedText.Text = LanguageManager.Instance.Text("acceptAllLocal");
-        }
-    }
-
-    private void OnAcceptAllRemoteClicked(object sender, RoutedEventArgs e)
-    {
-        if (MergedOutputEditor != null && RemoteEditor != null)
-        {
-            MergedOutputEditor.Text = RemoteEditor.Text;
-            if (ConflictBadge != null) ConflictBadge.Visibility = Visibility.Collapsed;
-            if (ResolvedBadge != null) ResolvedBadge.Visibility = Visibility.Visible;
-            if (ResolvedText != null) ResolvedText.Text = LanguageManager.Instance.Text("acceptAllRemote");
-        }
+        UpdateTitlesAndVisibility();
+        ComputeMerge();
     }
 
     private async void OnPickLocalClicked(object sender, RoutedEventArgs e)
@@ -255,8 +231,8 @@ public sealed partial class ThreeWayMergePage : Page
         if (file != null)
         {
             _localPath = file.Path;
-            LocalHeader.Text = file.Name;
-            LocalEditor.Text = await File.ReadAllTextAsync(file.Path, SettingsManager.Instance.GetEncoding());
+            if (LocalEditor != null) LocalEditor.Text = await System.IO.File.ReadAllTextAsync(file.Path, SettingsManager.Instance.GetEncoding());
+            UpdateTitlesAndVisibility();
             ComputeMerge();
         }
     }
@@ -267,8 +243,8 @@ public sealed partial class ThreeWayMergePage : Page
         if (file != null)
         {
             _basePath = file.Path;
-            BaseHeader.Text = file.Name;
-            BaseEditor.Text = await File.ReadAllTextAsync(file.Path, SettingsManager.Instance.GetEncoding());
+            if (BaseEditor != null) BaseEditor.Text = await System.IO.File.ReadAllTextAsync(file.Path, SettingsManager.Instance.GetEncoding());
+            UpdateTitlesAndVisibility();
             ComputeMerge();
         }
     }
@@ -279,20 +255,8 @@ public sealed partial class ThreeWayMergePage : Page
         if (file != null)
         {
             _remotePath = file.Path;
-            RemoteHeader.Text = file.Name;
-            RemoteEditor.Text = await File.ReadAllTextAsync(file.Path, SettingsManager.Instance.GetEncoding());
-            ComputeMerge();
-        }
-    }
-
-    private async void OnOpenFilesClicked(object sender, RoutedEventArgs e)
-    {
-        var file = await PickerHelper.PickSingleFileAsync(new[] { "*" }, App.MainWindowInstance);
-        if (file != null)
-        {
-            _localPath = file.Path;
-            LocalHeader.Text = file.Name;
-            LocalEditor.Text = await File.ReadAllTextAsync(file.Path, SettingsManager.Instance.GetEncoding());
+            if (RemoteEditor != null) RemoteEditor.Text = await System.IO.File.ReadAllTextAsync(file.Path, SettingsManager.Instance.GetEncoding());
+            UpdateTitlesAndVisibility();
             ComputeMerge();
         }
     }
@@ -305,17 +269,71 @@ public sealed partial class ThreeWayMergePage : Page
             { LanguageManager.Instance.Text("fileTypeAll"), new List<string> { "." } }
         };
 
-        var file = await PickerHelper.PickSaveFileAsync(".txt", choices, "merged_result.txt", App.MainWindowInstance);
+        string suggestedFileName = !string.IsNullOrEmpty(_localPath)
+            ? System.IO.Path.GetFileName(_localPath)
+            : "merged_result.txt";
+
+        var file = await PickerHelper.PickSaveFileAsync(".txt", choices, suggestedFileName, App.MainWindowInstance);
         if (file != null)
         {
-            if (SettingsManager.Instance.CreateBakBackup && File.Exists(file.Path))
+            if (SettingsManager.Instance.CreateBakBackup && System.IO.File.Exists(file.Path))
             {
-                try { File.Copy(file.Path, file.Path + ".bak", true); } catch { }
+                try { System.IO.File.Copy(file.Path, file.Path + ".bak", true); } catch { }
             }
-            await File.WriteAllTextAsync(file.Path, MergedOutputEditor.Text, SettingsManager.Instance.GetEncoding());
-            if (ResolvedText != null)
+            await System.IO.File.WriteAllTextAsync(file.Path, MergedOutputEditor.Text, SettingsManager.Instance.GetEncoding());
+            if (MergeStatusDetail != null)
             {
-                ResolvedText.Text = LanguageManager.Instance.Text("saveMergeSuccess");
+                MergeStatusDetail.Text = "• " + LanguageManager.Instance.Text("saveMergeSuccess");
+            }
+        }
+    }
+
+    // Drag & Drop Handlers
+    private void OnLocalDragOver(object sender, DragEventArgs e) => e.AcceptedOperation = DataPackageOperation.Copy;
+    private void OnBaseDragOver(object sender, DragEventArgs e) => e.AcceptedOperation = DataPackageOperation.Copy;
+    private void OnRemoteDragOver(object sender, DragEventArgs e) => e.AcceptedOperation = DataPackageOperation.Copy;
+
+    private async void OnLocalDrop(object sender, DragEventArgs e)
+    {
+        if (e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            var items = await e.DataView.GetStorageItemsAsync();
+            if (items.Count > 0 && items[0] is StorageFile file)
+            {
+                _localPath = file.Path;
+                if (LocalEditor != null) LocalEditor.Text = await System.IO.File.ReadAllTextAsync(file.Path, SettingsManager.Instance.GetEncoding());
+                UpdateTitlesAndVisibility();
+                ComputeMerge();
+            }
+        }
+    }
+
+    private async void OnBaseDrop(object sender, DragEventArgs e)
+    {
+        if (e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            var items = await e.DataView.GetStorageItemsAsync();
+            if (items.Count > 0 && items[0] is StorageFile file)
+            {
+                _basePath = file.Path;
+                if (BaseEditor != null) BaseEditor.Text = await System.IO.File.ReadAllTextAsync(file.Path, SettingsManager.Instance.GetEncoding());
+                UpdateTitlesAndVisibility();
+                ComputeMerge();
+            }
+        }
+    }
+
+    private async void OnRemoteDrop(object sender, DragEventArgs e)
+    {
+        if (e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            var items = await e.DataView.GetStorageItemsAsync();
+            if (items.Count > 0 && items[0] is StorageFile file)
+            {
+                _remotePath = file.Path;
+                if (RemoteEditor != null) RemoteEditor.Text = await System.IO.File.ReadAllTextAsync(file.Path, SettingsManager.Instance.GetEncoding());
+                UpdateTitlesAndVisibility();
+                ComputeMerge();
             }
         }
     }

@@ -45,13 +45,23 @@ win/
 > 该脚本会自动编译 `core/` 下的 Rust 代码，生成 `maccompare_ffi.dll` 并自动部署到各项目的输出目录中。
 
 ### 步骤 4：运行与调试图形界面
-直接在 Visual Studio 2026 中打开 `Z:\FileCompare\win\WinCompare.sln`，设置 `WinCompare.UI` 为启动项，按 **F5** 即可启动并享受 XAML 热重载！
+**方法 A：Visual Studio（推荐体验）**
+直接在 Visual Studio 2022/2026 中打开 `Z:\FileCompare\win\WinCompare.sln`，设置 `WinCompare.UI` 为启动项，按 **F5** 即可启动并享受 XAML 热重载！
 
-或者直接在终端中运行：
-```cmd
-cd Z:\FileCompare\win\src\WinCompare.UI
-dotnet run -p:Platform=x64
-```
+**方法 B：命令行运行**
+> 💡 **提示**：由于解决方案包含多个项目（UI、Cli、Core、Tests），不能直接在 `win` 根目录下裸跑 `dotnet run`，需指定 UI 项目：
+
+- **方式 1：进入 UI 目录运行（推荐）**
+  ```powershell
+  cd Z:\FileCompare\win\src\WinCompare.UI
+  dotnet run -p:Platform=x64
+  ```
+
+- **方式 2：在 `win` 目录下通过 `--project` 运行**
+  ```powershell
+  # 在 Z:\FileCompare\win 目录下执行：
+  dotnet run --project .\src\WinCompare.UI\WinCompare.UI.csproj -p:Platform=x64
+  ```
 
 ---
 

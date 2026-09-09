@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="WinCompare.UI.Views.HelpControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -8,8 +8,8 @@
     </UserControl.RenderTransform>
 
     <Border Width="690" Height="580"
-            Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
-            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource SurfaceStrokeColorFlyoutBrush}"
             BorderThickness="1"
             CornerRadius="12">
         <Grid>
@@ -45,7 +45,7 @@
             </Grid>
 
         <!-- Tabs -->
-        <TabView x:Name="HelpTabs" Grid.Row="1" IsAddTabButtonVisible="False">
+        <TabView x:Name="HelpTabs" Grid.Row="1" IsAddTabButtonVisible="False" Background="Transparent">
             <TabView.TabItems>
                 <!-- 1. 核心功能说明 (Core Features) -->
                 <TabViewItem x:Name="FeaturesTabItem" Header="核心功能说明" IsClosable="False">

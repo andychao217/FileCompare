@@ -1,6 +1,7 @@
-﻿using Microsoft.UI;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Windows.ApplicationModel.DataTransfer;
@@ -16,11 +17,12 @@ public sealed partial class TextDiffPage : Page
 {
     private string? _leftPath;
     private string? _rightPath;
-    private string _leftText = "// File 1: Sample Left\nfunction calculate(a, b) {\n    return a + b;\n}\n";
-    private string _rightText = "// File 2: Sample Right\nfunction calculate(a, b, multiplier = 1) {\n    return (a + b) * multiplier;\n}\n";
+    private string _leftText = string.Empty;
+    private string _rightText = string.Empty;
     private List<DiffLineDisplayItem> _displayItems = new();
     private int _currentDiffJumpIndex = -1;
     private bool _isDiffViewMode = true;
+    private System.Text.Encoding _currentEncoding = System.Text.Encoding.UTF8;
 
     private static readonly Brush AddBg = new SolidColorBrush(Windows.UI.Color.FromArgb(40, 34, 197, 94));
     private static readonly Brush AddFg = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 74, 222, 128));
@@ -32,134 +34,178 @@ public sealed partial class TextDiffPage : Page
     private static readonly Brush DefaultFg = new SolidColorBrush(Windows.UI.Color.FromArgb(230, 240, 240, 245));
     private static readonly Brush DimFg = new SolidColorBrush(Windows.UI.Color.FromArgb(140, 150, 150, 160));
 
+    private bool _isInitialized = false;
+
     public TextDiffPage()
     {
         this.InitializeComponent();
-        WhitespaceSwitch.IsOn = SettingsManager.Instance.DefaultIgnoreWhitespace;
-        CaseSwitch.IsOn = SettingsManager.Instance.DefaultIgnoreCase;
+        
         UpdateLocalization();
         LanguageManager.Instance.LanguageChanged += UpdateLocalization;
-        LeftEditor.Text = _leftText;
-        RightEditor.Text = _rightText;
-        RecomputeDiff();
+
+        if (WhitespaceSwitch != null)
+            WhitespaceSwitch.IsOn = SettingsManager.Instance.DefaultIgnoreWhitespace;
+        if (CaseSwitch != null)
+            CaseSwitch.IsOn = SettingsManager.Instance.DefaultIgnoreCase;
+        if (EncodingComboBox != null)
+            EncodingComboBox.SelectedIndex = 0;
+
+        if (LeftEditor != null) LeftEditor.Text = _leftText;
+        if (RightEditor != null) RightEditor.Text = _rightText;
+
+        _isInitialized = true;
+        UpdateWorkspaceVisibility();
     }
 
     private void UpdateLocalization()
     {
-        if (OpenFilesBtn != null) OpenFilesBtn.Label = LanguageManager.Instance.Text("openFile");
-        if (MenuPickLeft != null) MenuPickLeft.Text = LanguageManager.Instance.Text("pickLeftFile");
-        if (MenuPickRight != null) MenuPickRight.Text = LanguageManager.Instance.Text("pickRightFile");
-        if (MenuSaveLeft != null) MenuSaveLeft.Text = LanguageManager.Instance.Text("saveLeftFile");
-        if (MenuSaveRight != null) MenuSaveRight.Text = LanguageManager.Instance.Text("saveRightFile");
-        if (ViewModeBtn != null) ViewModeBtn.Label = _isDiffViewMode ? LanguageManager.Instance.Text("viewDiffMode") : LanguageManager.Instance.Text("viewEditMode");
-        if (WhitespaceSwitch != null) WhitespaceSwitch.Header = LanguageManager.Instance.Text("ignoreWhitespace");
-        if (CaseSwitch != null) CaseSwitch.Header = LanguageManager.Instance.Text("ignoreCase");
-        if (PrevDiffBtn != null) PrevDiffBtn.Label = LanguageManager.Instance.Text("prevDiff");
-        if (NextDiffBtn != null) NextDiffBtn.Label = LanguageManager.Instance.Text("nextDiff");
-        if (SwapSidesBtn != null) SwapSidesBtn.Label = LanguageManager.Instance.Text("swapSides");
-        if (RefreshBtn != null) RefreshBtn.Label = LanguageManager.Instance.Text("refreshCompare");
-        if (ExportReportBtn != null) ExportReportBtn.Label = LanguageManager.Instance.Text("exportDiff");
-        if (ClearAllBtn != null) ClearAllBtn.Label = LanguageManager.Instance.Text("clearAll");
-        if (AIBtnText != null) AIBtnText.Text = LanguageManager.Instance.Text("aiDiffSummary");
-        if (LeftBrowseBtn != null) LeftBrowseBtn.Content = LanguageManager.Instance.Text("browse");
-        if (RightBrowseBtn != null) RightBrowseBtn.Content = LanguageManager.Instance.Text("browse");
+        if (PrevDiffText != null) PrevDiffText.Text = LanguageManager.Instance.Text("prevDiff");
+        if (NextDiffText != null) NextDiffText.Text = LanguageManager.Instance.Text("nextDiff");
+        if (WhitespaceLabel != null) WhitespaceLabel.Text = LanguageManager.Instance.Text("ignoreWhitespace");
+        if (CaseLabel != null) CaseLabel.Text = LanguageManager.Instance.Text("ignoreCase");
+        if (TakeLeftText != null) TakeLeftText.Text = LanguageManager.Instance.Text("takeLeft");
+        if (TakeRightText != null) TakeRightText.Text = LanguageManager.Instance.Text("takeRight");
+        if (AIBtnText != null) AIBtnText.Text = LanguageManager.Instance.Text("aiSummary");
+        if (ClearAllText != null) ClearAllText.Text = LanguageManager.Instance.Text("clearAll");
+
+        if (LeftHeader != null && string.IsNullOrEmpty(_leftPath)) LeftHeader.Text = LanguageManager.Instance.Text("sourceFile");
+        if (RightHeader != null && string.IsNullOrEmpty(_rightPath)) RightHeader.Text = LanguageManager.Instance.Text("targetFile");
+        if (LeftBrowseBtn != null) LeftBrowseBtn.Content = LanguageManager.Instance.Text("selectEllipsis");
+        if (RightBrowseBtn != null) RightBrowseBtn.Content = LanguageManager.Instance.Text("selectEllipsis");
+        if (LeftSaveBtn != null) LeftSaveBtn.Content = LanguageManager.Instance.Text("save");
+        if (RightSaveBtn != null) RightSaveBtn.Content = LanguageManager.Instance.Text("save");
+
+        if (LeftEmptyTitle != null) LeftEmptyTitle.Text = LanguageManager.Instance.Text("noFileSelected");
+        if (RightEmptyTitle != null) RightEmptyTitle.Text = LanguageManager.Instance.Text("noFileSelected");
+        if (LeftEmptyDesc != null) LeftEmptyDesc.Text = LanguageManager.Instance.Text("dropOrPickFile");
+        if (RightEmptyDesc != null) RightEmptyDesc.Text = LanguageManager.Instance.Text("dropOrPickFile");
+        if (LeftPickBtn != null) LeftPickBtn.Content = LanguageManager.Instance.Text("pickSourceFile");
+        if (RightPickBtn != null) RightPickBtn.Content = LanguageManager.Instance.Text("pickTargetFile");
+
         if (AICardTitle != null) AICardTitle.Text = LanguageManager.Instance.Text("aiSummaryTitle");
         if (AICopyCommitBtnText != null) AICopyCommitBtnText.Text = LanguageManager.Instance.Text("copyCommitMsg");
-        if (LeftHeader != null && string.IsNullOrEmpty(_leftPath)) LeftHeader.Text = LanguageManager.Instance.Text("wordSideLeft");
-        if (RightHeader != null && string.IsNullOrEmpty(_rightPath)) RightHeader.Text = LanguageManager.Instance.Text("wordSideRight");
     }
 
-    private void OnSwapSidesClicked(object sender, RoutedEventArgs e)
+    private void UpdateWorkspaceVisibility()
     {
-        var tempPath = _leftPath;
-        _leftPath = _rightPath;
-        _rightPath = tempPath;
+        if (!_isInitialized) return;
 
-        LeftHeader.Text = !string.IsNullOrEmpty(_leftPath) ? Path.GetFileName(_leftPath) : LanguageManager.Instance.Text("wordSideLeft");
-        RightHeader.Text = !string.IsNullOrEmpty(_rightPath) ? Path.GetFileName(_rightPath) : LanguageManager.Instance.Text("wordSideRight");
+        bool hasLeft = !string.IsNullOrEmpty(_leftPath) || !string.IsNullOrEmpty(_leftText);
+        bool hasRight = !string.IsNullOrEmpty(_rightPath) || !string.IsNullOrEmpty(_rightText);
 
-        string tempText = LeftEditor.Text;
-        LeftEditor.Text = RightEditor.Text;
-        RightEditor.Text = tempText;
+        if (!hasLeft && !hasRight)
+        {
+            if (EmptyStateContainer != null) EmptyStateContainer.Visibility = Visibility.Visible;
+            if (DiffListContainer != null) DiffListContainer.Visibility = Visibility.Collapsed;
+            if (EditorsContainer != null) EditorsContainer.Visibility = Visibility.Collapsed;
 
-        _leftText = LeftEditor.Text;
-        _rightText = RightEditor.Text;
+            if (PrevDiffBtn != null) PrevDiffBtn.IsEnabled = false;
+            if (NextDiffBtn != null) NextDiffBtn.IsEnabled = false;
+            if (TakeLeftBtn != null) TakeLeftBtn.IsEnabled = false;
+            if (TakeRightBtn != null) TakeRightBtn.IsEnabled = false;
+            if (AISummaryButton != null) AISummaryButton.IsEnabled = false;
+            if (ClearAllBtn != null) ClearAllBtn.IsEnabled = false;
+            if (LeftSaveBtn != null) LeftSaveBtn.IsEnabled = false;
+            if (RightSaveBtn != null) RightSaveBtn.IsEnabled = false;
+            if (StatsText != null) StatsText.Text = string.Format(LanguageManager.Instance.Text("diffItemCount"), 0);
+        }
+        else
+        {
+            if (EmptyStateContainer != null) EmptyStateContainer.Visibility = Visibility.Collapsed;
+            if (_isDiffViewMode)
+            {
+                if (DiffListContainer != null) DiffListContainer.Visibility = Visibility.Visible;
+                if (EditorsContainer != null) EditorsContainer.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                if (DiffListContainer != null) DiffListContainer.Visibility = Visibility.Collapsed;
+                if (EditorsContainer != null) EditorsContainer.Visibility = Visibility.Visible;
+            }
 
-        RecomputeDiff();
+            bool hasBoth = hasLeft && hasRight;
+            if (PrevDiffBtn != null) PrevDiffBtn.IsEnabled = hasBoth;
+            if (NextDiffBtn != null) NextDiffBtn.IsEnabled = hasBoth;
+            if (TakeLeftBtn != null) TakeLeftBtn.IsEnabled = hasBoth;
+            if (TakeRightBtn != null) TakeRightBtn.IsEnabled = hasBoth;
+            if (AISummaryButton != null) AISummaryButton.IsEnabled = hasBoth;
+            if (ClearAllBtn != null) ClearAllBtn.IsEnabled = true;
+            if (LeftSaveBtn != null) LeftSaveBtn.IsEnabled = hasLeft;
+            if (RightSaveBtn != null) RightSaveBtn.IsEnabled = hasRight;
+        }
     }
 
-    private void OnRefreshClicked(object sender, RoutedEventArgs e)
+    private void OnTakeLeftClicked(object sender, RoutedEventArgs e)
     {
-        if (!string.IsNullOrEmpty(_leftPath) && File.Exists(_leftPath))
-        {
-            _leftText = File.ReadAllText(_leftPath, SettingsManager.Instance.GetEncoding());
-            LeftEditor.Text = _leftText;
-        }
-        if (!string.IsNullOrEmpty(_rightPath) && File.Exists(_rightPath))
-        {
-            _rightText = File.ReadAllText(_rightPath, SettingsManager.Instance.GetEncoding());
-            RightEditor.Text = _rightText;
-        }
+        if (string.IsNullOrEmpty(_leftText) && string.IsNullOrEmpty(LeftEditor.Text)) return;
+
+        _rightText = LeftEditor?.Text ?? _leftText;
+        if (RightEditor != null) RightEditor.Text = _rightText;
         RecomputeDiff();
+        StatusMessageText.Text = "已采纳左侧内容至右侧";
     }
+
+    private void OnTakeRightClicked(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(_rightText) && string.IsNullOrEmpty(RightEditor.Text)) return;
+
+        _leftText = RightEditor?.Text ?? _rightText;
+        if (LeftEditor != null) LeftEditor.Text = _leftText;
+        RecomputeDiff();
+        StatusMessageText.Text = "已采纳右侧内容至左侧";
+    }
+
+    private void OnEncodingChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_isInitialized) return;
+
+        if (EncodingComboBox?.SelectedItem is ComboBoxItem item && item.Content is string encName)
+        {
+            _currentEncoding = GetEncodingByName(encName);
+            if (EncodingStatusText != null) EncodingStatusText.Text = encName;
+
+            if (!string.IsNullOrEmpty(_leftPath) && File.Exists(_leftPath))
+            {
+                _leftText = File.ReadAllText(_leftPath, _currentEncoding);
+                if (LeftEditor != null) LeftEditor.Text = _leftText;
+            }
+            if (!string.IsNullOrEmpty(_rightPath) && File.Exists(_rightPath))
+            {
+                _rightText = File.ReadAllText(_rightPath, _currentEncoding);
+                if (RightEditor != null) RightEditor.Text = _rightText;
+            }
+            RecomputeDiff();
+        }
+    }
+
+    private static System.Text.Encoding GetEncodingByName(string name) => name switch
+    {
+        "GBK" => System.Text.Encoding.GetEncoding("GBK"),
+        "UTF-16 LE" => System.Text.Encoding.Unicode,
+        "UTF-16 BE" => System.Text.Encoding.BigEndianUnicode,
+        "ASCII" => System.Text.Encoding.ASCII,
+        _ => System.Text.Encoding.UTF8
+    };
 
     private void OnClearAllClicked(object sender, RoutedEventArgs e)
     {
+        if (!_isInitialized) return;
+
         _leftPath = null;
         _rightPath = null;
-        LeftHeader.Text = LanguageManager.Instance.Text("wordSideLeft");
-        RightHeader.Text = LanguageManager.Instance.Text("wordSideRight");
-        LeftEditor.Text = string.Empty;
-        RightEditor.Text = string.Empty;
+        if (LeftHeader != null) LeftHeader.Text = LanguageManager.Instance.Text("sourceFile");
+        if (RightHeader != null) RightHeader.Text = LanguageManager.Instance.Text("targetFile");
+        if (LeftEditor != null) LeftEditor.Text = string.Empty;
+        if (RightEditor != null) RightEditor.Text = string.Empty;
         _leftText = string.Empty;
         _rightText = string.Empty;
         _displayItems.Clear();
-        DiffListView.ItemsSource = null;
+        if (DiffListView != null) DiffListView.ItemsSource = null;
         _currentDiffJumpIndex = -1;
-        StatsText.Text = LanguageManager.Instance.Text("textDiffSummaryZero");
-        AICard.Visibility = Visibility.Collapsed;
-    }
-
-    private void OnExportDiffClicked(object sender, RoutedEventArgs e)
-    {
-        string left = LeftEditor?.Text ?? _leftText;
-        string right = RightEditor?.Text ?? _rightText;
-        bool ignoreWs = WhitespaceSwitch?.IsOn ?? false;
-        bool ignoreCase = CaseSwitch?.IsOn ?? false;
-
-        var result = DiffEngineService.Instance.CompareText(left, right, ignoreWs, ignoreCase);
-
-        var sb = new System.Text.StringBuilder();
-        string lName = !string.IsNullOrEmpty(_leftPath) ? Path.GetFileName(_leftPath) : "a/file";
-        string rName = !string.IsNullOrEmpty(_rightPath) ? Path.GetFileName(_rightPath) : "b/file";
-        sb.AppendLine($"--- {lName}");
-        sb.AppendLine($"+++ {rName}");
-        foreach (var chunk in result.Chunks)
-        {
-            if (chunk.ChangeType == DiffChangeType.Unchanged)
-            {
-                foreach (var line in chunk.LeftLines) sb.AppendLine($"  {line}");
-            }
-            else if (chunk.ChangeType == DiffChangeType.Added)
-            {
-                foreach (var line in chunk.RightLines) sb.AppendLine($"+ {line}");
-            }
-            else if (chunk.ChangeType == DiffChangeType.Deleted)
-            {
-                foreach (var line in chunk.LeftLines) sb.AppendLine($"- {line}");
-            }
-            else if (chunk.ChangeType == DiffChangeType.Modified)
-            {
-                foreach (var line in chunk.LeftLines) sb.AppendLine($"- {line}");
-                foreach (var line in chunk.RightLines) sb.AppendLine($"+ {line}");
-            }
-        }
-
-        var dp = new DataPackage();
-        dp.SetText(sb.ToString());
-        Clipboard.SetContent(dp);
-
-        StatsText.Text = LanguageManager.Instance.Text("exportSuccess");
+        if (StatusMessageText != null) StatusMessageText.Text = string.Empty;
+        if (CursorInfoText != null) CursorInfoText.Text = "Ln 1, Col 1";
+        if (AICard != null) AICard.Visibility = Visibility.Collapsed;
+        UpdateWorkspaceVisibility();
     }
 
     public void LoadFiles(string? leftPath, string? rightPath)
@@ -167,17 +213,17 @@ public sealed partial class TextDiffPage : Page
         if (!string.IsNullOrEmpty(leftPath) && File.Exists(leftPath))
         {
             _leftPath = leftPath;
-            LeftHeader.Text = Path.GetFileName(leftPath);
-            _leftText = File.ReadAllText(leftPath, SettingsManager.Instance.GetEncoding());
-            LeftEditor.Text = _leftText;
+            if (LeftHeader != null) LeftHeader.Text = Path.GetFileName(leftPath);
+            _leftText = File.ReadAllText(leftPath, _currentEncoding);
+            if (LeftEditor != null) LeftEditor.Text = _leftText;
         }
 
         if (!string.IsNullOrEmpty(rightPath) && File.Exists(rightPath))
         {
             _rightPath = rightPath;
-            RightHeader.Text = Path.GetFileName(rightPath);
-            _rightText = File.ReadAllText(rightPath, SettingsManager.Instance.GetEncoding());
-            RightEditor.Text = _rightText;
+            if (RightHeader != null) RightHeader.Text = Path.GetFileName(rightPath);
+            _rightText = File.ReadAllText(rightPath, _currentEncoding);
+            if (RightEditor != null) RightEditor.Text = _rightText;
         }
 
         if (!string.IsNullOrEmpty(_leftPath) && !string.IsNullOrEmpty(_rightPath))
@@ -185,6 +231,7 @@ public sealed partial class TextDiffPage : Page
             RecentHistoryManager.Instance.AddRecord(_leftPath, _rightPath, CompareType.TextDiff);
         }
 
+        UpdateWorkspaceVisibility();
         RecomputeDiff();
     }
 
@@ -199,36 +246,59 @@ public sealed partial class TextDiffPage : Page
 
     private void OnTextChanged(object sender, TextChangedEventArgs e)
     {
-        _leftText = LeftEditor.Text;
-        _rightText = RightEditor.Text;
+        if (!_isInitialized) return;
+        _leftText = LeftEditor?.Text ?? string.Empty;
+        _rightText = RightEditor?.Text ?? string.Empty;
         RecomputeDiff();
     }
 
     private void OnDiffOptionsChanged(object sender, RoutedEventArgs e)
     {
+        if (!_isInitialized) return;
         RecomputeDiff();
     }
 
-    private void OnToggleViewModeClicked(object sender, RoutedEventArgs e)
+    private void OnWhitespaceContainerClicked(object sender, PointerRoutedEventArgs e)
     {
-        _isDiffViewMode = !_isDiffViewMode;
-        if (_isDiffViewMode)
+        if (WhitespaceSwitch != null && !IsWithinElement(e.OriginalSource as DependencyObject, WhitespaceSwitch))
         {
-            DiffListContainer.Visibility = Visibility.Visible;
-            EditorsContainer.Visibility = Visibility.Collapsed;
-            ViewModeBtn.Label = LanguageManager.Instance.Text("viewDiffMode");
-            RecomputeDiff();
+            WhitespaceSwitch.IsOn = !WhitespaceSwitch.IsOn;
         }
-        else
+    }
+
+    private void OnCaseContainerClicked(object sender, PointerRoutedEventArgs e)
+    {
+        if (CaseSwitch != null && !IsWithinElement(e.OriginalSource as DependencyObject, CaseSwitch))
         {
-            DiffListContainer.Visibility = Visibility.Collapsed;
-            EditorsContainer.Visibility = Visibility.Visible;
-            ViewModeBtn.Label = LanguageManager.Instance.Text("viewEditMode");
+            CaseSwitch.IsOn = !CaseSwitch.IsOn;
         }
+    }
+
+    private static bool IsWithinElement(DependencyObject? child, DependencyObject? target)
+    {
+        if (child == null || target == null) return false;
+        var current = child;
+        while (current != null)
+        {
+            if (ReferenceEquals(current, target)) return true;
+            current = VisualTreeHelper.GetParent(current);
+        }
+        return false;
     }
 
     private void RecomputeDiff()
     {
+        if (!_isInitialized) return;
+        UpdateWorkspaceVisibility();
+
+        bool hasLeft = !string.IsNullOrEmpty(_leftPath) || !string.IsNullOrEmpty(_leftText);
+        bool hasRight = !string.IsNullOrEmpty(_rightPath) || !string.IsNullOrEmpty(_rightText);
+
+        if (!hasLeft && !hasRight)
+        {
+            return;
+        }
+
         bool ignoreWs = WhitespaceSwitch?.IsOn ?? false;
         bool ignoreCase = CaseSwitch?.IsOn ?? false;
 
@@ -315,8 +385,8 @@ public sealed partial class TextDiffPage : Page
 
         if (StatsText != null)
         {
-            StatsText.Text = string.Format(LanguageManager.Instance.Text("textDiffStats"),
-            result.Stats.Additions, result.Stats.Deletions, result.Stats.Modifications, alignedLines.Count);
+            int totalChanges = result.Stats.Additions + result.Stats.Deletions + result.Stats.Modifications;
+            StatsText.Text = string.Format(LanguageManager.Instance.Text("diffItemCount"), totalChanges);
         }
     }
 
@@ -376,34 +446,38 @@ public sealed partial class TextDiffPage : Page
 
     private async void OnPickLeftFileClicked(object sender, RoutedEventArgs e)
     {
-        var file = await PickerHelper.PickSingleFileAsync(new[] { "*" }, App.MainWindowInstance);
+        var targetWindow = (App.GetWindowForElement(this) as MainWindow) ?? App.ActiveWindow ?? App.MainWindowInstance;
+        var file = await PickerHelper.PickSingleFileAsync(new[] { "*" }, targetWindow);
         if (file != null)
         {
             _leftPath = file.Path;
             LeftHeader.Text = file.Name;
-            _leftText = await File.ReadAllTextAsync(file.Path);
+            _leftText = await File.ReadAllTextAsync(file.Path, _currentEncoding);
             LeftEditor.Text = _leftText;
             if (!string.IsNullOrEmpty(_rightPath))
             {
                 RecentHistoryManager.Instance.AddRecord(_leftPath, _rightPath, CompareType.TextDiff);
             }
+            UpdateWorkspaceVisibility();
             RecomputeDiff();
         }
     }
 
     private async void OnPickRightFileClicked(object sender, RoutedEventArgs e)
     {
-        var file = await PickerHelper.PickSingleFileAsync(new[] { "*" }, App.MainWindowInstance);
+        var targetWindow = (App.GetWindowForElement(this) as MainWindow) ?? App.ActiveWindow ?? App.MainWindowInstance;
+        var file = await PickerHelper.PickSingleFileAsync(new[] { "*" }, targetWindow);
         if (file != null)
         {
             _rightPath = file.Path;
             RightHeader.Text = file.Name;
-            _rightText = await File.ReadAllTextAsync(file.Path);
+            _rightText = await File.ReadAllTextAsync(file.Path, _currentEncoding);
             RightEditor.Text = _rightText;
             if (!string.IsNullOrEmpty(_leftPath))
             {
                 RecentHistoryManager.Instance.AddRecord(_leftPath, _rightPath, CompareType.TextDiff);
             }
+            UpdateWorkspaceVisibility();
             RecomputeDiff();
         }
     }
@@ -422,8 +496,9 @@ public sealed partial class TextDiffPage : Page
             {
                 _leftPath = file.Path;
                 LeftHeader.Text = file.Name;
-                _leftText = await File.ReadAllTextAsync(file.Path, SettingsManager.Instance.GetEncoding());
+                _leftText = await File.ReadAllTextAsync(file.Path, _currentEncoding);
                 LeftEditor.Text = _leftText;
+                UpdateWorkspaceVisibility();
                 RecomputeDiff();
             }
         }
@@ -443,8 +518,9 @@ public sealed partial class TextDiffPage : Page
             {
                 _rightPath = file.Path;
                 RightHeader.Text = file.Name;
-                _rightText = await File.ReadAllTextAsync(file.Path, SettingsManager.Instance.GetEncoding());
+                _rightText = await File.ReadAllTextAsync(file.Path, _currentEncoding);
                 RightEditor.Text = _rightText;
+                UpdateWorkspaceVisibility();
                 RecomputeDiff();
             }
         }
@@ -452,46 +528,52 @@ public sealed partial class TextDiffPage : Page
 
     private async void OnSaveLeftFileClicked(object sender, RoutedEventArgs e)
     {
+        var targetWindow = (App.GetWindowForElement(this) as MainWindow) ?? App.ActiveWindow ?? App.MainWindowInstance;
         if (!string.IsNullOrEmpty(_leftPath))
         {
             if (SettingsManager.Instance.CreateBakBackup && File.Exists(_leftPath))
             {
                 File.Copy(_leftPath, _leftPath + ".bak", true);
             }
-            await File.WriteAllTextAsync(_leftPath, LeftEditor.Text, SettingsManager.Instance.GetEncoding());
+            await File.WriteAllTextAsync(_leftPath, LeftEditor.Text, _currentEncoding);
+            StatusMessageText.Text = "源文件已保存";
         }
         else
         {
             var choices = new Dictionary<string, IList<string>> { { LanguageManager.Instance.Text("fileTypeText"), new List<string> { ".txt" } } };
-            var file = await PickerHelper.PickSaveFileAsync(".txt", choices, "file1.txt", App.MainWindowInstance);
+            var file = await PickerHelper.PickSaveFileAsync(".txt", choices, "file1.txt", targetWindow);
             if (file != null)
             {
                 _leftPath = file.Path;
                 LeftHeader.Text = file.Name;
-                await File.WriteAllTextAsync(file.Path, LeftEditor.Text, SettingsManager.Instance.GetEncoding());
+                await File.WriteAllTextAsync(file.Path, LeftEditor.Text, _currentEncoding);
+                StatusMessageText.Text = "源文件已保存";
             }
         }
     }
 
     private async void OnSaveRightFileClicked(object sender, RoutedEventArgs e)
     {
+        var targetWindow = (App.GetWindowForElement(this) as MainWindow) ?? App.ActiveWindow ?? App.MainWindowInstance;
         if (!string.IsNullOrEmpty(_rightPath))
         {
             if (SettingsManager.Instance.CreateBakBackup && File.Exists(_rightPath))
             {
                 File.Copy(_rightPath, _rightPath + ".bak", true);
             }
-            await File.WriteAllTextAsync(_rightPath, RightEditor.Text, SettingsManager.Instance.GetEncoding());
+            await File.WriteAllTextAsync(_rightPath, RightEditor.Text, _currentEncoding);
+            StatusMessageText.Text = "目标文件已保存";
         }
         else
         {
             var choices = new Dictionary<string, IList<string>> { { LanguageManager.Instance.Text("fileTypeText"), new List<string> { ".txt" } } };
-            var file = await PickerHelper.PickSaveFileAsync(".txt", choices, "file2.txt", App.MainWindowInstance);
+            var file = await PickerHelper.PickSaveFileAsync(".txt", choices, "file2.txt", targetWindow);
             if (file != null)
             {
                 _rightPath = file.Path;
                 RightHeader.Text = file.Name;
-                await File.WriteAllTextAsync(file.Path, RightEditor.Text, SettingsManager.Instance.GetEncoding());
+                await File.WriteAllTextAsync(file.Path, RightEditor.Text, _currentEncoding);
+                StatusMessageText.Text = "目标文件已保存";
             }
         }
     }

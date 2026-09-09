@@ -1,102 +1,207 @@
-﻿<Page
+<Page
     x:Class="WinCompare.UI.Views.TextDiffPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <Grid>
+    <Grid Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- CommandBar -->
-        <CommandBar Grid.Row="0" DefaultLabelPosition="Right" Background="Transparent">
-            <AppBarButton x:Name="OpenFilesBtn" Icon="OpenFile" Label="打开文件">
-                <AppBarButton.Flyout>
-                    <MenuFlyout>
-                        <MenuFlyoutItem x:Name="MenuPickLeft" Text="选择左侧文件 (Left)..." Click="OnPickLeftFileClicked" />
-                        <MenuFlyoutItem x:Name="MenuPickRight" Text="选择右侧文件 (Right)..." Click="OnPickRightFileClicked" />
-                        <MenuFlyoutSeparator />
-                        <MenuFlyoutItem x:Name="MenuSaveLeft" Text="保存左侧文件" Click="OnSaveLeftFileClicked" />
-                        <MenuFlyoutItem x:Name="MenuSaveRight" Text="保存右侧文件" Click="OnSaveRightFileClicked" />
-                    </MenuFlyout>
-                </AppBarButton.Flyout>
-            </AppBarButton>
-            <AppBarSeparator />
-            <AppBarButton x:Name="ViewModeBtn" Icon="Switch" Label="视图: 对齐差异" Click="OnToggleViewModeClicked" />
-            <AppBarSeparator />
-            <AppBarElementContainer VerticalAlignment="Center">
-                <ToggleSwitch x:Name="WhitespaceSwitch" Header="忽略空格" OffContent="" OnContent="" Toggled="OnDiffOptionsChanged" Margin="8,0" />
-            </AppBarElementContainer>
-            <AppBarElementContainer VerticalAlignment="Center">
-                <ToggleSwitch x:Name="CaseSwitch" Header="忽略大小写" OffContent="" OnContent="" Toggled="OnDiffOptionsChanged" Margin="8,0" />
-            </AppBarElementContainer>
-            <AppBarSeparator />
-            <AppBarButton x:Name="PrevDiffBtn" Icon="Previous" Label="上一处差异" Click="OnPrevDiffClicked" />
-            <AppBarButton x:Name="NextDiffBtn" Icon="Next" Label="下一处差异" Click="OnNextDiffClicked" />
-            <AppBarSeparator />
-            <AppBarButton x:Name="SwapSidesBtn" Icon="Switch" Label="交换左右" Click="OnSwapSidesClicked" />
-            <AppBarButton x:Name="RefreshBtn" Icon="Sync" Label="刷新比对" Click="OnRefreshClicked" />
-            <AppBarButton x:Name="ExportReportBtn" Icon="SaveLocal" Label="导出差异" Click="OnExportDiffClicked" />
-            <AppBarButton x:Name="ClearAllBtn" Icon="Delete" Label="清空" Click="OnClearAllClicked" />
+        <!-- 1. Top Toolbar (Exact Mac layout from Image 2) -->
+        <Border Grid.Row="0"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="12,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-            <CommandBar.Content>
-                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" Margin="12,0,0,0">
-                    <Button x:Name="AISummaryButton" Click="OnAISummaryClicked" Background="#8B5CF6" Foreground="White" CornerRadius="6" Padding="12,6">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <FontIcon Glyph="&#xE945;" FontSize="14" />
-                            <TextBlock x:Name="AIBtnText" Text="AI 改动总结" FontWeight="SemiBold" FontSize="12" />
+                <!-- Left Group: Navigation & Options -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <!-- 上一个差异 -->
+                    <Button x:Name="PrevDiffBtn" Click="OnPrevDiffClicked" Padding="8,4" CornerRadius="4" Height="30">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE74A;" FontSize="11" />
+                            <TextBlock x:Name="PrevDiffText" Text="上一个差异" FontSize="12" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                </StackPanel>
-            </CommandBar.Content>
-        </CommandBar>
 
-        <!-- Main Workspace Area -->
+                    <!-- 下一个差异 -->
+                    <Button x:Name="NextDiffBtn" Click="OnNextDiffClicked" Padding="8,4" CornerRadius="4" Height="30">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE74B;" FontSize="11" />
+                            <TextBlock x:Name="NextDiffText" Text="下一个差异" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Divider -->
+                    <Rectangle Width="1" Height="16" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="6,0" />
+
+                    <!-- 忽略空白符 Switch -->
+                    <Border x:Name="WhitespaceContainer" CornerRadius="4" Padding="6,2" Background="Transparent"
+                            PointerPressed="OnWhitespaceContainerClicked" ToolTipService.ToolTip="比对时忽略空格和制表符差异">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock x:Name="WhitespaceLabel" Text="忽略空白符" FontSize="12" VerticalAlignment="Center" IsHitTestVisible="False" />
+                            <ToggleSwitch x:Name="WhitespaceSwitch" OffContent="" OnContent="" Toggled="OnDiffOptionsChanged" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 忽略大小写 Switch -->
+                    <Border x:Name="CaseContainer" CornerRadius="4" Padding="6,2" Background="Transparent" Margin="2,0,0,0"
+                            PointerPressed="OnCaseContainerClicked" ToolTipService.ToolTip="比对时忽略字母大小写差异">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock x:Name="CaseLabel" Text="忽略大小写" FontSize="12" VerticalAlignment="Center" IsHitTestVisible="False" />
+                            <ToggleSwitch x:Name="CaseSwitch" OffContent="" OnContent="" Toggled="OnDiffOptionsChanged" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Right Group: Merge Actions, AI, Clear, Encoding -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <!-- 采纳左侧 -->
+                    <Button x:Name="TakeLeftBtn" Click="OnTakeLeftClicked" Padding="8,4" CornerRadius="4" Height="30" ToolTipService.ToolTip="采纳左侧内容至右侧">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE749;" FontSize="11" />
+                            <TextBlock x:Name="TakeLeftText" Text="采纳左侧" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- 采纳右侧 -->
+                    <Button x:Name="TakeRightBtn" Click="OnTakeRightClicked" Padding="8,4" CornerRadius="4" Height="30" ToolTipService.ToolTip="采纳右侧内容至左侧">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE748;" FontSize="11" />
+                            <TextBlock x:Name="TakeRightText" Text="采纳右侧" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Divider -->
+                    <Rectangle Width="1" Height="16" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="6,0" />
+
+                    <!-- AI 摘要 -->
+                    <Button x:Name="AISummaryButton" Click="OnAISummaryClicked"
+                            Background="#7C3AED" Foreground="White" CornerRadius="6" Padding="10,4" Height="30" ToolTipService.ToolTip="智能分析改动意图">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE945;" FontSize="12" />
+                            <TextBlock x:Name="AIBtnText" Text="AI 摘要" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- 一键清空 -->
+                    <Button x:Name="ClearAllBtn" Click="OnClearAllClicked" Padding="8,4" CornerRadius="4" Height="30" ToolTipService.ToolTip="一键清空对比内容与文件">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE74D;" FontSize="11" />
+                            <TextBlock x:Name="ClearAllText" Text="一键清空" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Divider -->
+                    <Rectangle Width="1" Height="16" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="6,0" />
+
+                    <!-- 编码选择器 -->
+                    <ComboBox x:Name="EncodingComboBox" Width="96" SelectionChanged="OnEncodingChanged" FontSize="11" Padding="8,4" Height="30" VerticalAlignment="Center">
+                        <ComboBoxItem Content="UTF-8" />
+                        <ComboBoxItem Content="GBK" />
+                        <ComboBoxItem Content="UTF-16 LE" />
+                        <ComboBoxItem Content="UTF-16 BE" />
+                        <ComboBoxItem Content="ASCII" />
+                    </ComboBox>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 2. Main Workspace Area -->
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="32" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="1" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-            <!-- Dual File Headers with Drag & Drop Hints -->
-            <Grid Grid.Row="0">
+            <!-- Dual File Headers (Matching Mac Header Bar) -->
+            <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left File Header -->
+                    <Grid Grid.Column="0" Padding="12,0" AllowDrop="True" DragOver="OnLeftDragOver" Drop="OnLeftDrop">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Left">
+                            <FontIcon Glyph="&#xE8A5;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock x:Name="LeftHeader" Text="源文件 (左侧)" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="320" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" HorizontalAlignment="Right">
+                            <Button x:Name="LeftBrowseBtn" Content="选择..." FontSize="11" Padding="8,2" Click="OnPickLeftFileClicked" CornerRadius="4" Height="24" />
+                            <Button x:Name="LeftSaveBtn" Content="保存" FontSize="11" Padding="8,2" Click="OnSaveLeftFileClicked" CornerRadius="4" Height="24" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Center Divider -->
+                    <Rectangle Grid.Column="1" Fill="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
+
+                    <!-- Right File Header -->
+                    <Grid Grid.Column="2" Padding="12,0" AllowDrop="True" DragOver="OnRightDragOver" Drop="OnRightDrop">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Left">
+                            <FontIcon Glyph="&#xE8A5;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock x:Name="RightHeader" Text="目标文件 (右侧)" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="320" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" HorizontalAlignment="Right">
+                            <Button x:Name="RightBrowseBtn" Content="选择..." FontSize="11" Padding="8,2" Click="OnPickRightFileClicked" CornerRadius="4" Height="24" />
+                            <Button x:Name="RightSaveBtn" Content="保存" FontSize="11" Padding="8,2" Click="OnSaveRightFileClicked" CornerRadius="4" Height="24" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Dual Drop Zones (Empty State matching Image 2) -->
+            <Grid x:Name="EmptyStateContainer" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Visibility="Visible">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="2" />
+                    <ColumnDefinition Width="1" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Left Header -->
-                <Border Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="12,6" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                        AllowDrop="True" DragOver="OnLeftDragOver" Drop="OnLeftDrop">
-                    <Grid>
-                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                            <FontIcon Glyph="&#xE8A5;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                            <TextBlock x:Name="LeftHeader" Text="File 1 (Left / Base)" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                        </StackPanel>
-                        <Button x:Name="LeftBrowseBtn" HorizontalAlignment="Right" Content="浏览" FontSize="11" Padding="8,2" Click="OnPickLeftFileClicked" />
-                    </Grid>
+                <!-- Left Empty Drop Zone -->
+                <Border x:Name="LeftDropZone" Grid.Column="0" Background="Transparent" AllowDrop="True" DragOver="OnLeftDragOver" Drop="OnLeftDrop">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                        <FontIcon Glyph="&#xE8F4;" FontSize="52" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="LeftEmptyTitle" Text="未选择文件" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                        <TextBlock x:Name="LeftEmptyDesc" Text="拖拽文件至此处或点击下方按钮选择" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,6" />
+                        <Button x:Name="LeftPickBtn" Content="选择源文件..." Style="{StaticResource AccentButtonStyle}" CornerRadius="6" Padding="18,8" FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Center" Click="OnPickLeftFileClicked" />
+                    </StackPanel>
                 </Border>
 
-                <Rectangle Grid.Column="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <!-- Center Divider -->
+                <Rectangle Grid.Column="1" Fill="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
 
-                <!-- Right Header -->
-                <Border Grid.Column="2" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="12,6" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                        AllowDrop="True" DragOver="OnRightDragOver" Drop="OnRightDrop">
-                    <Grid>
-                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                            <FontIcon Glyph="&#xE8A5;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                            <TextBlock x:Name="RightHeader" Text="File 2 (Right / Modified)" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                        </StackPanel>
-                        <Button x:Name="RightBrowseBtn" HorizontalAlignment="Right" Content="浏览" FontSize="11" Padding="8,2" Click="OnPickRightFileClicked" />
-                    </Grid>
+                <!-- Right Empty Drop Zone -->
+                <Border x:Name="RightDropZone" Grid.Column="2" Background="Transparent" AllowDrop="True" DragOver="OnRightDragOver" Drop="OnRightDrop">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                        <FontIcon Glyph="&#xE77C;" FontSize="52" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="RightEmptyTitle" Text="未选择文件" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                        <TextBlock x:Name="RightEmptyDesc" Text="拖拽文件至此处或点击下方按钮选择" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,6" />
+                        <Button x:Name="RightPickBtn" Content="选择目标文件..." Style="{StaticResource AccentButtonStyle}" CornerRadius="6" Padding="18,8" FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Center" Click="OnPickRightFileClicked" />
+                    </StackPanel>
                 </Border>
             </Grid>
 
-            <!-- Content Mode 1: Aligned Visual Diff ListView -->
-            <Grid x:Name="DiffListContainer" Grid.Row="1" Visibility="Visible">
+            <!-- Aligned Visual Diff ListView (Visible when files loaded) -->
+            <Grid x:Name="DiffListContainer" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Visibility="Collapsed">
                 <ListView x:Name="DiffListView" SelectionMode="Single" Padding="0">
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
@@ -135,7 +240,7 @@
                                                FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextWrapping="NoWrap" />
                                 </Grid>
 
-                                <Rectangle Grid.Column="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+                                <Rectangle Grid.Column="1" Fill="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
 
                                 <!-- Right Diff Cell -->
                                 <Grid Grid.Column="2" Background="{Binding RightBgBrush}">
@@ -162,11 +267,11 @@
                 </ListView>
             </Grid>
 
-            <!-- Content Mode 2: Direct Editable Editors -->
-            <Grid x:Name="EditorsContainer" Grid.Row="1" Visibility="Collapsed">
+            <!-- Direct Editable Editors Mode -->
+            <Grid x:Name="EditorsContainer" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Visibility="Collapsed">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="2" />
+                    <ColumnDefinition Width="1" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
@@ -175,7 +280,7 @@
                          ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
                          BorderThickness="0" Background="Transparent" TextChanged="OnTextChanged" />
 
-                <Rectangle Grid.Column="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Rectangle Grid.Column="1" Fill="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
 
                 <TextBox x:Name="RightEditor" Grid.Column="2" AcceptsReturn="True" TextWrapping="NoWrap"
                          FontFamily="{StaticResource CodeFontFamily}" FontSize="13"
@@ -232,13 +337,18 @@
             </Border>
         </Grid>
 
-        <!-- Bottom Status Bar -->
-        <Border Grid.Row="2" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="16,6" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+        <!-- 3. Bottom Status Bar (Matching Image 2) -->
+        <Border Grid.Row="2" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="16,4" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
             <Grid>
-                <StackPanel Orientation="Horizontal" Spacing="16">
-                    <TextBlock x:Name="StatsText" Text="0 处新增 · 0 处删除 · 0 处修改" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <!-- Status message on left -->
+                <TextBlock x:Name="StatusMessageText" HorizontalAlignment="Left" Text="" FontSize="11" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" VerticalAlignment="Center" />
+
+                <!-- Status metrics on right (Matching: Ln 1, Col 1      0 项      UTF-8) -->
+                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="20" VerticalAlignment="Center">
+                    <TextBlock x:Name="CursorInfoText" Text="Ln 1, Col 1" FontFamily="{StaticResource CodeFontFamily}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <TextBlock x:Name="StatsText" Text="0 项" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <TextBlock x:Name="EncodingStatusText" Text="UTF-8" FontFamily="{StaticResource CodeFontFamily}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 </StackPanel>
-                <TextBlock HorizontalAlignment="Right" Text="Rust Myers Core · UTF-8" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
             </Grid>
         </Border>
     </Grid>

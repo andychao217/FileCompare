@@ -1,4 +1,4 @@
-﻿using Microsoft.UI;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -20,9 +20,10 @@ public sealed partial class WordDiffPage : Page
     private WordDocument? _rightDoc;
     private List<WordDiffParagraphDisplayItem> _allParagraphs = new();
     private List<WordDiffParagraphDisplayItem> _displayParagraphs = new();
-    private int _currentDiffJumpIndex = -1;
     private string _searchQuery = string.Empty;
     private bool _isSidebarVisible = true;
+    private int _viewMode = 0; // 0: Struct, 1: Style, 2: Table, 3: Meta
+    private bool _isInitialized = false;
 
     private static readonly Brush ModBg = new SolidColorBrush(Windows.UI.Color.FromArgb(35, 234, 179, 8));
     private static readonly Brush ModFg = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 250, 204, 21));
@@ -30,52 +31,55 @@ public sealed partial class WordDiffPage : Page
     private static readonly Brush AddFg = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 74, 222, 128));
     private static readonly Brush DelBg = new SolidColorBrush(Windows.UI.Color.FromArgb(35, 239, 68, 68));
     private static readonly Brush DelFg = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 248, 113, 113));
-    private static readonly Brush SameBg = new SolidColorBrush(Windows.UI.Color.FromArgb(15, 156, 163, 175));
-    private static readonly Brush SameFg = new SolidColorBrush(Windows.UI.Color.FromArgb(180, 156, 163, 175));
+
+    private static readonly Brush ActiveTabBg = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 37, 99, 235));
+    private static readonly Brush InactiveTabBg = new SolidColorBrush(Colors.Transparent);
+    private static readonly Brush ActiveTabFg = new SolidColorBrush(Colors.White);
 
     public WordDiffPage()
     {
         this.InitializeComponent();
         UpdateLocalization();
         LanguageManager.Instance.LanguageChanged += UpdateLocalization;
+
+        this.ActualThemeChanged += (s, e) => SetModeButtonsVisual(_viewMode);
+
+        _isInitialized = true;
+        UpdateWorkspaceVisibility();
     }
 
     private void UpdateLocalization()
     {
-        OpenFileBtn.Label = LanguageManager.Instance.Text("openWordFiles");
-        PickLeftDocItem.Text = LanguageManager.Instance.Text("pickLeftDoc");
-        PickRightDocItem.Text = LanguageManager.Instance.Text("pickRightDoc");
-        PrevDiffBtn.Label = LanguageManager.Instance.Text("prevDiff");
-        NextDiffBtn.Label = LanguageManager.Instance.Text("nextDiff");
-        ToggleSidebarBtn.Label = LanguageManager.Instance.Text("docOutline");
-        ViewModeItem0.Content = LanguageManager.Instance.Text("viewStructuredContent");
-        ViewModeItem1.Content = LanguageManager.Instance.Text("viewTableDiff");
-        ViewModeItem2.Content = LanguageManager.Instance.Text("viewMetadataDiff");
-        if (SwapSidesBtn != null) SwapSidesBtn.Label = LanguageManager.Instance.Text("swapSides");
-        if (ExportReportBtn != null) ExportReportBtn.Label = LanguageManager.Instance.Text("exportDiff");
-        if (ClearAllBtn != null) ClearAllBtn.Label = LanguageManager.Instance.Text("clearAll");
-        if (WordSearchBox != null) WordSearchBox.PlaceholderText = LanguageManager.Instance.Text("searchOrFilter");
+        if (ModeStructText != null) ModeStructText.Text = "结构化内容比对";
+        if (ModeStyleText != null) ModeStyleText.Text = "样式格式比对";
+        if (ModeTableText != null) ModeTableText.Text = "表格网格比对";
+        if (ModeMetaText != null) ModeMetaText.Text = "文档元数据比对";
+        if (WordSearchBox != null) WordSearchBox.PlaceholderText = "搜索与过滤段落...";
+        if (ExportReportText != null) ExportReportText.Text = LanguageManager.Instance.Text("exportDiff");
 
-        LeftBrowseBtn.Content = LanguageManager.Instance.Text("browse");
-        RightBrowseBtn.Content = LanguageManager.Instance.Text("browse");
-        OutlineHeader.Text = LanguageManager.Instance.Text("docOutline");
-        MetadataHeader.Text = LanguageManager.Instance.Text("metaTitle");
-        EmptyPromptText.Text = LanguageManager.Instance.Text("wordEmptyPrompt");
-        EmptyActionBtn.Content = LanguageManager.Instance.Text("wordEmptyAction");
+        if (LeftBrowseBtn != null) LeftBrowseBtn.Content = LanguageManager.Instance.Text("selectEllipsis");
+        if (RightBrowseBtn != null) RightBrowseBtn.Content = LanguageManager.Instance.Text("selectEllipsis");
+        if (LeftPickBtn != null) LeftPickBtn.Content = LanguageManager.Instance.Text("pickSourceFile");
+        if (RightPickBtn != null) RightPickBtn.Content = LanguageManager.Instance.Text("pickTargetFile");
+
+        if (MetadataHeader != null) MetadataHeader.Text = LanguageManager.Instance.Text("metaTitle");
 
         if (string.IsNullOrEmpty(_leftPath))
         {
-            LeftDocPathText.Text = LanguageManager.Instance.Text("leftDocPrompt");
+            if (LeftDocTitle != null) LeftDocTitle.Text = "选择源文件...";
+            if (LeftDocSubtitle != null) LeftDocSubtitle.Text = "未选择文件";
         }
         if (string.IsNullOrEmpty(_rightPath))
         {
-            RightDocPathText.Text = LanguageManager.Instance.Text("rightDocPrompt");
+            if (RightDocTitle != null) RightDocTitle.Text = "选择目标文件...";
+            if (RightDocSubtitle != null) RightDocSubtitle.Text = "未选择文件";
         }
+
         if (_leftDoc == null)
         {
-            MetadataDetailsText.Text = LanguageManager.Instance.Text("metaNotLoaded");
-            StatusBarText.Text = LanguageManager.Instance.Text("notCompared");
-            DiffBadge.Text = string.Format(LanguageManager.Instance.Text("diffCountDocBadge"), 0);
+            if (MetadataDetailsText != null) MetadataDetailsText.Text = LanguageManager.Instance.Text("metaNotLoaded");
+            if (StatusBarText != null) StatusBarText.Text = LanguageManager.Instance.Text("notCompared");
+            if (DiffBadge != null) DiffBadge.Text = string.Format(LanguageManager.Instance.Text("diffCountDocBadge"), 0);
         }
         else
         {
@@ -96,9 +100,42 @@ public sealed partial class WordDiffPage : Page
                     item.StatusText = LanguageManager.Instance.Text("statusIdentical");
             }
 
-            DiffBadge.Text = string.Format(LanguageManager.Instance.Text("diffCountDocBadge"), totalDiffs);
-            int outlineNodes = OutlineTree.RootNodes.Count;
-            StatusBarText.Text = string.Format(LanguageManager.Instance.Text("wordSummaryStats"), _displayParagraphs.Count, outlineNodes);
+            if (DiffBadge != null)
+                DiffBadge.Text = string.Format(LanguageManager.Instance.Text("diffCountDocBadge"), totalDiffs);
+            int outlineNodes = OutlineTree?.RootNodes.Count ?? 0;
+            if (StatusBarText != null)
+                StatusBarText.Text = string.Format(LanguageManager.Instance.Text("wordSummaryStats"), _displayParagraphs.Count, outlineNodes);
+        }
+    }
+
+    private void UpdateWorkspaceVisibility()
+    {
+        if (!_isInitialized) return;
+
+        bool hasLeft = !string.IsNullOrEmpty(_leftPath);
+        bool hasRight = !string.IsNullOrEmpty(_rightPath);
+
+        if (!hasLeft && !hasRight)
+        {
+            if (EmptyStateContainer != null) EmptyStateContainer.Visibility = Visibility.Visible;
+            if (ParagraphsList != null) ParagraphsList.Visibility = Visibility.Collapsed;
+            if (TableDiffView != null) TableDiffView.Visibility = Visibility.Collapsed;
+            if (MetadataDiffView != null) MetadataDiffView.Visibility = Visibility.Collapsed;
+            if (OutlineEmptyState != null) OutlineEmptyState.Visibility = Visibility.Visible;
+            if (OutlineTree != null) OutlineTree.Visibility = Visibility.Collapsed;
+            if (OutlineCountBadge != null) OutlineCountBadge.Text = "0";
+
+            if (ExportReportBtn != null) ExportReportBtn.IsEnabled = false;
+            if (ClearAllBtn != null) ClearAllBtn.IsEnabled = false;
+        }
+        else
+        {
+            if (EmptyStateContainer != null) EmptyStateContainer.Visibility = Visibility.Collapsed;
+            SwitchViewModeDisplay();
+
+            bool hasBoth = hasLeft && hasRight;
+            if (ExportReportBtn != null) ExportReportBtn.IsEnabled = hasBoth;
+            if (ClearAllBtn != null) ClearAllBtn.IsEnabled = true;
         }
     }
 
@@ -107,14 +144,18 @@ public sealed partial class WordDiffPage : Page
         if (!string.IsNullOrEmpty(leftPath) && File.Exists(leftPath))
         {
             _leftPath = leftPath;
-            LeftDocPathText.Text = leftPath;
+            if (LeftDocTitle != null) LeftDocTitle.Text = Path.GetFileName(leftPath);
+            if (LeftDocSubtitle != null) LeftDocSubtitle.Text = leftPath;
         }
 
         if (!string.IsNullOrEmpty(rightPath) && File.Exists(rightPath))
         {
             _rightPath = rightPath;
-            RightDocPathText.Text = rightPath;
+            if (RightDocTitle != null) RightDocTitle.Text = Path.GetFileName(rightPath);
+            if (RightDocSubtitle != null) RightDocSubtitle.Text = rightPath;
         }
+
+        UpdateWorkspaceVisibility();
 
         if (!string.IsNullOrEmpty(_leftPath) && !string.IsNullOrEmpty(_rightPath))
         {
@@ -136,26 +177,20 @@ public sealed partial class WordDiffPage : Page
     {
         if (string.IsNullOrEmpty(_leftPath) || string.IsNullOrEmpty(_rightPath)) return;
 
-        EmptyStatePanel.Visibility = Visibility.Collapsed;
+        UpdateWorkspaceVisibility();
 
         _leftDoc = WordDocumentParser.Parse(_leftPath);
         _rightDoc = WordDocumentParser.Parse(_rightPath);
 
-        // 1. Build Outline Tree from headings
         BuildOutlineTree();
-
-        // 2. Aligned Paragraph Diff
         BuildParagraphDiff();
-
-        // 3. Table Diff
         BuildTableDiff();
-
-        // 4. Metadata Diff
         BuildMetadataDiff();
     }
 
     private void BuildOutlineTree()
     {
+        if (OutlineTree == null) return;
         OutlineTree.RootNodes.Clear();
 
         var headings = _leftDoc?.Paragraphs.Where(p => p.IsHeading).ToList() ?? new();
@@ -166,14 +201,20 @@ public sealed partial class WordDiffPage : Page
 
         if (headings.Count == 0)
         {
-            OutlineTree.RootNodes.Add(new TreeViewNode { Content = LanguageManager.Instance.Text("wordNoOutline") });
+            if (OutlineEmptyState != null) OutlineEmptyState.Visibility = Visibility.Visible;
+            if (OutlineTree != null) OutlineTree.Visibility = Visibility.Collapsed;
+            if (OutlineCountBadge != null) OutlineCountBadge.Text = "0";
             return;
         }
+
+        if (OutlineEmptyState != null) OutlineEmptyState.Visibility = Visibility.Collapsed;
+        if (OutlineTree != null) OutlineTree.Visibility = Visibility.Visible;
+        if (OutlineCountBadge != null) OutlineCountBadge.Text = headings.Count.ToString();
 
         foreach (var h in headings)
         {
             var node = new TreeViewNode { Content = new OutlineHeadingItem { Title = h.Text, Index = h.Index } };
-            OutlineTree.RootNodes.Add(node);
+            OutlineTree?.RootNodes.Add(node);
         }
     }
 
@@ -253,110 +294,163 @@ public sealed partial class WordDiffPage : Page
         }
 
         _displayParagraphs = filtered.ToList();
-        ParagraphsList.ItemsSource = null;
-        ParagraphsList.ItemsSource = _displayParagraphs;
+        if (ParagraphsList != null)
+        {
+            ParagraphsList.ItemsSource = null;
+            ParagraphsList.ItemsSource = _displayParagraphs;
+        }
 
         int totalDiffs = _allParagraphs.Count(p => p.LeftBadgeVisibility == Visibility.Visible || p.RightBadgeVisibility == Visibility.Visible);
-        DiffBadge.Text = string.Format(LanguageManager.Instance.Text("diffCountDocBadge"), totalDiffs);
-        int outlineNodes = OutlineTree.RootNodes.Count;
-        StatusBarText.Text = string.Format(LanguageManager.Instance.Text("wordSummaryStats"), _displayParagraphs.Count, outlineNodes);
+        if (DiffBadge != null)
+            DiffBadge.Text = string.Format(LanguageManager.Instance.Text("diffCountDocBadge"), totalDiffs);
+
+        int outlineNodes = OutlineTree?.RootNodes.Count ?? 0;
+        if (StatusBarText != null)
+            StatusBarText.Text = string.Format(LanguageManager.Instance.Text("wordSummaryStats"), _displayParagraphs.Count, outlineNodes);
     }
 
-    private void OnPrevDiffClicked(object sender, RoutedEventArgs e)
+    private void OnModeStructClicked(object sender, RoutedEventArgs e)
     {
-        if (_displayParagraphs.Count == 0) return;
+        _viewMode = 0;
+        SetModeButtonsVisual(0);
+        SwitchViewModeDisplay();
+    }
 
-        int startIndex = _currentDiffJumpIndex <= 0 ? _displayParagraphs.Count - 1 : _currentDiffJumpIndex - 1;
-        for (int i = startIndex; i >= 0; i--)
+    private void OnModeStyleClicked(object sender, RoutedEventArgs e)
+    {
+        _viewMode = 1;
+        SetModeButtonsVisual(1);
+        SwitchViewModeDisplay();
+    }
+
+    private void OnModeTableClicked(object sender, RoutedEventArgs e)
+    {
+        _viewMode = 2;
+        SetModeButtonsVisual(2);
+        SwitchViewModeDisplay();
+    }
+
+    private void OnModeMetaClicked(object sender, RoutedEventArgs e)
+    {
+        _viewMode = 3;
+        SetModeButtonsVisual(3);
+        SwitchViewModeDisplay();
+    }
+
+    private Brush GetInactiveTabForeground()
+    {
+        bool isDark = this.ActualTheme == ElementTheme.Dark;
+        return isDark 
+            ? new SolidColorBrush(Windows.UI.Color.FromArgb(255, 203, 213, 225)) // #CBD5E1 Slate 300 for dark mode
+            : new SolidColorBrush(Windows.UI.Color.FromArgb(255, 71, 85, 105));   // #475569 Slate 600 for light mode
+    }
+
+    private void SetModeButtonsVisual(int activeIndex)
+    {
+        var inactiveFg = GetInactiveTabForeground();
+
+        if (ModeStructBtn != null)
         {
-            if (_displayParagraphs[i].LeftBadgeVisibility == Visibility.Visible || _displayParagraphs[i].RightBadgeVisibility == Visibility.Visible)
-            {
-                _currentDiffJumpIndex = i;
-                ParagraphsList.SelectedIndex = i;
-                ParagraphsList.ScrollIntoView(_displayParagraphs[i]);
-                return;
-            }
+            ModeStructBtn.Background = activeIndex == 0 ? ActiveTabBg : InactiveTabBg;
+            ModeStructBtn.Foreground = activeIndex == 0 ? ActiveTabFg : inactiveFg;
+            ModeStructBtn.FontWeight = activeIndex == 0 ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
         }
-        for (int i = _displayParagraphs.Count - 1; i > startIndex; i--)
+        if (ModeStyleBtn != null)
         {
-            if (_displayParagraphs[i].LeftBadgeVisibility == Visibility.Visible || _displayParagraphs[i].RightBadgeVisibility == Visibility.Visible)
-            {
-                _currentDiffJumpIndex = i;
-                ParagraphsList.SelectedIndex = i;
-                ParagraphsList.ScrollIntoView(_displayParagraphs[i]);
-                return;
-            }
+            ModeStyleBtn.Background = activeIndex == 1 ? ActiveTabBg : InactiveTabBg;
+            ModeStyleBtn.Foreground = activeIndex == 1 ? ActiveTabFg : inactiveFg;
+            ModeStyleBtn.FontWeight = activeIndex == 1 ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
+        }
+        if (ModeTableBtn != null)
+        {
+            ModeTableBtn.Background = activeIndex == 2 ? ActiveTabBg : InactiveTabBg;
+            ModeTableBtn.Foreground = activeIndex == 2 ? ActiveTabFg : inactiveFg;
+            ModeTableBtn.FontWeight = activeIndex == 2 ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
+        }
+        if (ModeMetaBtn != null)
+        {
+            ModeMetaBtn.Background = activeIndex == 3 ? ActiveTabBg : InactiveTabBg;
+            ModeMetaBtn.Foreground = activeIndex == 3 ? ActiveTabFg : inactiveFg;
+            ModeMetaBtn.FontWeight = activeIndex == 3 ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
         }
     }
 
-    private void OnNextDiffClicked(object sender, RoutedEventArgs e)
+    private void SwitchViewModeDisplay()
     {
-        if (_displayParagraphs.Count == 0) return;
+        bool hasFiles = !string.IsNullOrEmpty(_leftPath) || !string.IsNullOrEmpty(_rightPath);
+        if (!hasFiles) return;
 
-        int startIndex = _currentDiffJumpIndex >= _displayParagraphs.Count - 1 ? 0 : _currentDiffJumpIndex + 1;
-        for (int i = startIndex; i < _displayParagraphs.Count; i++)
+        if (ParagraphsList != null) ParagraphsList.Visibility = Visibility.Collapsed;
+        if (TableDiffView != null) TableDiffView.Visibility = Visibility.Collapsed;
+        if (MetadataDiffView != null) MetadataDiffView.Visibility = Visibility.Collapsed;
+
+        switch (_viewMode)
         {
-            if (_displayParagraphs[i].LeftBadgeVisibility == Visibility.Visible || _displayParagraphs[i].RightBadgeVisibility == Visibility.Visible)
-            {
-                _currentDiffJumpIndex = i;
-                ParagraphsList.SelectedIndex = i;
-                ParagraphsList.ScrollIntoView(_displayParagraphs[i]);
-                return;
-            }
+            case 0:
+            case 1:
+                if (ParagraphsList != null) ParagraphsList.Visibility = Visibility.Visible;
+                break;
+            case 2:
+                if (TableDiffView != null) TableDiffView.Visibility = Visibility.Visible;
+                break;
+            case 3:
+                if (MetadataDiffView != null) MetadataDiffView.Visibility = Visibility.Visible;
+                break;
         }
-        for (int i = 0; i < startIndex; i++)
-        {
-            if (_displayParagraphs[i].LeftBadgeVisibility == Visibility.Visible || _displayParagraphs[i].RightBadgeVisibility == Visibility.Visible)
-            {
-                _currentDiffJumpIndex = i;
-                ParagraphsList.SelectedIndex = i;
-                ParagraphsList.ScrollIntoView(_displayParagraphs[i]);
-                return;
-            }
-        }
+    }
+
+    private void OnToggleSidebarClicked(object sender, RoutedEventArgs e)
+    {
+        _isSidebarVisible = !_isSidebarVisible;
+        var width = _isSidebarVisible ? new GridLength(220) : new GridLength(0);
+        if (SidebarCol != null) SidebarCol.Width = width;
+        if (HeaderSidebarCol != null) HeaderSidebarCol.Width = width;
     }
 
     private void OnSearchTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
+        if (!_isInitialized) return;
         _searchQuery = sender.Text ?? string.Empty;
         ApplyParagraphFilter();
     }
 
-    private void OnSwapSidesClicked(object sender, RoutedEventArgs e)
+    private void OnOutlineItemInvoked(TreeView sender, TreeViewItemInvokedEventArgs args)
     {
-        if (string.IsNullOrEmpty(_leftPath) && string.IsNullOrEmpty(_rightPath)) return;
-        var temp = _leftPath;
-        _leftPath = _rightPath;
-        _rightPath = temp;
-
-        LeftDocPathText.Text = _leftPath ?? LanguageManager.Instance.Text("leftDocPrompt");
-        RightDocPathText.Text = _rightPath ?? LanguageManager.Instance.Text("rightDocPrompt");
-
-        if (!string.IsNullOrEmpty(_leftPath) && !string.IsNullOrEmpty(_rightPath))
+        if (args.InvokedItem is TreeViewNode node && node.Content is OutlineHeadingItem item)
         {
-            ParseAndCompare();
+            var target = _displayParagraphs.FirstOrDefault(p => p.LeftIndexText.Contains(item.Index.ToString()) || p.RightIndexText.Contains(item.Index.ToString()));
+            if (target != null && ParagraphsList != null)
+            {
+                ParagraphsList.SelectedItem = target;
+                ParagraphsList.ScrollIntoView(target);
+            }
         }
     }
 
     private void OnClearAllClicked(object sender, RoutedEventArgs e)
     {
+        if (!_isInitialized) return;
         _leftPath = null;
         _rightPath = null;
         _leftDoc = null;
         _rightDoc = null;
         _allParagraphs.Clear();
         _displayParagraphs.Clear();
-        _currentDiffJumpIndex = -1;
         _searchQuery = string.Empty;
         if (WordSearchBox != null) WordSearchBox.Text = string.Empty;
-        ParagraphsList.ItemsSource = null;
-        OutlineTree.RootNodes.Clear();
-        LeftDocPathText.Text = LanguageManager.Instance.Text("leftDocPrompt");
-        RightDocPathText.Text = LanguageManager.Instance.Text("rightDocPrompt");
-        EmptyStatePanel.Visibility = Visibility.Visible;
-        DiffBadge.Text = string.Format(LanguageManager.Instance.Text("diffCountDocBadge"), 0);
-        MetadataDetailsText.Text = LanguageManager.Instance.Text("metaNotLoaded");
-        StatusBarText.Text = LanguageManager.Instance.Text("notCompared");
+        if (ParagraphsList != null) ParagraphsList.ItemsSource = null;
+        if (OutlineTree != null) OutlineTree.RootNodes.Clear();
+
+        if (LeftDocTitle != null) LeftDocTitle.Text = "选择源文件...";
+        if (LeftDocSubtitle != null) LeftDocSubtitle.Text = "未选择文件";
+        if (RightDocTitle != null) RightDocTitle.Text = "选择目标文件...";
+        if (RightDocSubtitle != null) RightDocSubtitle.Text = "未选择文件";
+
+        if (DiffBadge != null) DiffBadge.Text = string.Format(LanguageManager.Instance.Text("diffCountDocBadge"), 0);
+        if (MetadataDetailsText != null) MetadataDetailsText.Text = LanguageManager.Instance.Text("metaNotLoaded");
+        if (StatusBarText != null) StatusBarText.Text = LanguageManager.Instance.Text("notCompared");
+
+        UpdateWorkspaceVisibility();
     }
 
     private void OnExportDiffClicked(object sender, RoutedEventArgs e)
@@ -386,11 +480,13 @@ public sealed partial class WordDiffPage : Page
         dp.SetText(sb.ToString());
         Clipboard.SetContent(dp);
 
-        StatusBarText.Text = LanguageManager.Instance.Text("exportSuccess");
+        if (StatusBarText != null)
+            StatusBarText.Text = LanguageManager.Instance.Text("exportSuccess");
     }
 
     private void BuildTableDiff()
     {
+        if (TableDiffContainer == null) return;
         TableDiffContainer.Children.Clear();
         int leftTableCount = _leftDoc?.Tables.Count ?? 0;
         int rightTableCount = _rightDoc?.Tables.Count ?? 0;
@@ -448,63 +544,59 @@ public sealed partial class WordDiffPage : Page
 
     private void BuildMetadataDiff()
     {
-        if (_leftPath == null || _rightPath == null) return;
-
-        var fiLeft = new FileInfo(_leftPath);
-        var fiRight = new FileInfo(_rightPath);
-
-        var sbMeta = new System.Text.StringBuilder();
-        sbMeta.AppendLine(LanguageManager.Instance.Text("wordMetaLeftDoc"));
-        sbMeta.AppendLine(string.Format(LanguageManager.Instance.Text("wordMetaFilePath"), _leftPath));
-        sbMeta.AppendLine(string.Format(LanguageManager.Instance.Text("wordMetaFileSize"), FormatSize(fiLeft.Length)));
-        sbMeta.AppendLine(string.Format(LanguageManager.Instance.Text("wordMetaLastMod"), fiLeft.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")));
-        sbMeta.AppendLine(string.Format(LanguageManager.Instance.Text("wordMetaParagraphs"), _leftDoc?.Paragraphs.Count ?? 0));
-        sbMeta.AppendLine(string.Format(LanguageManager.Instance.Text("wordMetaTables"), _leftDoc?.Tables.Count ?? 0));
-        sbMeta.AppendLine();
-        sbMeta.AppendLine(LanguageManager.Instance.Text("wordMetaRightDoc"));
-        sbMeta.AppendLine(string.Format(LanguageManager.Instance.Text("wordMetaFilePath"), _rightPath));
-        sbMeta.AppendLine(string.Format(LanguageManager.Instance.Text("wordMetaFileSize"), FormatSize(fiRight.Length)));
-        sbMeta.AppendLine(string.Format(LanguageManager.Instance.Text("wordMetaLastMod"), fiRight.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")));
-        sbMeta.AppendLine(string.Format(LanguageManager.Instance.Text("wordMetaParagraphs"), _rightDoc?.Paragraphs.Count ?? 0));
-        sbMeta.AppendLine(string.Format(LanguageManager.Instance.Text("wordMetaTables"), _rightDoc?.Tables.Count ?? 0));
-
-        MetadataDetailsText.Text = sbMeta.ToString();
-    }
-
-    private void OnViewModeChanged(object sender, SelectionChangedEventArgs e)
-    {
-        int idx = ViewModeBox?.SelectedIndex ?? 0;
-        if (ParagraphsList != null) ParagraphsList.Visibility = idx == 0 ? Visibility.Visible : Visibility.Collapsed;
-        if (TableDiffView != null) TableDiffView.Visibility = idx == 1 ? Visibility.Visible : Visibility.Collapsed;
-        if (MetadataDiffView != null) MetadataDiffView.Visibility = idx == 2 ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private void OnToggleSidebarClicked(object sender, RoutedEventArgs e)
-    {
-        _isSidebarVisible = !_isSidebarVisible;
-        SidebarCol.Width = _isSidebarVisible ? new GridLength(220) : new GridLength(0);
-    }
-
-    private void OnOutlineItemInvoked(TreeView sender, TreeViewItemInvokedEventArgs args)
-    {
-        if (args.InvokedItem is TreeViewNode node && node.Content is OutlineHeadingItem item)
+        if (_leftDoc == null && _rightDoc == null)
         {
-            var match = _displayParagraphs.FirstOrDefault(p => p.LeftIndexText.Contains(item.Index.ToString()));
-            if (match != null)
-            {
-                ParagraphsList.ScrollIntoView(match);
-                ParagraphsList.SelectedItem = match;
-            }
+            if (MetadataDetailsText != null)
+                MetadataDetailsText.Text = LanguageManager.Instance.Text("metaNotLoaded");
+            return;
         }
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"--- [左侧原文档: {Path.GetFileName(_leftPath)}] ---");
+        if (_leftDoc != null && !string.IsNullOrEmpty(_leftPath) && File.Exists(_leftPath))
+        {
+            var fi = new FileInfo(_leftPath);
+            sb.AppendLine($"文件大小: {fi.Length / 1024.0:F1} KB ({fi.Length} 字节)");
+            sb.AppendLine($"创建时间: {fi.CreationTime:yyyy-MM-dd HH:mm:ss}");
+            sb.AppendLine($"修改时间: {fi.LastWriteTime:yyyy-MM-dd HH:mm:ss}");
+            sb.AppendLine($"段落总数: {_leftDoc.Paragraphs.Count}");
+            sb.AppendLine($"表格总数: {_leftDoc.Tables.Count}");
+        }
+        else
+        {
+            sb.AppendLine("未加载文档");
+        }
+
+        sb.AppendLine();
+        sb.AppendLine($"--- [右侧修订文档: {Path.GetFileName(_rightPath)}] ---");
+        if (_rightDoc != null && !string.IsNullOrEmpty(_rightPath) && File.Exists(_rightPath))
+        {
+            var fi = new FileInfo(_rightPath);
+            sb.AppendLine($"文件大小: {fi.Length / 1024.0:F1} KB ({fi.Length} 字节)");
+            sb.AppendLine($"创建时间: {fi.CreationTime:yyyy-MM-dd HH:mm:ss}");
+            sb.AppendLine($"修改时间: {fi.LastWriteTime:yyyy-MM-dd HH:mm:ss}");
+            sb.AppendLine($"段落总数: {_rightDoc.Paragraphs.Count}");
+            sb.AppendLine($"表格总数: {_rightDoc.Tables.Count}");
+        }
+        else
+        {
+            sb.AppendLine("未加载文档");
+        }
+
+        if (MetadataDetailsText != null)
+            MetadataDetailsText.Text = sb.ToString();
     }
 
     private async void OnPickLeftDocClicked(object sender, RoutedEventArgs e)
     {
-        var file = await PickerHelper.PickSingleFileAsync(new[] { ".docx", ".doc" }, App.MainWindowInstance);
+        var file = await PickerHelper.PickSingleFileAsync(new[] { ".docx", ".doc" });
         if (file != null)
         {
             _leftPath = file.Path;
-            LeftDocPathText.Text = file.Path;
+            if (LeftDocTitle != null) LeftDocTitle.Text = file.Name;
+            if (LeftDocSubtitle != null) LeftDocSubtitle.Text = file.Path;
+            UpdateWorkspaceVisibility();
+
             if (!string.IsNullOrEmpty(_rightPath))
             {
                 RecentHistoryManager.Instance.AddRecord(_leftPath, _rightPath, CompareType.WordDiff);
@@ -515,11 +607,14 @@ public sealed partial class WordDiffPage : Page
 
     private async void OnPickRightDocClicked(object sender, RoutedEventArgs e)
     {
-        var file = await PickerHelper.PickSingleFileAsync(new[] { ".docx", ".doc" }, App.MainWindowInstance);
+        var file = await PickerHelper.PickSingleFileAsync(new[] { ".docx", ".doc" });
         if (file != null)
         {
             _rightPath = file.Path;
-            RightDocPathText.Text = file.Path;
+            if (RightDocTitle != null) RightDocTitle.Text = file.Name;
+            if (RightDocSubtitle != null) RightDocSubtitle.Text = file.Path;
+            UpdateWorkspaceVisibility();
+
             if (!string.IsNullOrEmpty(_leftPath))
             {
                 RecentHistoryManager.Instance.AddRecord(_leftPath, _rightPath, CompareType.WordDiff);
@@ -530,7 +625,10 @@ public sealed partial class WordDiffPage : Page
 
     private void OnLeftDocDragOver(object sender, DragEventArgs e)
     {
-        e.AcceptedOperation = DataPackageOperation.Copy;
+        if (e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            e.AcceptedOperation = DataPackageOperation.Copy;
+        }
     }
 
     private async void OnLeftDocDrop(object sender, DragEventArgs e)
@@ -541,15 +639,25 @@ public sealed partial class WordDiffPage : Page
             if (items.Count > 0 && items[0] is StorageFile file)
             {
                 _leftPath = file.Path;
-                LeftDocPathText.Text = file.Path;
-                if (!string.IsNullOrEmpty(_rightPath)) ParseAndCompare();
+                if (LeftDocTitle != null) LeftDocTitle.Text = file.Name;
+                if (LeftDocSubtitle != null) LeftDocSubtitle.Text = file.Path;
+                UpdateWorkspaceVisibility();
+
+                if (!string.IsNullOrEmpty(_rightPath))
+                {
+                    RecentHistoryManager.Instance.AddRecord(_leftPath, _rightPath, CompareType.WordDiff);
+                    ParseAndCompare();
+                }
             }
         }
     }
 
     private void OnRightDocDragOver(object sender, DragEventArgs e)
     {
-        e.AcceptedOperation = DataPackageOperation.Copy;
+        if (e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            e.AcceptedOperation = DataPackageOperation.Copy;
+        }
     }
 
     private async void OnRightDocDrop(object sender, DragEventArgs e)
@@ -560,28 +668,23 @@ public sealed partial class WordDiffPage : Page
             if (items.Count > 0 && items[0] is StorageFile file)
             {
                 _rightPath = file.Path;
-                RightDocPathText.Text = file.Path;
-                if (!string.IsNullOrEmpty(_leftPath)) ParseAndCompare();
+                if (RightDocTitle != null) RightDocTitle.Text = file.Name;
+                if (RightDocSubtitle != null) RightDocSubtitle.Text = file.Path;
+                UpdateWorkspaceVisibility();
+
+                if (!string.IsNullOrEmpty(_leftPath))
+                {
+                    RecentHistoryManager.Instance.AddRecord(_leftPath, _rightPath, CompareType.WordDiff);
+                    ParseAndCompare();
+                }
             }
         }
     }
+}
 
-    private static string FormatSize(long bytes)
-    {
-        if (bytes < 1024) return $"{bytes} B";
-        if (bytes < 1024 * 1024)
-        {
-            string kb = (bytes / 1024.0).ToString("F1");
-            return $"{kb} KB";
-        }
-        string mb = (bytes / (1024.0 * 1024.0)).ToString("F1");
-        return $"{mb} MB";
-    }
-
-    private sealed class OutlineHeadingItem
-    {
-        public string Title { get; set; } = string.Empty;
-        public int Index { get; set; }
-        public override string ToString() => Title;
-    }
+public sealed class OutlineHeadingItem
+{
+    public string Title { get; set; } = string.Empty;
+    public int Index { get; set; }
+    public override string ToString() => Title;
 }

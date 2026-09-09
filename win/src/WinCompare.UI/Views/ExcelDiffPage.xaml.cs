@@ -1,6 +1,8 @@
-﻿using Microsoft.UI;
+using System.Text.Json;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Windows.ApplicationModel.DataTransfer;
@@ -22,6 +24,8 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
     private int _currentSheetIndex = 0;
     private int _currentDiffJumpIndex = -1;
     private string _searchQuery = string.Empty;
+    private int _filterMode = 0; // 0: All, 1: DiffOnly, 2: SameOnly
+    private bool _isInitialized = false;
 
     private static readonly Brush ModBg = new SolidColorBrush(Windows.UI.Color.FromArgb(35, 234, 179, 8));
     private static readonly Brush ModFg = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 250, 204, 21));
@@ -32,79 +36,116 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
     private static readonly Brush SameBg = new SolidColorBrush(Windows.UI.Color.FromArgb(15, 156, 163, 175));
     private static readonly Brush SameFg = new SolidColorBrush(Windows.UI.Color.FromArgb(180, 156, 163, 175));
 
+    private static readonly Brush ActiveFilterBg = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 37, 99, 235));
+    private static readonly Brush InactiveFilterBg = new SolidColorBrush(Colors.Transparent);
+    private static readonly Brush ActiveFilterFg = new SolidColorBrush(Colors.White);
+
     public ExcelDiffPage()
     {
         this.InitializeComponent();
+
+        if (WhitespaceSwitch != null)
+            WhitespaceSwitch.IsOn = SettingsManager.Instance.DefaultIgnoreWhitespace;
+        if (CaseSwitch != null)
+            CaseSwitch.IsOn = SettingsManager.Instance.DefaultIgnoreCase;
+
         UpdateLocalization();
         LanguageManager.Instance.LanguageChanged += UpdateLocalization;
+
+        this.ActualThemeChanged += (s, e) => SetFilterButtonsVisual(_filterMode);
+
+        _isInitialized = true;
+        UpdateWorkspaceVisibility();
     }
 
     private void UpdateLocalization()
     {
-        if (SheetLabel != null) SheetLabel.Text = LanguageManager.Instance.Text("worksheet") + ":";
-        OpenFileBtn.Label = LanguageManager.Instance.Text("openFiles");
-        PickLeftExcelItem.Text = LanguageManager.Instance.Text("pickLeftExcel");
-        PickRightExcelItem.Text = LanguageManager.Instance.Text("pickRightExcel");
-        PrevDiffBtn.Label = LanguageManager.Instance.Text("prevDiff");
-        NextDiffBtn.Label = LanguageManager.Instance.Text("nextDiff");
-        if (DiffOnlyToggle != null) DiffOnlyToggle.Label = LanguageManager.Instance.Text("filterDiffOnly");
-        if (SwapSidesBtn != null) SwapSidesBtn.Label = LanguageManager.Instance.Text("swapSides");
-        if (ExportReportBtn != null) ExportReportBtn.Label = LanguageManager.Instance.Text("exportDiff");
-        if (ClearAllBtn != null) ClearAllBtn.Label = LanguageManager.Instance.Text("clearAll");
-        if (ExcelSearchBox != null) ExcelSearchBox.PlaceholderText = LanguageManager.Instance.Text("searchOrFilter");
-        RefreshBtn.Label = LanguageManager.Instance.Text("refreshCompare");
+        if (PrevDiffText != null) PrevDiffText.Text = LanguageManager.Instance.Text("prevDiff");
+        if (NextDiffText != null) NextDiffText.Text = LanguageManager.Instance.Text("nextDiff");
+        if (WhitespaceLabel != null) WhitespaceLabel.Text = LanguageManager.Instance.Text("ignoreWhitespace");
+        if (CaseLabel != null) CaseLabel.Text = LanguageManager.Instance.Text("ignoreCase");
+        if (RuleBtnText != null) RuleBtnText.Text = "比对规则";
+        if (SwapSidesText != null) SwapSidesText.Text = LanguageManager.Instance.Text("swapSides");
+        if (RefreshText != null) RefreshText.Text = LanguageManager.Instance.Text("refreshCompare");
+        if (TakeLeftText != null) TakeLeftText.Text = LanguageManager.Instance.Text("takeLeft");
+        if (TakeRightText != null) TakeRightText.Text = LanguageManager.Instance.Text("takeRight");
+        if (ClearAllText != null) ClearAllText.Text = LanguageManager.Instance.Text("clearAll");
 
-        LeftBrowseBtn.Content = LanguageManager.Instance.Text("browse");
-        RightBrowseBtn.Content = LanguageManager.Instance.Text("browse");
+        if (FilterAllText != null) FilterAllText.Text = LanguageManager.Instance.Text("filterAll") ?? "全部";
+        if (FilterDiffText != null) FilterDiffText.Text = LanguageManager.Instance.Text("filterDiffOnly") ?? "仅差异";
+        if (FilterSameText != null) FilterSameText.Text = LanguageManager.Instance.Text("filterSameOnly") ?? "仅相同";
+        if (ExcelSearchBox != null) ExcelSearchBox.PlaceholderText = "搜索与过滤段落...";
 
-        LeftColRowHeader.Text = LanguageManager.Instance.Text("excelColRow");
-        RightColRowHeader.Text = LanguageManager.Instance.Text("excelColRow");
-        LeftColStatusHeader.Text = LanguageManager.Instance.Text("excelColStatus");
-        RightColStatusHeader.Text = LanguageManager.Instance.Text("excelColStatus");
-        LeftColContentHeader.Text = LanguageManager.Instance.Text("leftColContent");
-        RightColContentHeader.Text = LanguageManager.Instance.Text("rightColContent");
+        if (LeftBrowseBtn != null) LeftBrowseBtn.Content = LanguageManager.Instance.Text("selectEllipsis");
+        if (RightBrowseBtn != null) RightBrowseBtn.Content = LanguageManager.Instance.Text("selectEllipsis");
+        if (LeftPickBtn != null) LeftPickBtn.Content = LanguageManager.Instance.Text("pickSourceFile");
+        if (RightPickBtn != null) RightPickBtn.Content = LanguageManager.Instance.Text("pickTargetFile");
 
-        EmptyPromptText.Text = LanguageManager.Instance.Text("excelEmptyPrompt");
-        EmptyActionBtn.Content = LanguageManager.Instance.Text("excelEmptyAction");
-        InspectorTitle.Text = LanguageManager.Instance.Text("inspectorTitle");
+        if (LeftEmptyTitle != null) LeftEmptyTitle.Text = LanguageManager.Instance.Text("noFileSelected");
+        if (RightEmptyTitle != null) RightEmptyTitle.Text = LanguageManager.Instance.Text("noFileSelected");
+        if (LeftEmptyDesc != null) LeftEmptyDesc.Text = LanguageManager.Instance.Text("dropOrPickFile");
+        if (RightEmptyDesc != null) RightEmptyDesc.Text = LanguageManager.Instance.Text("dropOrPickFile");
 
-        if (string.IsNullOrEmpty(_leftPath))
+        if (LeftColRowHeader != null) LeftColRowHeader.Text = LanguageManager.Instance.Text("excelColRow");
+        if (RightColRowHeader != null) RightColRowHeader.Text = LanguageManager.Instance.Text("excelColRow");
+        if (LeftColStatusHeader != null) LeftColStatusHeader.Text = LanguageManager.Instance.Text("excelColStatus");
+        if (RightColStatusHeader != null) RightColStatusHeader.Text = LanguageManager.Instance.Text("excelColStatus");
+        if (LeftColContentHeader != null) LeftColContentHeader.Text = LanguageManager.Instance.Text("leftColContent");
+        if (RightColContentHeader != null) RightColContentHeader.Text = LanguageManager.Instance.Text("rightColContent");
+
+        if (InspectorTitle != null) InspectorTitle.Text = LanguageManager.Instance.Text("inspectorTitle");
+
+        if (string.IsNullOrEmpty(_leftPath) && LeftExcelHeader != null)
         {
-            LeftExcelPathText.Text = LanguageManager.Instance.Text("leftExcelPrompt");
+            LeftExcelHeader.Text = LanguageManager.Instance.Text("sourceFile");
         }
-        if (string.IsNullOrEmpty(_rightPath))
+        if (string.IsNullOrEmpty(_rightPath) && RightExcelHeader != null)
         {
-            RightExcelPathText.Text = LanguageManager.Instance.Text("rightExcelPrompt");
+            RightExcelHeader.Text = LanguageManager.Instance.Text("targetFile");
         }
-        if (ExcelRowsList.SelectedItem == null)
+        if (ExcelRowsList != null && ExcelRowsList.SelectedItem == null && InspectorContent != null)
         {
             InspectorContent.Text = LanguageManager.Instance.Text("inspectorNoSelection");
         }
+    }
 
-        if (_displayRows.Count > 0)
+    private void UpdateWorkspaceVisibility()
+    {
+        if (!_isInitialized) return;
+
+        bool hasLeft = !string.IsNullOrEmpty(_leftPath);
+        bool hasRight = !string.IsNullOrEmpty(_rightPath);
+
+        if (!hasLeft && !hasRight)
         {
-            int diffCount = _displayRows.Count(r => r.IsDiff);
-            DiffBadge.Text = string.Format(LanguageManager.Instance.Text("diffCountBadge"), diffCount);
+            if (EmptyStateContainer != null) EmptyStateContainer.Visibility = Visibility.Visible;
+            if (DiffGridContainer != null) DiffGridContainer.Visibility = Visibility.Collapsed;
 
-            foreach (var r in _displayRows)
-            {
-                if (r.StatusBgBrush == AddBg)
-                    r.StatusText = LanguageManager.Instance.Text("statusAdded");
-                else if (r.StatusBgBrush == DelBg)
-                    r.StatusText = LanguageManager.Instance.Text("statusDeleted");
-                else if (r.StatusBgBrush == ModBg)
-                    r.StatusText = LanguageManager.Instance.Text("statusModified");
-                else
-                    r.StatusText = LanguageManager.Instance.Text("statusIdentical");
-            }
-
-            string sheetName = SheetComboBox.SelectedItem?.ToString() ?? "Sheet1";
-            StatusInfoText.Text = string.Format(LanguageManager.Instance.Text("excelSummaryStats"), sheetName, _displayRows.Count, diffCount);
+            if (PrevDiffBtn != null) PrevDiffBtn.IsEnabled = false;
+            if (NextDiffBtn != null) NextDiffBtn.IsEnabled = false;
+            if (RuleSettingsBtn != null) RuleSettingsBtn.IsEnabled = false;
+            if (SwapSidesBtn != null) SwapSidesBtn.IsEnabled = false;
+            if (RefreshBtn != null) RefreshBtn.IsEnabled = false;
+            if (TakeLeftBtn != null) TakeLeftBtn.IsEnabled = false;
+            if (TakeRightBtn != null) TakeRightBtn.IsEnabled = false;
+            if (ClearAllBtn != null) ClearAllBtn.IsEnabled = false;
+            if (DiffBadge != null) DiffBadge.Text = string.Format(LanguageManager.Instance.Text("diffCountBadge"), 0);
+            if (StatusInfoText != null) StatusInfoText.Text = LanguageManager.Instance.Text("notLoaded");
         }
         else
         {
-            DiffBadge.Text = string.Format(LanguageManager.Instance.Text("diffCountBadge"), 0);
-            StatusInfoText.Text = LanguageManager.Instance.Text("notLoaded");
+            if (EmptyStateContainer != null) EmptyStateContainer.Visibility = Visibility.Collapsed;
+            if (DiffGridContainer != null) DiffGridContainer.Visibility = Visibility.Visible;
+
+            bool hasBoth = hasLeft && hasRight;
+            if (PrevDiffBtn != null) PrevDiffBtn.IsEnabled = hasBoth;
+            if (NextDiffBtn != null) NextDiffBtn.IsEnabled = hasBoth;
+            if (RuleSettingsBtn != null) RuleSettingsBtn.IsEnabled = hasBoth;
+            if (SwapSidesBtn != null) SwapSidesBtn.IsEnabled = hasBoth;
+            if (RefreshBtn != null) RefreshBtn.IsEnabled = hasBoth;
+            if (TakeLeftBtn != null) TakeLeftBtn.IsEnabled = hasBoth;
+            if (TakeRightBtn != null) TakeRightBtn.IsEnabled = hasBoth;
+            if (ClearAllBtn != null) ClearAllBtn.IsEnabled = true;
         }
     }
 
@@ -113,14 +154,16 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
         if (!string.IsNullOrEmpty(leftPath) && File.Exists(leftPath))
         {
             _leftPath = leftPath;
-            LeftExcelPathText.Text = leftPath;
+            if (LeftExcelHeader != null) LeftExcelHeader.Text = Path.GetFileName(leftPath);
         }
 
         if (!string.IsNullOrEmpty(rightPath) && File.Exists(rightPath))
         {
             _rightPath = rightPath;
-            RightExcelPathText.Text = rightPath;
+            if (RightExcelHeader != null) RightExcelHeader.Text = Path.GetFileName(rightPath);
         }
+
+        UpdateWorkspaceVisibility();
 
         if (!string.IsNullOrEmpty(_leftPath) && !string.IsNullOrEmpty(_rightPath))
         {
@@ -140,22 +183,69 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
 
     private void OnRefreshClicked(object sender, RoutedEventArgs e)
     {
+        if (!_isInitialized) return;
         InitSessionAndCompare();
+    }
+
+    private void OnDiffOptionsChanged(object sender, RoutedEventArgs e)
+    {
+        if (!_isInitialized) return;
+        if (!string.IsNullOrEmpty(_leftPath) && !string.IsNullOrEmpty(_rightPath))
+        {
+            InitSessionAndCompare();
+        }
+    }
+
+    private void OnWhitespaceContainerClicked(object sender, PointerRoutedEventArgs e)
+    {
+        if (WhitespaceSwitch != null && !IsWithinElement(e.OriginalSource as DependencyObject, WhitespaceSwitch))
+        {
+            WhitespaceSwitch.IsOn = !WhitespaceSwitch.IsOn;
+        }
+    }
+
+    private void OnCaseContainerClicked(object sender, PointerRoutedEventArgs e)
+    {
+        if (CaseSwitch != null && !IsWithinElement(e.OriginalSource as DependencyObject, CaseSwitch))
+        {
+            CaseSwitch.IsOn = !CaseSwitch.IsOn;
+        }
+    }
+
+    private static bool IsWithinElement(DependencyObject? child, DependencyObject? target)
+    {
+        if (child == null || target == null) return false;
+        var current = child;
+        while (current != null)
+        {
+            if (ReferenceEquals(current, target)) return true;
+            current = VisualTreeHelper.GetParent(current);
+        }
+        return false;
     }
 
     private void InitSessionAndCompare()
     {
         if (string.IsNullOrEmpty(_leftPath) || string.IsNullOrEmpty(_rightPath)) return;
 
-        EmptyStatePanel.Visibility = Visibility.Collapsed;
+        UpdateWorkspaceVisibility();
 
-        // Dispose previous session if any
         _session?.Dispose();
         _session = null;
 
         try
         {
-            _session = ExcelDiffSession.Create(_leftPath, _rightPath);
+            var rules = new
+            {
+                ignore_whitespace = WhitespaceSwitch?.IsOn ?? false,
+                ignore_case = CaseSwitch?.IsOn ?? false,
+                numeric_tolerance = 0.0001,
+                ignore_empty_rows = true,
+                compare_formulas = false,
+                key_columns = Array.Empty<string>()
+            };
+            string optionsJson = JsonSerializer.Serialize(rules);
+            _session = ExcelDiffSession.Create(_leftPath, _rightPath, optionsJson);
         }
         catch (Exception ex)
         {
@@ -165,26 +255,33 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
         if (_session != null)
         {
             var summary = _session.GetSummary();
-            DiffBadge.Text = string.Format(LanguageManager.Instance.Text("diffCountBadge"), summary.TotalDiffCount);
+            if (DiffBadge != null)
+                DiffBadge.Text = string.Format(LanguageManager.Instance.Text("diffCountBadge"), summary.TotalDiffCount);
 
-            SheetComboBox.Items.Clear();
-            if (summary.Sheets.Count > 0)
+            if (SheetComboBox != null)
             {
-                foreach (var s in summary.Sheets)
+                SheetComboBox.Items.Clear();
+                if (summary.Sheets.Count > 0)
                 {
-                    SheetComboBox.Items.Add($"{s.SheetName} ({s.DiffCount})");
+                    foreach (var s in summary.Sheets)
+                    {
+                        SheetComboBox.Items.Add($"{s.SheetName} ({s.DiffCount})");
+                    }
+                    _currentSheetIndex = 0;
+                    SheetComboBox.SelectedIndex = 0;
                 }
-                SheetComboBox.SelectedIndex = 0;
+                else
+                {
+                    SheetComboBox.Items.Add("Sheet1");
+                    _currentSheetIndex = 0;
+                    SheetComboBox.SelectedIndex = 0;
+                }
             }
-            else
-            {
-                SheetComboBox.Items.Add("Sheet1");
-                SheetComboBox.SelectedIndex = 0;
-            }
+
+            LoadRowsForSheet(_currentSheetIndex);
         }
         else
         {
-            // Fallback: CSV / Delimited parser
             LoadFallbackCsvComparison();
         }
     }
@@ -193,9 +290,12 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
     {
         if (string.IsNullOrEmpty(_leftPath) || string.IsNullOrEmpty(_rightPath)) return;
 
-        SheetComboBox.Items.Clear();
-        SheetComboBox.Items.Add("Table1");
-        SheetComboBox.SelectedIndex = 0;
+        if (SheetComboBox != null)
+        {
+            SheetComboBox.Items.Clear();
+            SheetComboBox.Items.Add("Table1");
+            SheetComboBox.SelectedIndex = 0;
+        }
 
         string[] leftLines = File.Exists(_leftPath) ? File.ReadAllLines(_leftPath) : Array.Empty<string>();
         string[] rightLines = File.Exists(_rightPath) ? File.ReadAllLines(_rightPath) : Array.Empty<string>();
@@ -203,6 +303,9 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
         int max = Math.Max(leftLines.Length, rightLines.Length);
         _allRows.Clear();
         int diffCount = 0;
+
+        bool ignoreWs = WhitespaceSwitch?.IsOn ?? false;
+        bool ignoreCase = CaseSwitch?.IsOn ?? false;
 
         for (int i = 0; i < max; i++)
         {
@@ -214,7 +317,11 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
 
             bool isAdd = i >= leftLines.Length;
             bool isDel = i >= rightLines.Length;
-            bool isMod = !isAdd && !isDel && lStr != rStr;
+
+            string compL = ignoreWs ? System.Text.RegularExpressions.Regex.Replace(lStr, @"\s+", "") : lStr;
+            string compR = ignoreWs ? System.Text.RegularExpressions.Regex.Replace(rStr, @"\s+", "") : rStr;
+            var compType = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+            bool isMod = !isAdd && !isDel && !string.Equals(compL, compR, compType);
             bool isSame = !isAdd && !isDel && !isMod;
 
             var item = new ExcelRowDisplayItem
@@ -267,18 +374,26 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
 
     private void OnSheetChanged(object sender, SelectionChangedEventArgs e)
     {
-        _currentSheetIndex = Math.Max(0, SheetComboBox.SelectedIndex);
-        LoadSheetViewport();
+        if (!_isInitialized) return;
+        if (SheetComboBox?.SelectedIndex is int idx && idx >= 0)
+        {
+            _currentSheetIndex = idx;
+            if (_session != null)
+            {
+                LoadRowsForSheet(_currentSheetIndex);
+            }
+        }
     }
 
-    private void LoadSheetViewport()
+    private void LoadRowsForSheet(int sheetIdx)
     {
         if (_session == null) return;
 
-        var viewport = _session.GetViewport(_currentSheetIndex, 0, 5000);
+        var viewport = _session.GetViewport(sheetIdx, 0, 5000);
+        var rows = viewport.Rows;
         _allRows.Clear();
 
-        foreach (var r in viewport.Rows)
+        foreach (var r in rows)
         {
             var item = new ExcelRowDisplayItem
             {
@@ -287,7 +402,7 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
                 RightCells = r.RightCells,
                 LeftRowFormatted = string.Join("  |  ", r.LeftCells),
                 RightRowFormatted = string.Join("  |  ", r.RightCells),
-                IsDiff = r.Status != "Unchanged"
+                IsDiff = r.Status != "Unchanged" && r.Status != "Identical"
             };
 
             switch (r.Status)
@@ -326,14 +441,16 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
 
     private void ApplyFilter()
     {
-        bool diffOnly = DiffOnlyToggle?.IsChecked == true;
         string query = _searchQuery.Trim().ToLowerInvariant();
-
         IEnumerable<ExcelRowDisplayItem> filtered = _allRows;
 
-        if (diffOnly)
+        if (_filterMode == 1) // 仅差异
         {
             filtered = filtered.Where(r => r.IsDiff);
+        }
+        else if (_filterMode == 2) // 仅相同
+        {
+            filtered = filtered.Where(r => !r.IsDiff);
         }
 
         if (!string.IsNullOrEmpty(query))
@@ -345,22 +462,77 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
         }
 
         _displayRows = filtered.ToList();
-        ExcelRowsList.ItemsSource = null;
-        ExcelRowsList.ItemsSource = _displayRows;
+        if (ExcelRowsList != null)
+        {
+            ExcelRowsList.ItemsSource = null;
+            ExcelRowsList.ItemsSource = _displayRows;
+        }
 
         int totalDiff = _allRows.Count(r => r.IsDiff);
-        DiffBadge.Text = string.Format(LanguageManager.Instance.Text("diffCountBadge"), totalDiff);
-        string sheetName = SheetComboBox.SelectedItem?.ToString() ?? $"Sheet{_currentSheetIndex + 1}";
-        StatusInfoText.Text = string.Format(LanguageManager.Instance.Text("excelSummaryStats"), sheetName, _displayRows.Count, totalDiff);
+        if (DiffBadge != null)
+            DiffBadge.Text = string.Format(LanguageManager.Instance.Text("diffCountBadge"), totalDiff);
+
+        string sheetName = SheetComboBox?.SelectedItem?.ToString() ?? $"Sheet{_currentSheetIndex + 1}";
+        if (StatusInfoText != null)
+            StatusInfoText.Text = string.Format(LanguageManager.Instance.Text("excelSummaryStats"), sheetName, _displayRows.Count, totalDiff);
     }
 
-    private void OnDiffOnlyToggled(object sender, RoutedEventArgs e)
+    private void OnFilterAllClicked(object sender, RoutedEventArgs e)
     {
+        _filterMode = 0;
+        SetFilterButtonsVisual(0);
         ApplyFilter();
+    }
+
+    private void OnFilterDiffOnlyClicked(object sender, RoutedEventArgs e)
+    {
+        _filterMode = 1;
+        SetFilterButtonsVisual(1);
+        ApplyFilter();
+    }
+
+    private void OnFilterSameOnlyClicked(object sender, RoutedEventArgs e)
+    {
+        _filterMode = 2;
+        SetFilterButtonsVisual(2);
+        ApplyFilter();
+    }
+
+    private Brush GetInactiveFilterForeground()
+    {
+        bool isDark = this.ActualTheme == ElementTheme.Dark;
+        return isDark 
+            ? new SolidColorBrush(Windows.UI.Color.FromArgb(255, 203, 213, 225)) // #CBD5E1 Slate 300 for dark mode
+            : new SolidColorBrush(Windows.UI.Color.FromArgb(255, 71, 85, 105));   // #475569 Slate 600 for light mode
+    }
+
+    private void SetFilterButtonsVisual(int activeIndex)
+    {
+        var inactiveFg = GetInactiveFilterForeground();
+
+        if (FilterAllBtn != null)
+        {
+            FilterAllBtn.Background = activeIndex == 0 ? ActiveFilterBg : InactiveFilterBg;
+            FilterAllBtn.Foreground = activeIndex == 0 ? ActiveFilterFg : inactiveFg;
+            FilterAllBtn.FontWeight = activeIndex == 0 ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
+        }
+        if (FilterDiffBtn != null)
+        {
+            FilterDiffBtn.Background = activeIndex == 1 ? ActiveFilterBg : InactiveFilterBg;
+            FilterDiffBtn.Foreground = activeIndex == 1 ? ActiveFilterFg : inactiveFg;
+            FilterDiffBtn.FontWeight = activeIndex == 1 ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
+        }
+        if (FilterSameBtn != null)
+        {
+            FilterSameBtn.Background = activeIndex == 2 ? ActiveFilterBg : InactiveFilterBg;
+            FilterSameBtn.Foreground = activeIndex == 2 ? ActiveFilterFg : inactiveFg;
+            FilterSameBtn.FontWeight = activeIndex == 2 ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
+        }
     }
 
     private void OnSearchTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
+        if (!_isInitialized) return;
         _searchQuery = sender.Text ?? string.Empty;
         ApplyFilter();
     }
@@ -372,8 +544,10 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
         _leftPath = _rightPath;
         _rightPath = temp;
 
-        LeftExcelPathText.Text = _leftPath ?? LanguageManager.Instance.Text("leftExcelPrompt");
-        RightExcelPathText.Text = _rightPath ?? LanguageManager.Instance.Text("rightExcelPrompt");
+        if (LeftExcelHeader != null)
+            LeftExcelHeader.Text = !string.IsNullOrEmpty(_leftPath) ? Path.GetFileName(_leftPath) : LanguageManager.Instance.Text("sourceFile");
+        if (RightExcelHeader != null)
+            RightExcelHeader.Text = !string.IsNullOrEmpty(_rightPath) ? Path.GetFileName(_rightPath) : LanguageManager.Instance.Text("targetFile");
 
         if (!string.IsNullOrEmpty(_leftPath) && !string.IsNullOrEmpty(_rightPath))
         {
@@ -381,8 +555,39 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
         }
     }
 
+    private void OnTakeLeftClicked(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(_leftPath) || string.IsNullOrEmpty(_rightPath)) return;
+        try
+        {
+            File.Copy(_leftPath, _rightPath, true);
+            if (StatusInfoText != null) StatusInfoText.Text = "已采纳左侧表格至右侧";
+            InitSessionAndCompare();
+        }
+        catch (Exception ex)
+        {
+            if (StatusInfoText != null) StatusInfoText.Text = $"采纳失败: {ex.Message}";
+        }
+    }
+
+    private void OnTakeRightClicked(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(_leftPath) || string.IsNullOrEmpty(_rightPath)) return;
+        try
+        {
+            File.Copy(_rightPath, _leftPath, true);
+            if (StatusInfoText != null) StatusInfoText.Text = "已采纳右侧表格至左侧";
+            InitSessionAndCompare();
+        }
+        catch (Exception ex)
+        {
+            if (StatusInfoText != null) StatusInfoText.Text = $"采纳失败: {ex.Message}";
+        }
+    }
+
     private void OnClearAllClicked(object sender, RoutedEventArgs e)
     {
+        if (!_isInitialized) return;
         _leftPath = null;
         _rightPath = null;
         _session?.Dispose();
@@ -391,16 +596,21 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
         _displayRows.Clear();
         _searchQuery = string.Empty;
         if (ExcelSearchBox != null) ExcelSearchBox.Text = string.Empty;
-        if (DiffOnlyToggle != null) DiffOnlyToggle.IsChecked = false;
-        ExcelRowsList.ItemsSource = null;
-        SheetComboBox.Items.Clear();
-        LeftExcelPathText.Text = LanguageManager.Instance.Text("leftExcelPrompt");
-        RightExcelPathText.Text = LanguageManager.Instance.Text("rightExcelPrompt");
-        EmptyStatePanel.Visibility = Visibility.Visible;
-        DiffBadge.Text = string.Format(LanguageManager.Instance.Text("diffCountBadge"), 0);
-        StatusInfoText.Text = LanguageManager.Instance.Text("notLoaded");
-        InspectorTitle.Text = LanguageManager.Instance.Text("inspectorTitle");
-        InspectorContent.Text = LanguageManager.Instance.Text("inspectorNoSelection");
+        _filterMode = 0;
+        SetFilterButtonsVisual(0);
+
+        if (ExcelRowsList != null) ExcelRowsList.ItemsSource = null;
+        if (SheetComboBox != null) SheetComboBox.Items.Clear();
+
+        if (LeftExcelHeader != null) LeftExcelHeader.Text = LanguageManager.Instance.Text("sourceFile");
+        if (RightExcelHeader != null) RightExcelHeader.Text = LanguageManager.Instance.Text("targetFile");
+
+        if (DiffBadge != null) DiffBadge.Text = string.Format(LanguageManager.Instance.Text("diffCountBadge"), 0);
+        if (StatusInfoText != null) StatusInfoText.Text = LanguageManager.Instance.Text("notLoaded");
+        if (InspectorTitle != null) InspectorTitle.Text = LanguageManager.Instance.Text("inspectorTitle");
+        if (InspectorContent != null) InspectorContent.Text = LanguageManager.Instance.Text("inspectorNoSelection");
+
+        UpdateWorkspaceVisibility();
     }
 
     private void OnExportDiffClicked(object sender, RoutedEventArgs e)
@@ -429,7 +639,8 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
         dp.SetText(sb.ToString());
         Clipboard.SetContent(dp);
 
-        StatusInfoText.Text = LanguageManager.Instance.Text("exportSuccess");
+        if (StatusInfoText != null)
+            StatusInfoText.Text = LanguageManager.Instance.Text("exportSuccess");
     }
 
     private void OnPrevDiffClicked(object sender, RoutedEventArgs e)
@@ -488,39 +699,36 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
 
     private void OnRowSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (ExcelRowsList.SelectedItem is ExcelRowDisplayItem item)
+        if (ExcelRowsList?.SelectedItem is ExcelRowDisplayItem item)
         {
-            InspectorTitle.Text = string.Format(LanguageManager.Instance.Text("inspectorRowDetailTitle"), item.RowIndexText, item.StatusText);
             var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"[行 {item.RowIndexText}] 状态: {item.StatusText}");
+            sb.AppendLine();
+            sb.AppendLine($"[左侧 {Path.GetFileName(_leftPath) ?? "Left"}]:");
+            sb.AppendLine(string.Join(", ", item.LeftCells));
+            sb.AppendLine();
+            sb.AppendLine($"[右侧 {Path.GetFileName(_rightPath) ?? "Right"}]:");
+            sb.AppendLine(string.Join(", ", item.RightCells));
 
-            string noneText = LanguageManager.Instance.Text("inspectorNone");
-            int maxCols = Math.Max(item.LeftCells.Count, item.RightCells.Count);
-            for (int col = 0; col < maxCols; col++)
-            {
-                string l = col < item.LeftCells.Count ? item.LeftCells[col] : noneText;
-                string r = col < item.RightCells.Count ? item.RightCells[col] : noneText;
-
-                if (l != r)
-                {
-                    sb.AppendLine(string.Format(LanguageManager.Instance.Text("inspectorColModified"), col + 1, l, r));
-                }
-                else
-                {
-                    sb.AppendLine(string.Format(LanguageManager.Instance.Text("inspectorColIdentical"), col + 1, l));
-                }
-            }
-
-            InspectorContent.Text = sb.ToString();
+            if (InspectorContent != null)
+                InspectorContent.Text = sb.ToString();
+        }
+        else
+        {
+            if (InspectorContent != null)
+                InspectorContent.Text = LanguageManager.Instance.Text("inspectorNoSelection");
         }
     }
 
     private async void OnPickLeftExcelClicked(object sender, RoutedEventArgs e)
     {
-        var file = await PickerHelper.PickSingleFileAsync(new[] { ".xlsx", ".xls", ".csv" }, App.MainWindowInstance);
+        var file = await PickerHelper.PickSingleFileAsync(new[] { ".xlsx", ".xls", ".csv" });
         if (file != null)
         {
             _leftPath = file.Path;
-            LeftExcelPathText.Text = file.Path;
+            if (LeftExcelHeader != null) LeftExcelHeader.Text = file.Name;
+            UpdateWorkspaceVisibility();
+
             if (!string.IsNullOrEmpty(_rightPath))
             {
                 RecentHistoryManager.Instance.AddRecord(_leftPath, _rightPath, CompareType.ExcelDiff);
@@ -531,11 +739,13 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
 
     private async void OnPickRightExcelClicked(object sender, RoutedEventArgs e)
     {
-        var file = await PickerHelper.PickSingleFileAsync(new[] { ".xlsx", ".xls", ".csv" }, App.MainWindowInstance);
+        var file = await PickerHelper.PickSingleFileAsync(new[] { ".xlsx", ".xls", ".csv" });
         if (file != null)
         {
             _rightPath = file.Path;
-            RightExcelPathText.Text = file.Path;
+            if (RightExcelHeader != null) RightExcelHeader.Text = file.Name;
+            UpdateWorkspaceVisibility();
+
             if (!string.IsNullOrEmpty(_leftPath))
             {
                 RecentHistoryManager.Instance.AddRecord(_leftPath, _rightPath, CompareType.ExcelDiff);
@@ -546,7 +756,10 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
 
     private void OnLeftExcelDragOver(object sender, DragEventArgs e)
     {
-        e.AcceptedOperation = DataPackageOperation.Copy;
+        if (e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            e.AcceptedOperation = DataPackageOperation.Copy;
+        }
     }
 
     private async void OnLeftExcelDrop(object sender, DragEventArgs e)
@@ -557,15 +770,24 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
             if (items.Count > 0 && items[0] is StorageFile file)
             {
                 _leftPath = file.Path;
-                LeftExcelPathText.Text = file.Path;
-                if (!string.IsNullOrEmpty(_rightPath)) InitSessionAndCompare();
+                if (LeftExcelHeader != null) LeftExcelHeader.Text = file.Name;
+                UpdateWorkspaceVisibility();
+
+                if (!string.IsNullOrEmpty(_rightPath))
+                {
+                    RecentHistoryManager.Instance.AddRecord(_leftPath, _rightPath, CompareType.ExcelDiff);
+                    InitSessionAndCompare();
+                }
             }
         }
     }
 
     private void OnRightExcelDragOver(object sender, DragEventArgs e)
     {
-        e.AcceptedOperation = DataPackageOperation.Copy;
+        if (e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            e.AcceptedOperation = DataPackageOperation.Copy;
+        }
     }
 
     private async void OnRightExcelDrop(object sender, DragEventArgs e)
@@ -576,8 +798,14 @@ public sealed partial class ExcelDiffPage : Page, IDisposable
             if (items.Count > 0 && items[0] is StorageFile file)
             {
                 _rightPath = file.Path;
-                RightExcelPathText.Text = file.Path;
-                if (!string.IsNullOrEmpty(_leftPath)) InitSessionAndCompare();
+                if (RightExcelHeader != null) RightExcelHeader.Text = file.Name;
+                UpdateWorkspaceVisibility();
+
+                if (!string.IsNullOrEmpty(_leftPath))
+                {
+                    RecentHistoryManager.Instance.AddRecord(_leftPath, _rightPath, CompareType.ExcelDiff);
+                    InitSessionAndCompare();
+                }
             }
         }
     }

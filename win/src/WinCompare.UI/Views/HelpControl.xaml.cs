@@ -1,4 +1,4 @@
-﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Windows.ApplicationModel.DataTransfer;
@@ -36,9 +36,17 @@ public sealed partial class HelpControl : UserControl
     private Windows.Foundation.Point _startPoint;
     private bool _isDragging = false;
 
+    private UIElement? GetDragReferenceElement()
+    {
+        return this.XamlRoot?.Content ?? App.GetWindowForElement(this)?.Content;
+    }
+
     private void OnHeaderPointerPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
-        var ptr = e.GetCurrentPoint(this.Parent as UIElement ?? this);
+        var refElement = GetDragReferenceElement();
+        if (refElement == null) return;
+
+        var ptr = e.GetCurrentPoint(refElement);
         if (ptr.Properties.IsLeftButtonPressed)
         {
             _isDragging = true;
@@ -52,7 +60,10 @@ public sealed partial class HelpControl : UserControl
     {
         if (_isDragging)
         {
-            var curPoint = e.GetCurrentPoint(this.Parent as UIElement ?? this).Position;
+            var refElement = GetDragReferenceElement();
+            if (refElement == null) return;
+
+            var curPoint = e.GetCurrentPoint(refElement).Position;
             double dx = curPoint.X - _startPoint.X;
             double dy = curPoint.Y - _startPoint.Y;
 
