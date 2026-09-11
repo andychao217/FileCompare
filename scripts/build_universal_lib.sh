@@ -35,13 +35,8 @@ lipo -create \
     "${ROOT_DIR}/core/target/x86_64-apple-darwin/release/libmaccompare_ffi.a" \
     -output "${OUTPUT_DIR}/libmaccompare_ffi.a"
 
-# Also copy dylib if needed
-if [ -f "${ROOT_DIR}/core/target/aarch64-apple-darwin/release/libmaccompare_ffi.dylib" ] && [ -f "${ROOT_DIR}/core/target/x86_64-apple-darwin/release/libmaccompare_ffi.dylib" ]; then
-    lipo -create \
-        "${ROOT_DIR}/core/target/aarch64-apple-darwin/release/libmaccompare_ffi.dylib" \
-        "${ROOT_DIR}/core/target/x86_64-apple-darwin/release/libmaccompare_ffi.dylib" \
-        -output "${OUTPUT_DIR}/libmaccompare_ffi.dylib"
-fi
+# Ensure any legacy dylib is removed so clang linker always links against the static library .a
+rm -f "${OUTPUT_DIR}/libmaccompare_ffi.dylib"
 
 echo "=== Universal static library created successfully! ==="
 lipo -info "${OUTPUT_DIR}/libmaccompare_ffi.a"

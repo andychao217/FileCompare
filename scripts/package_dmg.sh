@@ -79,6 +79,14 @@ if command -v lipo &> /dev/null; then
     lipo -info "${MACCOMPARE_BIN}" || true
 fi
 
+# Assert static linking of Rust core to prevent dynamic library missing crashes on other Macs
+if otool -L "${MACCOMPARE_BIN}" | grep -q "libmaccompare_ffi.dylib"; then
+    echo "❌ Error: MacCompare executable is dynamically linked to libmaccompare_ffi.dylib!"
+    echo "It must be statically linked to prevent launch crashes on client machines."
+    exit 1
+fi
+echo "✅ Verified: MacCompare is statically linked with Rust core (no external libmaccompare_ffi.dylib dependency)."
+
 # 2. Build MacCompare.app bundle
 echo "[2/4] Constructing ${APP_NAME}.app bundle..."
 rm -rf "${STAGE_DIR}"
