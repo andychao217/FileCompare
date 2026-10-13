@@ -48,13 +48,13 @@ rustup target add x86_64-apple-darwin
 # 1. 赋予执行权限（首次）
 chmod +x scripts/*.sh
 
-# 2. 一键构建并生成指定版本的 DMG 包（默认版本为 0.5.0）
-bash scripts/package_dmg.sh 0.5.0
+# 2. 一键构建并生成指定版本的 DMG 包（默认版本为 0.6.0）
+bash scripts/package_dmg.sh 0.6.0
 ```
 
 #### 打包输出位置：
 * **应用程序包**：`dist/staging/MacCompare.app`
-* **DMG 磁盘镜像**：`dist/MacCompare-0.5.0.dmg`
+* **DMG 磁盘镜像**：`dist/MacCompare-0.6.0.dmg`
 
 ---
 
@@ -96,7 +96,7 @@ lipo -info dist/staging/MacCompare.app/Contents/MacOS/mcdiff
 codesign -dv --verbose=4 dist/staging/MacCompare.app
 
 # 3. 本地挂载测试
-hdiutil attach dist/MacCompare-0.5.0.dmg
+hdiutil attach dist/MacCompare-0.6.0.dmg
 ```
 
 > **提示（首次打开提示“无法打开”）：**  
@@ -161,13 +161,13 @@ Run `scripts/package_dmg.sh` from the repository root:
 # 1. Grant execute permissions (first time only)
 chmod +x scripts/*.sh
 
-# 2. Build & package specified version (defaults to 0.5.0)
-bash scripts/package_dmg.sh 0.5.0
+# 2. Build & package specified version (defaults to 0.6.0)
+bash scripts/package_dmg.sh 0.6.0
 ```
 
 #### Output Locations:
 * **Application Bundle**: `dist/staging/MacCompare.app`
-* **DMG Disk Image**: `dist/MacCompare-0.5.0.dmg`
+* **DMG Disk Image**: `dist/MacCompare-0.6.0.dmg`
 
 ---
 
@@ -209,7 +209,7 @@ lipo -info dist/staging/MacCompare.app/Contents/MacOS/mcdiff
 codesign -dv --verbose=4 dist/staging/MacCompare.app
 
 # 3. Mount DMG image
-hdiutil attach dist/MacCompare-0.5.0.dmg
+hdiutil attach dist/MacCompare-0.6.0.dmg
 ```
 
 > **Note on Gatekeeper:**  

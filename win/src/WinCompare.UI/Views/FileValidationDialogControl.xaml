@@ -1,0 +1,37 @@
+﻿<UserControl
+    x:Class="WinCompare.UI.Views.FileValidationDialogControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Border Width="440"
+            Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource SurfaceStrokeColorFlyoutBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            Padding="22">
+        <StackPanel Spacing="16">
+            <!-- Header: Icon & Title -->
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <FontIcon x:Name="DialogIcon" Glyph="&#xE8AB;" FontSize="20"
+                          Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                          VerticalAlignment="Center" />
+                <TextBlock x:Name="DialogTitleText" Text="提示" FontSize="15" FontWeight="SemiBold"
+                           Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+
+            <!-- Message Body -->
+            <TextBlock x:Name="DialogMessageText" FontSize="13"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       TextWrapping="Wrap" LineHeight="19" />
+
+            <!-- Buttons Action Row -->
+            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                <Button x:Name="CancelBtn" Content="取消" Padding="16,5" CornerRadius="6"
+                        Visibility="Collapsed" />
+                <Button x:Name="PrimaryBtn" Content="知道了" Style="{StaticResource AccentButtonStyle}"
+                        Padding="18,5" CornerRadius="6" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

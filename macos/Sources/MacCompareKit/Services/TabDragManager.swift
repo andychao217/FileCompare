@@ -177,7 +177,7 @@ public final class TabDragManager {
                 Image(systemName: tab.type.iconName)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(.accentColor)
-                Text(tab.displayTitle)
+                Text(sourceTabManager?.tabTitle(for: tab) ?? tab.displayTitle)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.primary)
                     .lineLimit(1)

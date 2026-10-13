@@ -5,6 +5,7 @@ public struct ExcelTableGridView: View {
     @Bindable var viewModel: ExcelDiffViewModel
     @State private var hoveredRowId: UUID?
     @State private var themeManager = ThemeManager.shared
+    @State private var scrollSynchronizer = DualScrollSynchronizer()
 
     private let columnWidth: CGFloat = 140
     private let rowHeaderWidth: CGFloat = 44
@@ -60,22 +61,40 @@ public struct ExcelTableGridView: View {
         columnHeaders: [String],
         rows: [AlignedExcelRow]
     ) -> some View {
-        ScrollView([.horizontal, .vertical]) {
-            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                Section {
-                    ForEach(rows) { row in
-                        tableRowView(isLeft: isLeft, row: row, columnHeaders: columnHeaders)
-                            .id(row.id)
-                            .onTapGesture {
-                                viewModel.selectRow(id: row.id)
-                            }
-                            .onHover { isHovered in
-                                if isHovered { hoveredRowId = row.id }
-                                else if hoveredRowId == row.id { hoveredRowId = nil }
-                            }
+        ScrollViewReader { proxy in
+            ScrollView([.horizontal, .vertical]) {
+                LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                    Section {
+                        ForEach(rows) { row in
+                            tableRowView(isLeft: isLeft, row: row, columnHeaders: columnHeaders)
+                                .id(row.id)
+                                .onTapGesture {
+                                    viewModel.selectRow(id: row.id)
+                                }
+                                .onHover { isHovered in
+                                    if isHovered { hoveredRowId = row.id }
+                                    else if hoveredRowId == row.id { hoveredRowId = nil }
+                                }
+                        }
+                    } header: {
+                        headerRowView(columnHeaders: columnHeaders)
                     }
-                } header: {
-                    headerRowView(columnHeaders: columnHeaders)
+                }
+                .background(
+                    ScrollViewFinder { scrollView in
+                        if isLeft {
+                            scrollSynchronizer.register(left: scrollView)
+                        } else {
+                            scrollSynchronizer.register(right: scrollView)
+                        }
+                    }
+                )
+            }
+            .onChange(of: viewModel.selectedRowId) { _, newId in
+                if let newId = newId {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        proxy.scrollTo(newId, anchor: .center)
+                    }
                 }
             }
         }
@@ -293,5 +312,100 @@ public struct ExcelTableGridView: View {
 
     private func inlineDiffBackground(isLeft: Bool) -> Color {
         isLeft ? Color.red.opacity(0.2) : Color.green.opacity(0.2)
+    }
+}
+
+// MARK: - Dual Pane Scroll Synchronizer
+
+@MainActor
+final class DualScrollSynchronizer: NSObject {
+    private weak var leftScrollView: NSScrollView?
+    private weak var rightScrollView: NSScrollView?
+    private var isSyncing = false
+
+    func register(left: NSScrollView) {
+        if self.leftScrollView === left { return }
+        if let old = self.leftScrollView {
+            NotificationCenter.default.removeObserver(self, name: NSView.boundsDidChangeNotification, object: old.contentView)
+        }
+        self.leftScrollView = left
+        left.contentView.postsBoundsChangedNotifications = true
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(leftBoundsDidChange(_:)),
+            name: NSView.boundsDidChangeNotification,
+            object: left.contentView
+        )
+    }
+
+    func register(right: NSScrollView) {
+        if self.rightScrollView === right { return }
+        if let old = self.rightScrollView {
+            NotificationCenter.default.removeObserver(self, name: NSView.boundsDidChangeNotification, object: old.contentView)
+        }
+        self.rightScrollView = right
+        right.contentView.postsBoundsChangedNotifications = true
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(rightBoundsDidChange(_:)),
+            name: NSView.boundsDidChangeNotification,
+            object: right.contentView
+        )
+    }
+
+    @objc private func leftBoundsDidChange(_ notification: Notification) {
+        guard !isSyncing, let left = leftScrollView, let right = rightScrollView else { return }
+        isSyncing = true
+        defer { isSyncing = false }
+        let targetOrigin = left.contentView.bounds.origin
+        right.contentView.scroll(to: targetOrigin)
+        right.reflectScrolledClipView(right.contentView)
+    }
+
+    @objc private func rightBoundsDidChange(_ notification: Notification) {
+        guard !isSyncing, let left = leftScrollView, let right = rightScrollView else { return }
+        isSyncing = true
+        defer { isSyncing = false }
+        let targetOrigin = right.contentView.bounds.origin
+        left.contentView.scroll(to: targetOrigin)
+        left.reflectScrolledClipView(left.contentView)
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+}
+
+private final class EnclosingScrollViewFinderView: NSView {
+    var onFound: ((NSScrollView) -> Void)?
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        notifyScrollView()
+    }
+
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        notifyScrollView()
+    }
+
+    private func notifyScrollView() {
+        if let scrollView = enclosingScrollView {
+            onFound?(scrollView)
+        }
+    }
+}
+
+private struct ScrollViewFinder: NSViewRepresentable {
+    var onFound: (NSScrollView) -> Void
+
+    func makeNSView(context: Context) -> EnclosingScrollViewFinderView {
+        let view = EnclosingScrollViewFinderView()
+        view.onFound = onFound
+        return view
+    }
+
+    func updateNSView(_ nsView: EnclosingScrollViewFinderView, context: Context) {
+        nsView.onFound = onFound
     }
 }

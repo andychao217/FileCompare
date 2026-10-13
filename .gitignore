@@ -83,5 +83,5 @@ Generated\ Files/
 
 # Keep pre-bundled native dll in source tree if applicable
 !win/src/WinCompare.UI/maccompare_ffi.dll
-
+test_files/
 

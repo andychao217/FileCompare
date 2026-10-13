@@ -1,4 +1,4 @@
-<Page
+﻿<Page
     x:Class="WinCompare.UI.Views.FolderDiffPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -29,7 +29,7 @@
                     <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="6" Padding="2">
                         <StackPanel Orientation="Horizontal" Spacing="2">
                             <Button x:Name="ModeFastBtn" Click="OnModeFastClicked"
-                                    Background="#2563EB" Foreground="White" BorderThickness="0"
+                                    Background="{ThemeResource BrandPrimaryBrush}" Foreground="{ThemeResource TextOnAccentBrush}" BorderThickness="0"
                                     CornerRadius="4" Padding="12,4" Height="28" FontSize="11" FontWeight="SemiBold">
                                 <TextBlock x:Name="ModeFastText" Text="快速比对 (时间戳/大小)" VerticalAlignment="Center" />
                             </Button>
@@ -83,11 +83,11 @@
                 <!-- Right Group: Sync Preview Pill Button -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                     <Button x:Name="SyncPreviewBtn" Click="OnSyncPreviewClicked"
-                            Background="#2563EB" Foreground="White"
+                            Background="{ThemeResource BrandPrimaryBrush}" Foreground="{ThemeResource TextOnAccentBrush}"
                             CornerRadius="6" Padding="12,4" Height="30" FontWeight="SemiBold">
                         <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                             <FontIcon Glyph="&#xE768;" FontSize="11" />
-                            <TextBlock Text="预览同步" FontSize="12" VerticalAlignment="Center" />
+                            <TextBlock x:Name="SyncPreviewText" Text="预览同步" FontSize="12" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
@@ -107,33 +107,33 @@
                 <StackPanel Spacing="16">
                     <!-- Section: 常用位置 -->
                     <StackPanel Spacing="4">
-                        <TextBlock Text="常用位置" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorTertiaryBrush}" Margin="8,0,0,4" />
+                        <TextBlock x:Name="QuickPlacesTitle" Text="常用位置" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorTertiaryBrush}" Margin="8,0,0,4" />
                         
                         <Button Click="OnSelectDocsDirClicked" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Background="Transparent" BorderThickness="0" Padding="8,6" CornerRadius="4">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon Glyph="&#xE8B7;" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <TextBlock Text="文稿目录 (Documents)" FontSize="11" TextTrimming="CharacterEllipsis" MaxWidth="140" />
+                                <TextBlock x:Name="DocsDirText" Text="文稿目录 (Documents)" FontSize="11" TextTrimming="CharacterEllipsis" MaxWidth="140" />
                             </StackPanel>
                         </Button>
 
                         <Button Click="OnSelectDownloadsDirClicked" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Background="Transparent" BorderThickness="0" Padding="8,6" CornerRadius="4">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon Glyph="&#xE896;" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <TextBlock Text="下载目录 (Downloads)" FontSize="11" TextTrimming="CharacterEllipsis" MaxWidth="140" />
+                                <TextBlock x:Name="DownloadsDirText" Text="下载目录 (Downloads)" FontSize="11" TextTrimming="CharacterEllipsis" MaxWidth="140" />
                             </StackPanel>
                         </Button>
 
                         <Button Click="OnSelectDesktopDirClicked" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Background="Transparent" BorderThickness="0" Padding="8,6" CornerRadius="4">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon Glyph="&#xE7F4;" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <TextBlock Text="桌面 (Desktop)" FontSize="11" TextTrimming="CharacterEllipsis" MaxWidth="140" />
+                                <TextBlock x:Name="DesktopDirText" Text="桌面 (Desktop)" FontSize="11" TextTrimming="CharacterEllipsis" MaxWidth="140" />
                             </StackPanel>
                         </Button>
 
                         <Button Click="OnPickLeftFolderClicked" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Background="Transparent" BorderThickness="0" Padding="8,6" CornerRadius="4">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon Glyph="&#xED25;" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <TextBlock Text="浏览文件夹..." FontSize="11" TextTrimming="CharacterEllipsis" MaxWidth="140" />
+                                <TextBlock x:Name="BrowseDirText" Text="浏览文件夹..." FontSize="11" TextTrimming="CharacterEllipsis" MaxWidth="140" />
                             </StackPanel>
                         </Button>
                     </StackPanel>
@@ -143,26 +143,26 @@
 
                     <!-- Section: 工具 -->
                     <StackPanel Spacing="4">
-                        <TextBlock Text="工具" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorTertiaryBrush}" Margin="8,0,0,4" />
+                        <TextBlock x:Name="ToolsTitle" Text="工具" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorTertiaryBrush}" Margin="8,0,0,4" />
 
                         <Button Click="OnSwapFoldersClicked" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Background="Transparent" BorderThickness="0" Padding="8,6" CornerRadius="4">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon Glyph="&#xE8EE;" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <TextBlock Text="左右目录对调" FontSize="11" />
+                                <TextBlock x:Name="SwapFoldersText" Text="左右目录对调" FontSize="11" />
                             </StackPanel>
                         </Button>
 
                         <Button Click="OnStartScanClicked" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Background="Transparent" BorderThickness="0" Padding="8,6" CornerRadius="4">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon Glyph="&#xE72C;" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <TextBlock Text="重新扫描目录" FontSize="11" />
+                                <TextBlock x:Name="RescanFoldersText" Text="重新扫描目录" FontSize="11" />
                             </StackPanel>
                         </Button>
 
                         <Button Click="OnClearAllClicked" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Background="Transparent" BorderThickness="0" Padding="8,6" CornerRadius="4">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon Glyph="&#xE74D;" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <TextBlock Text="一键清空" FontSize="11" />
+                                <TextBlock x:Name="ClearAllSidebarText" Text="一键清空" FontSize="11" />
                             </StackPanel>
                         </Button>
                     </StackPanel>
@@ -194,9 +194,9 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Left Folder Header -->
-                        <Grid Grid.Column="0" Padding="12,0" AllowDrop="True" DragOver="OnLeftFolderDragOver" Drop="OnLeftFolderDrop">
+                        <Grid Grid.Column="0" Padding="12,0" Background="Transparent" AllowDrop="True" DragOver="OnLeftFolderDragOver" Drop="OnLeftFolderDrop">
                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                <FontIcon Glyph="&#xED25;" FontSize="13" Foreground="#3B82F6" />
+                                <FontIcon Glyph="&#xED25;" FontSize="13" Foreground="{ThemeResource FolderIconBrush}" />
                                 <TextBlock x:Name="LeftFolderHeader" Text="未选择源文件夹" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="320" />
                             </StackPanel>
                             <Button x:Name="LeftBrowseBtn" HorizontalAlignment="Right" Content="选择..." FontSize="11" Padding="8,2" Click="OnPickLeftFolderClicked" CornerRadius="4" Height="24" VerticalAlignment="Center" />
@@ -206,9 +206,9 @@
                         <Rectangle Grid.Column="1" Fill="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
 
                         <!-- Right Folder Header -->
-                        <Grid Grid.Column="2" Padding="12,0" AllowDrop="True" DragOver="OnRightFolderDragOver" Drop="OnRightFolderDrop">
+                        <Grid Grid.Column="2" Padding="12,0" Background="Transparent" AllowDrop="True" DragOver="OnRightFolderDragOver" Drop="OnRightFolderDrop">
                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                <FontIcon Glyph="&#xED25;" FontSize="13" Foreground="#22C55E" />
+                                <FontIcon Glyph="&#xED25;" FontSize="13" Foreground="{ThemeResource ExcelIconBrush}" />
                                 <TextBlock x:Name="RightFolderHeader" Text="未选择目标文件夹" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="320" />
                             </StackPanel>
                             <Button x:Name="RightBrowseBtn" HorizontalAlignment="Right" Content="选择..." FontSize="11" Padding="8,2" Click="OnPickRightFolderClicked" CornerRadius="4" Height="24" VerticalAlignment="Center" />
@@ -216,107 +216,333 @@
                     </Grid>
                 </Border>
 
-                <!-- Main Content Area: Empty State vs Result Grid -->
+                <!-- Main Content Area: Dual Independent Drop Zones / Single Previews vs Result Grid -->
                 <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3">
-                    <!-- Dual Empty Drop Zones (Matching Mac Image 3) -->
-                    <Grid x:Name="EmptyStateContainer" Visibility="Visible">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="1" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
+                    <!-- Left Column: Empty Zone OR Single Folder File List -->
+                    <Grid Grid.Column="0" Background="Transparent" AllowDrop="True" DragOver="OnLeftFolderDragOver" Drop="OnLeftFolderDrop">
                         <!-- Left Empty Drop Zone (Source) -->
-                        <Border Grid.Column="0" Background="Transparent" AllowDrop="True" DragOver="OnLeftFolderDragOver" Drop="OnLeftFolderDrop">
+                        <Border x:Name="LeftEmptyZone" Background="Transparent" AllowDrop="True" DragOver="OnLeftFolderDragOver" Drop="OnLeftFolderDrop" Visibility="Visible">
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
-                                <FontIcon Glyph="&#xE8F4;" FontSize="52" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
+                                <FontIcon Glyph="&#xED25;" FontSize="52" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
                                 <TextBlock x:Name="LeftEmptyTitle" Text="未选择源文件夹" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
                                 <TextBlock x:Name="LeftEmptyDesc" Text="拖拽文件夹至此处或点击下方按钮选择" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,6" />
                                 <Button x:Name="LeftPickBtn" Content="选择源文件夹..." Style="{StaticResource AccentButtonStyle}" CornerRadius="6" Padding="18,8" FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Center" Click="OnPickLeftFolderClicked" />
                             </StackPanel>
                         </Border>
 
-                        <!-- Center Divider -->
-                        <Rectangle Grid.Column="1" Fill="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
+                        <!-- Left Single Folder Preview List -->
+                        <Grid x:Name="LeftSingleContainer" Visibility="Collapsed">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="28" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <!-- Sub-Header -->
+                            <Border Grid.Row="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Padding="12,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="70" />
+                                        <ColumnDefinition Width="130" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="SingleLeftColName" Grid.Column="0" Text="名称" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock x:Name="SingleLeftColSize" Grid.Column="1" Text="大小" Width="70" TextAlignment="Right" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock x:Name="SingleLeftColModified" Grid.Column="2" Text="修改时间" Width="130" TextAlignment="Right" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </Grid>
+                            </Border>
+                            <!-- ListView -->
+                            <ListView x:Name="LeftSingleListView" Grid.Row="1" SelectionMode="Single" Padding="0" HorizontalContentAlignment="Stretch" DoubleTapped="OnLeftSingleItemDoubleTapped"
+                                      AllowDrop="True" DragOver="OnLeftFolderDragOver" Drop="OnLeftFolderDrop">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Height="32" Padding="12,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="70" />
+                                                <ColumnDefinition Width="130" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                <FontIcon Glyph="{Binding IconGlyph}" Foreground="{Binding IconColorBrush}" FontSize="12" />
+                                                <TextBlock Text="{Binding RelativePath}" FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{Binding SizeFormatted}" Width="70" TextAlignment="Right" FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="2" Text="{Binding ModifiedFormatted}" Width="130" TextAlignment="Right" FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </Grid>
 
+                        <!-- Left Loading Overlay -->
+                        <Grid x:Name="LeftLoadingOverlay" Visibility="Collapsed" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                                <ProgressRing IsActive="True" Width="36" Height="36" />
+                                <TextBlock x:Name="LeftLoadingText" Text="正在读取源文件夹..." FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+
+                    <!-- Center Divider -->
+                    <Rectangle Grid.Column="1" Fill="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
+
+                    <!-- Right Column: Empty Zone OR Single Folder File List -->
+                    <Grid Grid.Column="2" Background="Transparent" AllowDrop="True" DragOver="OnRightFolderDragOver" Drop="OnRightFolderDrop">
                         <!-- Right Empty Drop Zone (Target) -->
-                        <Border Grid.Column="2" Background="Transparent" AllowDrop="True" DragOver="OnRightFolderDragOver" Drop="OnRightFolderDrop">
+                        <Border x:Name="RightEmptyZone" Background="Transparent" AllowDrop="True" DragOver="OnRightFolderDragOver" Drop="OnRightFolderDrop" Visibility="Visible">
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
-                                <FontIcon Glyph="&#xE713;" FontSize="52" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
+                                <FontIcon Glyph="&#xED25;" FontSize="52" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
                                 <TextBlock x:Name="RightEmptyTitle" Text="未选择目标文件夹" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
                                 <TextBlock x:Name="RightEmptyDesc" Text="拖拽文件夹至此处或点击下方按钮选择" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,6" />
                                 <Button x:Name="RightPickBtn" Content="选择目标文件夹..." Style="{StaticResource AccentButtonStyle}" CornerRadius="6" Padding="18,8" FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Center" Click="OnPickRightFolderClicked" />
                             </StackPanel>
                         </Border>
+
+                        <!-- Right Single Folder Preview List -->
+                        <Grid x:Name="RightSingleContainer" Visibility="Collapsed">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="28" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <!-- Sub-Header -->
+                            <Border Grid.Row="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Padding="12,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="70" />
+                                        <ColumnDefinition Width="130" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="SingleRightColName" Grid.Column="0" Text="名称" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock x:Name="SingleRightColSize" Grid.Column="1" Text="大小" Width="70" TextAlignment="Right" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock x:Name="SingleRightColModified" Grid.Column="2" Text="修改时间" Width="130" TextAlignment="Right" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </Grid>
+                            </Border>
+                            <!-- ListView -->
+                            <ListView x:Name="RightSingleListView" Grid.Row="1" SelectionMode="Single" Padding="0" HorizontalContentAlignment="Stretch" DoubleTapped="OnRightSingleItemDoubleTapped"
+                                      AllowDrop="True" DragOver="OnRightFolderDragOver" Drop="OnRightFolderDrop">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Height="32" Padding="12,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="70" />
+                                                <ColumnDefinition Width="130" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                <FontIcon Glyph="{Binding IconGlyph}" Foreground="{Binding IconColorBrush}" FontSize="12" />
+                                                <TextBlock Text="{Binding RelativePath}" FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{Binding SizeFormatted}" Width="70" TextAlignment="Right" FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="2" Text="{Binding ModifiedFormatted}" Width="130" TextAlignment="Right" FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </Grid>
+
+                        <!-- Right Loading Overlay -->
+                        <Grid x:Name="RightLoadingOverlay" Visibility="Collapsed" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                                <ProgressRing IsActive="True" Width="36" Height="36" />
+                                <TextBlock x:Name="RightLoadingText" Text="正在读取目标文件夹..." FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Grid>
                     </Grid>
 
-                    <!-- Active Result ListView -->
-                    <Grid x:Name="ResultContainer" Visibility="Collapsed">
+                    <!-- Active Result ListView (Dual-Pane Side-by-Side Tree View, covers all 3 columns when both loaded) -->
+                    <Grid x:Name="ResultContainer" Grid.Column="0" Grid.ColumnSpan="3" Visibility="Collapsed" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+                          AllowDrop="True" DragOver="OnDiffContainerDragOver" Drop="OnDiffContainerDrop">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="28" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
-                        <!-- Column Header -->
-                        <Border Grid.Row="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="16,0" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                        <!-- Dual Sub-Headers (Matching Mac Dual Columns) -->
+                        <Border Grid.Row="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="90" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="120" />
-                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="1" />
+                                    <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="ColHeaderStatus" Grid.Column="0" Text="状态" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <TextBlock x:Name="ColHeaderPath" Grid.Column="1" Text="相对路径 (双击打开详细比对)" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <TextBlock x:Name="ColHeaderLeftSize" Grid.Column="2" Text="左侧大小" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <TextBlock x:Name="ColHeaderRightSize" Grid.Column="3" Text="右侧大小" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                <!-- Left Sub-Header -->
+                                <Grid Grid.Column="0" Padding="12,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="70" />
+                                        <ColumnDefinition Width="130" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="ColHeaderLeftName" Grid.Column="0" Text="名称" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock x:Name="ColHeaderLeftHash" Grid.Column="1" Text="CRC32" Width="80" TextAlignment="Right" Visibility="Collapsed" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock x:Name="ColHeaderLeftSize" Grid.Column="2" Text="大小" Width="70" TextAlignment="Right" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock x:Name="ColHeaderLeftModified" Grid.Column="3" Text="修改时间" Width="130" TextAlignment="Right" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </Grid>
+
+                                <!-- Center Divider -->
+                                <Rectangle Grid.Column="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                                <!-- Right Sub-Header -->
+                                <Grid Grid.Column="2" Padding="12,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="70" />
+                                        <ColumnDefinition Width="130" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="ColHeaderRightName" Grid.Column="0" Text="名称" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock x:Name="ColHeaderRightHash" Grid.Column="1" Text="CRC32" Width="80" TextAlignment="Right" Visibility="Collapsed" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock x:Name="ColHeaderRightSize" Grid.Column="2" Text="大小" Width="70" TextAlignment="Right" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock x:Name="ColHeaderRightModified" Grid.Column="3" Text="修改时间" Width="130" TextAlignment="Right" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </Grid>
                             </Grid>
                         </Border>
 
-                        <!-- File List -->
-                        <ListView x:Name="FolderDiffListView" Grid.Row="1" SelectionMode="Single" Padding="0" DoubleTapped="OnItemDoubleTapped">
+                        <!-- File List (Dual-Column Aligned Items) -->
+                        <ListView x:Name="FolderDiffListView" Grid.Row="1" SelectionMode="Single" Padding="0" HorizontalContentAlignment="Stretch" DoubleTapped="OnItemDoubleTapped"
+                                  AllowDrop="True" DragOver="OnDiffContainerDragOver" Drop="OnDiffContainerDrop">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid Height="34" Padding="16,0" ColumnSpacing="12">
+                                    <Grid Height="32">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="90" />
                                             <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="120" />
-                                            <ColumnDefinition Width="120" />
+                                            <ColumnDefinition Width="1" />
+                                            <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
 
-                                        <!-- Status Badge -->
-                                        <Border Grid.Column="0" Background="{Binding StatusBgBrush}" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding StatusText}" FontSize="11" FontWeight="SemiBold" Foreground="{Binding StatusFgBrush}" />
+                                        <!-- Left Side Item -->
+                                        <Border Grid.Column="0" Background="{Binding LeftBgBrush}" Padding="12,0">
+                                            <Grid>
+                                                <!-- Left Missing Placeholder -->
+                                                <Grid Visibility="{Binding LeftPlaceholderVisibility}">
+                                                    <TextBlock Text="-----------------" FontFamily="{StaticResource CodeFontFamily}" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" VerticalAlignment="Center" />
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" VerticalAlignment="Center">
+                                                        <TextBlock Text="---" Visibility="{Binding HashVisibility}" Width="80" TextAlignment="Right" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                        <TextBlock Text="---" Width="70" TextAlignment="Right" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                        <TextBlock Text="---" Width="130" TextAlignment="Right" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <!-- Left Normal Item -->
+                                                <Grid Visibility="{Binding LeftItemVisibility}">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="70" />
+                                                        <ColumnDefinition Width="130" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <!-- Icon & Name -->
+                                                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                        <FontIcon Glyph="{Binding LeftIconGlyph}" Foreground="{Binding LeftIconColorBrush}" FontSize="12" />
+                                                        <TextBlock Text="{Binding LeftName}" FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" />
+                                                    </StackPanel>
+
+                                                    <!-- Hash -->
+                                                    <TextBlock Grid.Column="1" Text="{Binding LeftHash}" Visibility="{Binding HashVisibility}" Width="80" TextAlignment="Right" FontSize="10" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+
+                                                    <!-- Size -->
+                                                    <TextBlock Grid.Column="2" Text="{Binding LeftSizeFormatted}" Width="70" TextAlignment="Right" FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+
+                                                    <!-- Modified -->
+                                                    <TextBlock Grid.Column="3" Text="{Binding LeftModifiedFormatted}" Width="130" TextAlignment="Right" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                                </Grid>
+                                            </Grid>
                                         </Border>
 
-                                        <!-- Relative Path with icon -->
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                            <FontIcon Glyph="{Binding IconGlyph}" Foreground="{Binding IconColorBrush}" FontSize="13" />
-                                            <TextBlock Text="{Binding RelativePath}" FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" />
-                                        </StackPanel>
+                                        <!-- Center Vertical Divider -->
+                                        <Rectangle Grid.Column="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
 
-                                        <!-- Left Size -->
-                                        <TextBlock Grid.Column="2" Text="{Binding LeftSizeFormatted}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" FontSize="11" FontFamily="{StaticResource CodeFontFamily}" />
+                                        <!-- Right Side Item -->
+                                        <Border Grid.Column="2" Background="{Binding RightBgBrush}" Padding="12,0">
+                                            <Grid>
+                                                <!-- Right Missing Placeholder -->
+                                                <Grid Visibility="{Binding RightPlaceholderVisibility}">
+                                                    <TextBlock Text="-----------------" FontFamily="{StaticResource CodeFontFamily}" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" VerticalAlignment="Center" />
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" VerticalAlignment="Center">
+                                                        <TextBlock Text="---" Visibility="{Binding HashVisibility}" Width="80" TextAlignment="Right" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                        <TextBlock Text="---" Width="70" TextAlignment="Right" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                        <TextBlock Text="---" Width="130" TextAlignment="Right" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                    </StackPanel>
+                                                </Grid>
 
-                                        <!-- Right Size -->
-                                        <TextBlock Grid.Column="3" Text="{Binding RightSizeFormatted}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" FontSize="11" FontFamily="{StaticResource CodeFontFamily}" />
+                                                <!-- Right Normal Item -->
+                                                <Grid Visibility="{Binding RightItemVisibility}">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="70" />
+                                                        <ColumnDefinition Width="130" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <!-- Icon & Name -->
+                                                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                        <FontIcon Glyph="{Binding RightIconGlyph}" Foreground="{Binding RightIconColorBrush}" FontSize="12" />
+                                                        <TextBlock Text="{Binding RightName}" FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" />
+                                                    </StackPanel>
+
+                                                    <!-- Hash -->
+                                                    <TextBlock Grid.Column="1" Text="{Binding RightHash}" Visibility="{Binding HashVisibility}" Width="80" TextAlignment="Right" FontSize="10" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+
+                                                    <!-- Size -->
+                                                    <TextBlock Grid.Column="2" Text="{Binding RightSizeFormatted}" Width="70" TextAlignment="Right" FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+
+                                                    <!-- Modified -->
+                                                    <TextBlock Grid.Column="3" Text="{Binding RightModifiedFormatted}" Width="130" TextAlignment="Right" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                                </Grid>
+                                            </Grid>
+                                        </Border>
                                     </Grid>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                         </ListView>
+
+                        <!-- Dual-Pane Compare Loading Overlay -->
+                        <Grid x:Name="DualCompareLoadingOverlay" Grid.Row="1" Visibility="Collapsed" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="1" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <!-- Left Pane Loading -->
+                            <StackPanel Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                                <ProgressRing IsActive="True" Width="36" Height="36" />
+                                <TextBlock x:Name="DualLeftLoadingText" Text="正在读取源文件夹..." FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                            </StackPanel>
+                            <!-- Center Divider -->
+                            <Rectangle Grid.Column="1" Fill="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
+                            <!-- Right Pane Loading -->
+                            <StackPanel Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                                <ProgressRing IsActive="True" Width="36" Height="36" />
+                                <TextBlock x:Name="DualRightLoadingText" Text="正在读取目标文件夹..." FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Grid>
                     </Grid>
                 </Grid>
             </Grid>
         </Grid>
 
-        <!-- 3. Bottom Status Bar (Matching Image 3) -->
+        <!-- 3. Bottom Status Bar (Matching macOS Image 2) -->
         <Border Grid.Row="2" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="16,4" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
             <Grid>
+                <!-- Left: Stats or Prompt -->
+                <StackPanel x:Name="StatusStatsPanel" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Visibility="Collapsed">
+                    <TextBlock x:Name="StatusTotalText" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                    <TextBlock x:Name="StatusModText" FontSize="11" Foreground="{ThemeResource StatusModTextBrush}" VerticalAlignment="Center" />
+                    <TextBlock x:Name="StatusAddText" FontSize="11" Foreground="{ThemeResource StatusAddTextBrush}" VerticalAlignment="Center" />
+                    <TextBlock x:Name="StatusDelText" FontSize="11" Foreground="{ThemeResource StatusDelTextBrush}" VerticalAlignment="Center" />
+                </StackPanel>
                 <TextBlock x:Name="StatusBarText" HorizontalAlignment="Left" Text="请选择左右两侧文件夹以开始比对。" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+
+                <!-- Right: Sync status message & Engine -->
                 <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-                    <TextBlock x:Name="SyncStatusText" Text="就绪" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                    <TextBlock Text="Rust walkdir / rayon SIMD" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    <TextBlock x:Name="SyncStatusText" Text="就绪" FontSize="11" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" VerticalAlignment="Center" />
+                    <TextBlock Text="Rust walkdir / rayon SIMD" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" VerticalAlignment="Center" />
                 </StackPanel>
             </Grid>
         </Border>

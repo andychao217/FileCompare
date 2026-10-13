@@ -1,4 +1,4 @@
-using Microsoft.UI;
+﻿using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -15,6 +15,7 @@ public sealed partial class SettingsControl : UserControl
 
     public event Action<ElementTheme>? ThemeChanged;
     public event Action? CloseRequested;
+    public event Action<string, string, string>? UpdateRequested;
 
     public SettingsControl()
     {
@@ -84,6 +85,7 @@ public sealed partial class SettingsControl : UserControl
             if (IgnoreWsSwitch != null) IgnoreWsSwitch.IsOn = SettingsManager.Instance.DefaultIgnoreWhitespace;
             if (IgnoreCaseSwitch != null) IgnoreCaseSwitch.IsOn = SettingsManager.Instance.DefaultIgnoreCase;
             if (BackupSwitch != null) BackupSwitch.IsOn = SettingsManager.Instance.CreateBakBackup;
+            if (AutoUpdateSwitch != null) AutoUpdateSwitch.IsOn = SettingsManager.Instance.AutoCheckUpdatesOnLaunch;
 
             // 6. Initialize Folder Diff Settings
             if (SettingsManager.Instance.DefaultFolderDiffMode == FolderDiffMode.Quick)
@@ -194,12 +196,17 @@ public sealed partial class SettingsControl : UserControl
             bool rustAvailable = DiffEngineService.Instance.IsRustAvailable();
             if (rustAvailable)
             {
-                if (EngineStatusDot != null) EngineStatusDot.Fill = new SolidColorBrush(ColorHelper.FromArgb(255, 16, 185, 129));
-                if (EngineStatusText != null) EngineStatusText.Text = LanguageManager.Instance.Text("engineStatusRust");
+                if (EngineStatusDot != null) EngineStatusDot.Fill = App.GetThemeBrush("StatusSuccessBrush");
+                string rustVersion = DiffEngineService.Instance.GetVersion();
+                if (string.IsNullOrWhiteSpace(rustVersion) || rustVersion.StartsWith("Error", StringComparison.OrdinalIgnoreCase))
+                {
+                    rustVersion = "0.2.0";
+                }
+                if (EngineStatusText != null) EngineStatusText.Text = string.Format(LanguageManager.Instance.Text("engineStatusRust"), rustVersion);
             }
             else
             {
-                if (EngineStatusDot != null) EngineStatusDot.Fill = new SolidColorBrush(ColorHelper.FromArgb(255, 59, 130, 246));
+                if (EngineStatusDot != null) EngineStatusDot.Fill = App.GetThemeBrush("BrandInfoBrush");
                 if (EngineStatusText != null) EngineStatusText.Text = LanguageManager.Instance.Text("engineStatusFallback");
             }
         }
@@ -228,6 +235,44 @@ public sealed partial class SettingsControl : UserControl
             if (BackupTitleText != null) BackupTitleText.Text = LanguageManager.Instance.Text("createBakBackupTitle");
             if (BackupDescText != null) BackupDescText.Text = LanguageManager.Instance.Text("createBakBackupDesc");
             if (AutoUpdateSwitch != null) AutoUpdateSwitch.Header = LanguageManager.Instance.Text("autoCheckUpdatesOnLaunch");
+            if (CloseButton != null) ToolTipService.SetToolTip(CloseButton, LanguageManager.Instance.Text("close"));
+
+            if (ThemeFollowSystemItem != null) ThemeFollowSystemItem.Content = LanguageManager.Instance.Text("followSystem");
+            if (ThemeDarkItem != null) ThemeDarkItem.Content = LanguageManager.Instance.Text("themeDark");
+            if (ThemeLightItem != null) ThemeLightItem.Content = LanguageManager.Instance.Text("themeLight");
+
+            if (EngineRustFirstItem != null) EngineRustFirstItem.Content = LanguageManager.Instance.Text("engineRustFirst");
+            if (EngineRustOnlyItem != null) EngineRustOnlyItem.Content = LanguageManager.Instance.Text("engineRustOnly");
+            if (EngineFallbackItem != null) EngineFallbackItem.Content = LanguageManager.Instance.Text("engineFallback");
+
+            if (IgnoreWsSwitch != null) IgnoreWsSwitch.Header = LanguageManager.Instance.Text("ignoreWhitespace");
+            if (IgnoreCaseSwitch != null) IgnoreCaseSwitch.Header = LanguageManager.Instance.Text("ignoreCase");
+
+            if (RadioAiLocal != null) RadioAiLocal.Content = LanguageManager.Instance.Text("aiLocalOfflineDesc");
+            if (RadioAiCloud != null) RadioAiCloud.Content = LanguageManager.Instance.Text("aiCloudApiDesc");
+
+            if (Gemma1bDesc != null) Gemma1bDesc.Text = LanguageManager.Instance.Text("gemma1bDesc");
+            if (Gemma4bDesc != null) Gemma4bDesc.Text = LanguageManager.Instance.Text("gemma4bDesc");
+            if (Gemma1bInUseText != null) Gemma1bInUseText.Text = LanguageManager.Instance.Text("modelInUse");
+            if (Gemma4bInUseText != null) Gemma4bInUseText.Text = LanguageManager.Instance.Text("modelInUse");
+            if (Gemma1bSelectBtn != null) Gemma1bSelectBtn.Content = LanguageManager.Instance.Text("enable");
+            if (Gemma4bSelectBtn != null) Gemma4bSelectBtn.Content = LanguageManager.Instance.Text("enable");
+            if (Gemma1bDeleteBtn != null)
+            {
+                Gemma1bDeleteBtn.Content = LanguageManager.Instance.Text("clear");
+                ToolTipService.SetToolTip(Gemma1bDeleteBtn, LanguageManager.Instance.Text("cleanModelTooltip"));
+            }
+            if (Gemma4bDeleteBtn != null)
+            {
+                Gemma4bDeleteBtn.Content = LanguageManager.Instance.Text("clear");
+                ToolTipService.SetToolTip(Gemma4bDeleteBtn, LanguageManager.Instance.Text("cleanModelTooltip"));
+            }
+            if (Gemma1bDownloadText != null) Gemma1bDownloadText.Text = LanguageManager.Instance.Text("downloadModel");
+            if (Gemma4bDownloadText != null) Gemma4bDownloadText.Text = LanguageManager.Instance.Text("downloadModel");
+            if (Gemma1bCancelText != null) Gemma1bCancelText.Text = LanguageManager.Instance.Text("cancel");
+            if (Gemma4bCancelText != null) Gemma4bCancelText.Text = LanguageManager.Instance.Text("cancel");
+            if (Gemma1bRetryBtn != null) Gemma1bRetryBtn.Content = LanguageManager.Instance.Text("retry");
+            if (Gemma4bRetryBtn != null) Gemma4bRetryBtn.Content = LanguageManager.Instance.Text("retry");
 
             if (DefaultCompareModeLabel != null) DefaultCompareModeLabel.Text = LanguageManager.Instance.Text("defaultCompareMode");
             if (QuickCompareRadio != null) QuickCompareRadio.Content = LanguageManager.Instance.Text("quickCompareMode");
@@ -239,6 +284,15 @@ public sealed partial class SettingsControl : UserControl
             if (AutoReleaseTitle != null) AutoReleaseTitle.Text = LanguageManager.Instance.Text("aiAutoReleaseMemory");
             if (AutoReleaseDesc != null) AutoReleaseDesc.Text = LanguageManager.Instance.Text("aiAutoReleaseMemoryDesc");
             if (PresetLabel != null) PresetLabel.Text = LanguageManager.Instance.Text("aiCloudPreset");
+            if (PresetSubLabel != null) PresetSubLabel.Text = LanguageManager.Instance.Text("aiCloudPresetDesc");
+            if (ApiConfigTitle != null) ApiConfigTitle.Text = LanguageManager.Instance.Text("apiConfiguration");
+            if (ApiBaseUrlBox != null) ApiBaseUrlBox.Header = LanguageManager.Instance.Text("aiCloudBaseURL");
+            if (ApiKeyPasswordBox != null) ApiKeyPasswordBox.Header = LanguageManager.Instance.Text("aiCloudAPIKey");
+            if (ApiKeyTextBox != null) ApiKeyTextBox.Header = LanguageManager.Instance.Text("aiCloudAPIKey");
+            if (ApiModelNameBox != null) ApiModelNameBox.Header = LanguageManager.Instance.Text("aiCloudModelName");
+            if (VersionTextBlock != null) VersionTextBlock.Text = string.Format(LanguageManager.Instance.Text("aboutVersion"), UpdateCheckerService.CurrentVersion);
+            if (NativeArchBadgeText != null) NativeArchBadgeText.Text = LanguageManager.Instance.Text("winNativeArch");
+            if (AboutDescText != null) AboutDescText.Text = LanguageManager.Instance.Text("aboutDesc");
             if (TestConnBtnText != null) TestConnBtnText.Text = LanguageManager.Instance.Text("aiCloudTestConnection");
             if (CheckUpdateBtnText != null) CheckUpdateBtnText.Text = LanguageManager.Instance.Text("checkForUpdates");
 
@@ -326,6 +380,11 @@ public sealed partial class SettingsControl : UserControl
     private void OnBackupToggled(object sender, RoutedEventArgs e)
     {
         if (!_isInitializing) SettingsManager.Instance.CreateBakBackup = BackupSwitch.IsOn;
+    }
+
+    private void OnAutoUpdateToggled(object sender, RoutedEventArgs e)
+    {
+        if (!_isInitializing && AutoUpdateSwitch != null) SettingsManager.Instance.AutoCheckUpdatesOnLaunch = AutoUpdateSwitch.IsOn;
     }
 
     private void OnFolderModeChecked(object sender, RoutedEventArgs e)
@@ -615,7 +674,7 @@ public sealed partial class SettingsControl : UserControl
         TestProgressRing.Visibility = Visibility.Visible;
         TestProgressRing.IsActive = true;
         TestResultText.Text = LanguageManager.Instance.Text("aiCloudTesting");
-        TestResultText.Foreground = new SolidColorBrush(ColorHelper.FromArgb(255, 150, 150, 150));
+        TestResultText.Foreground = App.GetThemeBrush("TextMutedBrush");
 
         string endpoint = ApiBaseUrlBox?.Text ?? "";
         string apiKey = ApiKeyPasswordBox?.Password.Length > 0 ? ApiKeyPasswordBox.Password : (ApiKeyTextBox?.Text ?? "");
@@ -631,13 +690,13 @@ public sealed partial class SettingsControl : UserControl
         {
             string okText = LanguageManager.Instance.Text("aiCloudTestSuccess");
             TestResultText.Text = $"✔ {okText} ({latency:F2}s)";
-            TestResultText.Foreground = new SolidColorBrush(ColorHelper.FromArgb(255, 16, 185, 129));
+            TestResultText.Foreground = App.GetThemeBrush("StatusSuccessBrush");
         }
         else
         {
             string failText = LanguageManager.Instance.Text("aiCloudTestFailed");
             TestResultText.Text = $"❌ {failText}: {msg}";
-            TestResultText.Foreground = new SolidColorBrush(ColorHelper.FromArgb(255, 239, 68, 68));
+            TestResultText.Foreground = App.GetThemeBrush("StatusDangerBrush");
         }
     }
 
@@ -647,49 +706,31 @@ public sealed partial class SettingsControl : UserControl
         UpdateProgressRing.Visibility = Visibility.Visible;
         UpdateProgressRing.IsActive = true;
         UpdateStatusText.Text = LanguageManager.Instance.Text("checkingForUpdates");
+        UpdateStatusText.Foreground = App.GetThemeBrush("TextMutedBrush");
 
-        try
+        var (status, newVer, notes, url) = await UpdateCheckerService.Instance.CheckForUpdatesAsync(isUserInitiated: true);
+
+        UpdateProgressRing.IsActive = false;
+        UpdateProgressRing.Visibility = Visibility.Collapsed;
+        CheckUpdateBtn.IsEnabled = true;
+
+        if (status == UpdateCheckStatus.UpdateAvailable)
         {
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("WinCompare-App");
-            using var resp = await client.GetAsync("https://api.github.com/repos/andychao217/FileCompare/releases/latest");
-            if (resp.IsSuccessStatusCode)
-            {
-                string json = await resp.Content.ReadAsStringAsync();
-                using var doc = System.Text.Json.JsonDocument.Parse(json);
-                string tagName = doc.RootElement.GetProperty("tag_name").GetString() ?? "";
-
-                string currentVer = "v1.0.0";
-                if (!string.IsNullOrEmpty(tagName) && !tagName.Equals(currentVer, StringComparison.OrdinalIgnoreCase))
-                {
-                    UpdateStatusText.Text = string.Format(LanguageManager.Instance.Text("newVersionFoundFormat"), tagName, currentVer);
-                    UpdateStatusText.Foreground = new SolidColorBrush(ColorHelper.FromArgb(255, 16, 185, 129));
-                }
-                else
-                {
-                    string upToDate = LanguageManager.Instance.Text("upToDateTitle");
-                    string lastChecked = LanguageManager.Instance.Text("lastChecked");
-                    UpdateStatusText.Text = $"{upToDate} ({currentVer}) · {lastChecked}: {DateTime.Now:HH:mm:ss}";
-                }
-            }
-            else
-            {
-                string upToDate = LanguageManager.Instance.Text("upToDateTitle");
-                string lastChecked = LanguageManager.Instance.Text("lastChecked");
-                UpdateStatusText.Text = $"{upToDate} · {lastChecked}: {DateTime.Now:HH:mm:ss}";
-            }
+            UpdateStatusText.Text = string.Format(LanguageManager.Instance.Text("newVersionFoundFormat"), newVer, UpdateCheckerService.CurrentVersion);
+            UpdateStatusText.Foreground = App.GetThemeBrush("StatusSuccessBrush");
+            UpdateRequested?.Invoke(newVer, notes, url);
         }
-        catch
+        else if (status == UpdateCheckStatus.UpToDate)
         {
             string upToDate = LanguageManager.Instance.Text("upToDateTitle");
             string lastChecked = LanguageManager.Instance.Text("lastChecked");
-            UpdateStatusText.Text = $"{upToDate} · {lastChecked}: {DateTime.Now:HH:mm:ss}";
+            UpdateStatusText.Text = $"{upToDate} (v{UpdateCheckerService.CurrentVersion}) · {lastChecked}: {DateTime.Now:HH:mm:ss}";
+            UpdateStatusText.Foreground = App.GetThemeBrush("TextMutedBrush");
         }
-        finally
+        else
         {
-            UpdateProgressRing.IsActive = false;
-            UpdateProgressRing.Visibility = Visibility.Collapsed;
-            CheckUpdateBtn.IsEnabled = true;
+            UpdateStatusText.Text = LanguageManager.Instance.Text("checkFailed");
+            UpdateStatusText.Foreground = App.GetThemeBrush("StatusDangerBrush");
         }
     }
 }

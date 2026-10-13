@@ -113,8 +113,18 @@ pub fn compare_text(
     right_content: &str,
     options: &DiffOptions,
 ) -> TextDiffResult {
-    let left_raw_lines: Vec<&str> = left_content.lines().collect();
-    let right_raw_lines: Vec<&str> = right_content.lines().collect();
+    let left_normalized;
+    let right_normalized;
+    let (left_str, right_str) = if left_content.contains('\r') || right_content.contains('\r') {
+        left_normalized = left_content.replace("\r\n", "\n").replace('\r', "\n");
+        right_normalized = right_content.replace("\r\n", "\n").replace('\r', "\n");
+        (left_normalized.as_str(), right_normalized.as_str())
+    } else {
+        (left_content, right_content)
+    };
+
+    let left_raw_lines: Vec<&str> = left_str.lines().collect();
+    let right_raw_lines: Vec<&str> = right_str.lines().collect();
 
     let left_norm: Vec<String> = left_raw_lines
         .iter()
@@ -386,16 +396,28 @@ pub fn merge_three_way(
     base_content: &str,
     remote_content: &str,
 ) -> MergeResult {
-    let mut result = MergeResult::default();
-    let local_lines: Vec<&str> = local_content.lines().collect();
-    let base_lines: Vec<&str> = base_content.lines().collect();
-    let remote_lines: Vec<&str> = remote_content.lines().collect();
+    let loc_norm;
+    let bas_norm;
+    let rem_norm;
+    let (loc_str, bas_str, rem_str) = if local_content.contains('\r') || base_content.contains('\r') || remote_content.contains('\r') {
+        loc_norm = local_content.replace("\r\n", "\n").replace('\r', "\n");
+        bas_norm = base_content.replace("\r\n", "\n").replace('\r', "\n");
+        rem_norm = remote_content.replace("\r\n", "\n").replace('\r', "\n");
+        (loc_norm.as_str(), bas_norm.as_str(), rem_norm.as_str())
+    } else {
+        (local_content, base_content, remote_content)
+    };
+
+    let local_lines: Vec<&str> = loc_str.lines().collect();
+    let base_lines: Vec<&str> = bas_str.lines().collect();
+    let remote_lines: Vec<&str> = rem_str.lines().collect();
 
     let max_len = local_lines
         .len()
         .max(base_lines.len())
         .max(remote_lines.len());
 
+    let mut result = MergeResult::default();
     let mut merged_output = Vec::new();
 
     for i in 0..max_len {
@@ -481,5 +503,35 @@ mod tests {
         let result = merge_three_way(local, base, remote);
         assert_eq!(result.conflict_count, 0);
         assert_eq!(result.auto_resolved_count, 2);
+    }
+
+    #[test]
+    fn test_cr_and_crlf_line_endings() {
+        let left = "Line 1\rLine 2\rLine 3 Changed\rLine 4";
+        let right = "Line 1\r\nLine 2\r\nLine 3\r\nLine 4";
+        let options = DiffOptions::default();
+
+        let result = compare_text(left, right, &options);
+        assert_eq!(result.lines.len(), 4);
+        assert_eq!(result.total_modifications, 1);
+        assert_eq!(result.lines[0].change_type, ChangeType::Unchanged);
+        assert_eq!(result.lines[1].change_type, ChangeType::Unchanged);
+        assert_eq!(result.lines[2].change_type, ChangeType::Modified);
+        assert_eq!(result.lines[3].change_type, ChangeType::Unchanged);
+    }
+
+    #[test]
+    fn test_excel_row_display_item_diff() {
+        let left = std::fs::read_to_string("../../../test_files/ExcelRowDisplayItem_2.cs").unwrap();
+        let right = std::fs::read_to_string("../../../test_files/ExcelRowDisplayItem.cs").unwrap();
+        let options = DiffOptions::default();
+
+        let result = compare_text(&left, &right, &options);
+        println!("Rust diff lines count: {}", result.lines.len());
+        println!("Rust diff line 0: {:?}", result.lines[0]);
+        println!("Rust diff line 19: {:?}", result.lines[19]);
+        assert_eq!(result.lines.len(), 72);
+        assert_eq!(result.lines[0].change_type, ChangeType::Unchanged);
+        assert_eq!(result.lines[19].change_type, ChangeType::Modified);
     }
 }

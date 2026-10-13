@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using WinCompare.Core.Models;
 
 namespace WinCompare.Core.Services;
@@ -31,6 +32,15 @@ public sealed class RecentHistoryManager
         if (string.IsNullOrWhiteSpace(leftPath) || string.IsNullOrWhiteSpace(rightPath))
             return;
 
+        var newRecord = new RecentCompareRecord
+        {
+            LeftPath = leftPath,
+            RightPath = rightPath,
+            Type = type,
+            Timestamp = DateTime.Now
+        };
+        newRecord.Type = newRecord.EffectiveType;
+
         // Deduplicate bidirectional
         var existing = Records.FirstOrDefault(r =>
             (r.LeftPath.Equals(leftPath, StringComparison.OrdinalIgnoreCase) && r.RightPath.Equals(rightPath, StringComparison.OrdinalIgnoreCase)) ||
@@ -40,14 +50,6 @@ public sealed class RecentHistoryManager
         {
             Records.Remove(existing);
         }
-
-        var newRecord = new RecentCompareRecord
-        {
-            LeftPath = leftPath,
-            RightPath = rightPath,
-            Type = type,
-            Timestamp = DateTime.Now
-        };
 
         Records.Insert(0, newRecord);
 
@@ -86,20 +88,37 @@ public sealed class RecentHistoryManager
             if (File.Exists(_storagePath))
             {
                 string json = File.ReadAllText(_storagePath);
-                var items = JsonSerializer.Deserialize<List<RecentCompareRecord>>(json);
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                options.Converters.Add(new JsonStringEnumConverter());
+                var items = JsonSerializer.Deserialize<List<RecentCompareRecord>>(json, options);
                 if (items != null)
                 {
                     Records.Clear();
+                    bool needsResave = false;
                     foreach (var item in items)
                     {
+                        var eff = item.EffectiveType;
+                        if (item.Type != eff)
+                        {
+                            item.Type = eff;
+                            needsResave = true;
+                        }
                         Records.Add(item);
+                    }
+
+                    if (needsResave)
+                    {
+                        SaveRecords();
                     }
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Fallback gracefully on disk read error
+            System.Diagnostics.Debug.WriteLine($"RecentHistoryManager.LoadRecords error: {ex.Message}");
         }
     }
 
@@ -107,7 +126,12 @@ public sealed class RecentHistoryManager
     {
         try
         {
-            string json = JsonSerializer.Serialize(Records.ToList(), new JsonSerializerOptions { WriteIndented = true });
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true
+            };
+            options.Converters.Add(new JsonStringEnumConverter());
+            string json = JsonSerializer.Serialize(Records.ToList(), options);
             File.WriteAllText(_storagePath, json);
         }
         catch

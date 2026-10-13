@@ -1,0 +1,100 @@
+﻿<UserControl
+    x:Class="WinCompare.UI.Views.SyncPreviewDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Border Width="560" MaxHeight="520"
+            Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource SurfaceStrokeColorFlyoutBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            Padding="20">
+        <Grid RowSpacing="14">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- 1. Header (Sync Icon + Title + Subtitle + Close Button X) -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <FontIcon Glyph="&#xE895;" FontSize="24" Foreground="{ThemeResource BrandPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,12,0" />
+
+                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                    <TextBlock x:Name="TitleBlock" Text="预演: 文件同步操作清单" FontSize="16" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                    <TextBlock x:Name="SubtitleBlock" Text="在执行实际磁盘写操作前仔细检查以下变更项目。" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                </StackPanel>
+
+                <Button x:Name="CloseBtn" Grid.Column="2" Click="OnCancelClicked"
+                        Background="Transparent" BorderThickness="0" CornerRadius="4"
+                        Width="30" Height="30" Padding="0" VerticalAlignment="Top">
+                    <FontIcon Glyph="&#xE711;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+            </Grid>
+
+            <!-- 2. Divider line -->
+            <Rectangle Grid.Row="1" Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,2" />
+
+            <!-- 3. Body: Empty State or Virtualized ListView -->
+            <Grid Grid.Row="2">
+                <!-- Empty State (Completely in sync) -->
+                <StackPanel x:Name="EmptyPanel" Spacing="10" Padding="0,32,0,32" HorizontalAlignment="Center" Visibility="Collapsed">
+                    <FontIcon Glyph="&#xE73E;" FontSize="36" Foreground="{ThemeResource StatusAddTextBrush}" HorizontalAlignment="Center" />
+                    <TextBlock x:Name="EmptyTextBlock" Text="两侧文件夹内容完全一致，无需同步。" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Operations List -->
+                <StackPanel x:Name="ListPanel" Spacing="6" Visibility="Visible">
+                    <TextBlock x:Name="CountHeaderBlock" Text="待执行同步项:" FontSize="12.5" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+
+                    <Border CornerRadius="6" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" Padding="4">
+                        <ListView x:Name="OperationsListView" MaxHeight="220" SelectionMode="None" IsItemClickEnabled="False" Padding="0">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,1" Padding="8,5" Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="18" Height="18" CornerRadius="9" Background="{Binding ActionBadgeBrush}" VerticalAlignment="Center">
+                                            <FontIcon Glyph="{Binding ActionBadgeGlyph}" FontSize="9" Foreground="{ThemeResource TextOnAccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <TextBlock Grid.Column="1" Text="{Binding RelativePath}" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" MaxLines="1" VerticalAlignment="Center" Margin="8,0,8,0" />
+                                        <TextBlock Grid.Column="2" Text="{Binding ActionDescription}" FontSize="10.5" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Border>
+
+                    <!-- Limit Note -->
+                    <TextBlock x:Name="LimitNoteBlock" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Right" Visibility="Collapsed" />
+                </StackPanel>
+            </Grid>
+
+            <!-- 4. Footer Buttons -->
+            <Grid Grid.Row="3" Margin="0,6,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Button x:Name="CancelBtn" Grid.Column="0" Click="OnCancelClicked"
+                        Content="取消" Width="80" Height="32" CornerRadius="4" HorizontalAlignment="Left" />
+
+                <Button x:Name="ExecuteBtn" Grid.Column="2" Click="OnExecuteClicked"
+                        Content="执行同步" Background="{ThemeResource BrandPrimaryBrush}" Foreground="{ThemeResource TextOnAccentBrush}" BorderThickness="0"
+                        MinWidth="96" Height="32" CornerRadius="4" HorizontalAlignment="Right" />
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

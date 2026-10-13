@@ -3,14 +3,17 @@ import UniformTypeIdentifiers
 
 public struct ThreeWayMergeView: View {
     @Bindable public var viewModel: ThreeWayMergeViewModel
+    public var tabManager: TabManager?
     @State private var isLocalTargeted = false
     @State private var isBaseTargeted = false
     @State private var isRemoteTargeted = false
     @State private var showClearConfirmation = false
     @State private var languageManager = LanguageManager.shared
+    @State private var validationResult: ValidationResult?
 
-    public init(viewModel: ThreeWayMergeViewModel) {
+    public init(viewModel: ThreeWayMergeViewModel, tabManager: TabManager? = nil) {
         self.viewModel = viewModel
+        self.tabManager = tabManager
     }
 
     public var body: some View {
@@ -32,7 +35,7 @@ public struct ThreeWayMergeView: View {
                             hasFile: viewModel.localFileURL != nil || !viewModel.localContent.isEmpty,
                             accentColor: .orange,
                             isLeft: true,
-                            onOpen: { viewModel.openLocalFile() }
+                            onOpen: { chooseFile(for: .local) }
                         )
                         .background(isLocalTargeted ? Color.orange.opacity(0.1) : Color.clear)
                         .onDrop(of: [.fileURL], isTargeted: $isLocalTargeted) { providers in
@@ -49,7 +52,7 @@ public struct ThreeWayMergeView: View {
                             hasFile: viewModel.baseFileURL != nil || !viewModel.baseContent.isEmpty,
                             accentColor: .gray,
                             isBase: true,
-                            onOpen: { viewModel.openBaseFile() }
+                            onOpen: { chooseFile(for: .base) }
                         )
                         .background(isBaseTargeted ? Color.gray.opacity(0.1) : Color.clear)
                         .onDrop(of: [.fileURL], isTargeted: $isBaseTargeted) { providers in
@@ -66,7 +69,7 @@ public struct ThreeWayMergeView: View {
                             hasFile: viewModel.remoteFileURL != nil || !viewModel.remoteContent.isEmpty,
                             accentColor: .green,
                             isRight: true,
-                            onOpen: { viewModel.openRemoteFile() }
+                            onOpen: { chooseFile(for: .remote) }
                         )
                         .background(isRemoteTargeted ? Color.green.opacity(0.1) : Color.clear)
                         .onDrop(of: [.fileURL], isTargeted: $isRemoteTargeted) { providers in
@@ -84,13 +87,55 @@ public struct ThreeWayMergeView: View {
             }
         }
         .background(Color(nsColor: .textBackgroundColor))
+        .overlay {
+            if let result = validationResult {
+                FileValidationDialogView(
+                    result: result,
+                    onDismiss: {
+                        self.validationResult = nil
+                    },
+                    onSwitchMode: { mode, url in
+                        self.validationResult = nil
+                        tabManager?.openSingleTarget(url: url, mode: mode)
+                    }
+                )
+            }
+        }
+    }
+
+    private func chooseFile(for type: ThreeWayMergeViewModel.MergeFileType) {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        switch type {
+        case .local:
+            panel.title = languageManager.text(.localBranch)
+        case .base:
+            panel.title = languageManager.text(.baseBranch)
+        case .remote:
+            panel.title = languageManager.text(.remoteBranch)
+        }
+        if panel.runModal() == .OK, let url = panel.url {
+            let check = FileFormatValidator.validate(url: url, expectedMode: .threeWayMerge)
+            if !check.isValid {
+                self.validationResult = check
+                return
+            }
+            viewModel.loadSingleFile(from: url, type: type)
+        }
     }
 
     private func handleDrop(providers: [NSItemProvider], type: ThreeWayMergeViewModel.MergeFileType) -> Bool {
         guard let provider = providers.first else { return false }
-        _ = provider.loadObject(ofClass: URL.self) { url, _ in
-            guard let fileURL = url else { return }
+        provider.loadFileURL { fileURL in
+            guard let fileURL = fileURL else { return }
             DispatchQueue.main.async {
+                let check = FileFormatValidator.validate(url: fileURL, expectedMode: .threeWayMerge)
+                if !check.isValid {
+                    self.validationResult = check
+                    return
+                }
                 self.viewModel.loadSingleFile(from: fileURL, type: type)
             }
         }

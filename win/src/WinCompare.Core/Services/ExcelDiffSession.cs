@@ -54,12 +54,34 @@ public sealed class ExcelDiffSession : IDisposable
         var handle = new SafeRustStringHandle(jsonPtr);
         string json = handle.ToManagedStringAndDispose();
 
+        var result = new ExcelViewportData { SheetIndex = sheetIndex, StartRow = startRow };
         if (string.IsNullOrEmpty(json))
         {
-            return new ExcelViewportData { SheetIndex = sheetIndex, StartRow = startRow };
+            return result;
         }
 
-        return JsonSerializer.Deserialize<ExcelViewportData>(json) ?? new ExcelViewportData { SheetIndex = sheetIndex, StartRow = startRow };
+        try
+        {
+            var rows = JsonSerializer.Deserialize<List<ExcelRowDiff>>(json);
+            if (rows != null)
+            {
+                result.Rows = rows;
+                return result;
+            }
+        }
+        catch { }
+
+        try
+        {
+            var data = JsonSerializer.Deserialize<ExcelViewportData>(json);
+            if (data?.Rows != null)
+            {
+                result = data;
+            }
+        }
+        catch { }
+
+        return result;
     }
 
     public long FindNextDiffRow(int sheetIndex, int currentRow, bool backwards = false)

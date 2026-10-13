@@ -1,6 +1,8 @@
+﻿using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Windows.ApplicationModel.DataTransfer;
 using WinCompare.Core.Services;
 
@@ -9,12 +11,22 @@ namespace WinCompare.UI.Views;
 public sealed partial class HelpControl : UserControl
 {
     public event Action? CloseRequested;
+    public event Action<string, string, string>? UpdateRequested;
 
-    public HelpControl()
+    public HelpControl() : this(0)
+    {
+    }
+
+    public HelpControl(int initialTabIndex)
     {
         try
         {
             this.InitializeComponent();
+
+            if (HelpTabs != null && initialTabIndex >= 0 && initialTabIndex < HelpTabs.TabItems.Count)
+            {
+                HelpTabs.SelectedIndex = initialTabIndex;
+            }
 
             if (DragHeader != null)
             {
@@ -29,7 +41,8 @@ public sealed partial class HelpControl : UserControl
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"HelpControl constructor error: {ex}");
+            App.LogFatalError("HelpControl.ctor", ex);
+            throw;
         }
     }
 
@@ -100,7 +113,8 @@ public sealed partial class HelpControl : UserControl
         try
         {
             if (HelpTitleText != null) HelpTitleText.Text = LanguageManager.Instance.Text("helpTitle");
-            if (HelpSubtitleText != null) HelpSubtitleText.Text = LanguageManager.Instance.Text("helpSubtitle");
+            string helpSub = LanguageManager.Instance.Text("helpSubtitle");
+            if (HelpSubtitleText != null) HelpSubtitleText.Text = $"WinCompare v{UpdateCheckerService.CurrentVersion} \u2022 {helpSub}";
 
             if (FeaturesTabItem != null) FeaturesTabItem.Header = LanguageManager.Instance.Text("coreFeatures");
             if (ShortcutsTabItem != null) ShortcutsTabItem.Header = LanguageManager.Instance.Text("shortcuts");
@@ -129,9 +143,41 @@ public sealed partial class HelpControl : UserControl
             if (GitConfigLabel != null) GitConfigLabel.Text = LanguageManager.Instance.Text("gitMergetoolConfigGuide");
             if (CopyBtnText != null) CopyBtnText.Text = LanguageManager.Instance.Text("copyCommand");
 
+            if (TabDragHelpTitleText != null) TabDragHelpTitleText.Text = LanguageManager.Instance.Text("tabDragMergeTitle") + " (Tab Drag & Multi-Window)";
+            if (TabDragHelpDescText != null) TabDragHelpDescText.Text = LanguageManager.Instance.Text("tabDragMergeDesc");
+
             if (AiHelpTitleText != null) AiHelpTitleText.Text = LanguageManager.Instance.Text("aiEngine") + " (AI Diff Assistant)";
             if (AiHelpDescText != null) AiHelpDescText.Text = LanguageManager.Instance.Text("aiFeatureHelpTitle");
             if (AiDetailText != null) AiDetailText.Text = LanguageManager.Instance.Text("aiAssistantGuideDetail");
+
+            // Shortcuts Tab
+            if (ShortcutNewTextText != null) ShortcutNewTextText.Text = LanguageManager.Instance.Text("textDiffTitle");
+            if (ShortcutNewExcelText != null) ShortcutNewExcelText.Text = LanguageManager.Instance.Text("excelDiffTitle");
+            if (ShortcutNewWordText != null) ShortcutNewWordText.Text = LanguageManager.Instance.Text("wordDiffTitle");
+            if (ShortcutNewFolderText != null) ShortcutNewFolderText.Text = LanguageManager.Instance.Text("folderDiffTitle");
+            if (ShortcutNewMergeText != null) ShortcutNewMergeText.Text = LanguageManager.Instance.Text("threeWayMerge");
+            if (ShortcutNextTabText != null) ShortcutNextTabText.Text = LanguageManager.Instance.Text("nextTab");
+            if (ShortcutPrevTabText != null) ShortcutPrevTabText.Text = LanguageManager.Instance.Text("prevTab");
+            if (ShortcutOpenFileText != null) ShortcutOpenFileText.Text = LanguageManager.Instance.Text("openFile");
+            if (ShortcutSaveText != null) ShortcutSaveText.Text = LanguageManager.Instance.Text("saveChanges");
+            if (ShortcutCloseTabText != null) ShortcutCloseTabText.Text = LanguageManager.Instance.Text("closeTab");
+            if (ShortcutRefreshText != null) ShortcutRefreshText.Text = LanguageManager.Instance.Text("refreshCompare");
+            if (ShortcutNextDiffText != null) ShortcutNextDiffText.Text = LanguageManager.Instance.Text("nextDiff");
+            if (ShortcutPrevDiffText != null) ShortcutPrevDiffText.Text = LanguageManager.Instance.Text("prevDiff");
+            if (ShortcutTakeLeftText != null) ShortcutTakeLeftText.Text = LanguageManager.Instance.Text("takeLeft");
+            if (ShortcutTakeRightText != null) ShortcutTakeRightText.Text = LanguageManager.Instance.Text("takeRight");
+            if (ShortcutIgnoreWsText != null) ShortcutIgnoreWsText.Text = LanguageManager.Instance.Text("ignoreWhitespace");
+            if (ShortcutIgnoreCaseText != null) ShortcutIgnoreCaseText.Text = LanguageManager.Instance.Text("ignoreCase");
+            if (ShortcutAiSummaryText != null) ShortcutAiSummaryText.Text = LanguageManager.Instance.Text("aiSummary");
+            if (ShortcutSettingsText != null) ShortcutSettingsText.Text = LanguageManager.Instance.Text("openPreferences");
+            if (ShortcutHelpText != null) ShortcutHelpText.Text = LanguageManager.Instance.Text("helpAndGuide");
+            if (ShortcutCancelText != null) ShortcutCancelText.Text = LanguageManager.Instance.Text("cancelTabDragDesc");
+
+            // About Tab & Close Button
+            if (AboutVersionText != null) AboutVersionText.Text = string.Format(LanguageManager.Instance.Text("aboutVersion"), UpdateCheckerService.CurrentVersion);
+            if (AboutDescText != null) AboutDescText.Text = LanguageManager.Instance.Text("aboutDesc");
+            if (AboutCheckUpdateBtnText != null) AboutCheckUpdateBtnText.Text = LanguageManager.Instance.Text("checkForUpdates");
+            if (CloseButton != null) ToolTipService.SetToolTip(CloseButton, LanguageManager.Instance.Text("close"));
         }
         catch { }
     }
@@ -151,6 +197,41 @@ public sealed partial class HelpControl : UserControl
         catch
         {
             // Clipboard access fallback
+        }
+    }
+
+    private async void OnCheckUpdateClicked(object sender, RoutedEventArgs e)
+    {
+        AboutCheckUpdateBtn.IsEnabled = false;
+        AboutUpdateProgressRing.Visibility = Visibility.Visible;
+        AboutUpdateProgressRing.IsActive = true;
+        AboutUpdateStatusText.Text = LanguageManager.Instance.Text("checkingForUpdates");
+        AboutUpdateStatusText.Foreground = App.GetThemeBrush("TextMutedBrush");
+
+        var (status, newVer, notes, url) = await UpdateCheckerService.Instance.CheckForUpdatesAsync(isUserInitiated: true);
+
+        AboutUpdateProgressRing.IsActive = false;
+        AboutUpdateProgressRing.Visibility = Visibility.Collapsed;
+        AboutCheckUpdateBtn.IsEnabled = true;
+
+        if (status == UpdateCheckStatus.UpdateAvailable)
+        {
+            AboutUpdateStatusText.Text = string.Format(LanguageManager.Instance.Text("newVersionFoundFormat"), newVer, UpdateCheckerService.CurrentVersion);
+            AboutUpdateStatusText.Foreground = App.GetThemeBrush("StatusSuccessBrush");
+
+            UpdateRequested?.Invoke(newVer, notes, url);
+        }
+        else if (status == UpdateCheckStatus.UpToDate)
+        {
+            string upToDate = LanguageManager.Instance.Text("upToDateTitle");
+            string lastChecked = LanguageManager.Instance.Text("lastChecked");
+            AboutUpdateStatusText.Text = $"{upToDate} (v{UpdateCheckerService.CurrentVersion}) \u00B7 {lastChecked}: {DateTime.Now:HH:mm:ss}";
+            AboutUpdateStatusText.Foreground = App.GetThemeBrush("TextMutedBrush");
+        }
+        else
+        {
+            AboutUpdateStatusText.Text = LanguageManager.Instance.Text("checkFailed");
+            AboutUpdateStatusText.Foreground = App.GetThemeBrush("StatusDangerBrush");
         }
     }
 }

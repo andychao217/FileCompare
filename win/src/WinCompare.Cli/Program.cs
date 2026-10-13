@@ -15,7 +15,7 @@ internal class Program
 
         if (args.Contains("--version") || args.Contains("-v"))
         {
-            Console.WriteLine("WinCompare CLI (wincmp) v0.5.0");
+            Console.WriteLine($"WinCompare CLI (wincmp) v{UpdateCheckerService.CurrentVersion}");
             Console.WriteLine($"Rust Engine: {DiffEngineService.Instance.GetVersion()}");
             return 0;
         }

@@ -173,7 +173,7 @@ git config --global difftool.maccompare.cmd 'mcdiff "$LOCAL" "$REMOTE"'
 #### Package Universal DMG Release (Universal Binary 2)
 
 ```bash
-bash scripts/package_dmg.sh 0.5.0
+bash scripts/package_dmg.sh 0.6.0
 ```
 
 ### 📄 License
@@ -301,7 +301,7 @@ mcdiff --merge local.py base.py remote.py -o merged.py
 #### 打包 Universal DMG 安装包 (Universal Binary 2)
 
 ```bash
-bash scripts/package_dmg.sh 0.5.0
+bash scripts/package_dmg.sh 0.6.0
 ```
 
 ### 📄 开源许可证

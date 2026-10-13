@@ -4,12 +4,15 @@ import UniformTypeIdentifiers
 
 public struct ExcelDiffView: View {
     @Bindable var viewModel: ExcelDiffViewModel
+    public var tabManager: TabManager?
     @State private var languageManager = LanguageManager.shared
     @State private var isLeftDropTargeted: Bool = false
     @State private var isRightDropTargeted: Bool = false
+    @State private var validationResult: ValidationResult?
 
-    public init(viewModel: ExcelDiffViewModel) {
+    public init(viewModel: ExcelDiffViewModel, tabManager: TabManager? = nil) {
         self.viewModel = viewModel
+        self.tabManager = tabManager
     }
 
     private var isBothEmpty: Bool {
@@ -133,6 +136,20 @@ public struct ExcelDiffView: View {
         .sheet(isPresented: $viewModel.isRulesSheetPresented) {
             ExcelRulesSheetView(viewModel: viewModel)
         }
+        .overlay {
+            if let result = validationResult {
+                FileValidationDialogView(
+                    result: result,
+                    onDismiss: {
+                        self.validationResult = nil
+                    },
+                    onSwitchMode: { mode, url in
+                        self.validationResult = nil
+                        tabManager?.openSingleTarget(url: url, mode: mode)
+                    }
+                )
+            }
+        }
     }
 
     @ViewBuilder
@@ -166,9 +183,14 @@ public struct ExcelDiffView: View {
 
     private func handleDrop(providers: [NSItemProvider], isLeft: Bool) -> Bool {
         guard let provider = providers.first else { return false }
-        _ = provider.loadObject(ofClass: URL.self) { url, _ in
-            guard let fileURL = url else { return }
+        provider.loadFileURL { fileURL in
+            guard let fileURL = fileURL else { return }
             DispatchQueue.main.async {
+                let check = FileFormatValidator.validate(url: fileURL, expectedMode: .excelDiff)
+                if !check.isValid {
+                    self.validationResult = check
+                    return
+                }
                 self.viewModel.loadSingleFile(from: fileURL, isLeft: isLeft)
             }
         }

@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="WinCompare.UI.Views.HelpControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -26,12 +26,12 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                    <Border Background="#208B5CF6" CornerRadius="8" Width="36" Height="36" VerticalAlignment="Center">
-                        <FontIcon Glyph="&#xE897;" FontSize="18" Foreground="#8B5CF6" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Border Background="{ThemeResource AIAccentBgSubtleBrush}" CornerRadius="8" Width="36" Height="36" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE897;" FontSize="18" Foreground="{ThemeResource AIAccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <StackPanel Spacing="2" VerticalAlignment="Center">
                         <TextBlock x:Name="HelpTitleText" Text="WinCompare 帮助与用户指南" FontSize="16" FontWeight="SemiBold" />
-                        <TextBlock x:Name="HelpSubtitleText" Text="WinCompare v1.0.0 • 快捷键与核心功能说明" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Name="HelpSubtitleText" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                     </StackPanel>
                 </StackPanel>
 
@@ -58,8 +58,8 @@
                             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
                                 <StackPanel Spacing="8">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
-                                        <Border Background="#150078D4" CornerRadius="6" Width="28" Height="28">
-                                            <FontIcon Glyph="&#xE8A5;" FontSize="14" Foreground="#0078D4" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        <Border Background="{ThemeResource HelpOfficeBlueBgBrush}" CornerRadius="6" Width="28" Height="28">
+                                            <FontIcon Glyph="&#xE8A5;" FontSize="14" Foreground="{ThemeResource HelpOfficeBlueBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
                                         <StackPanel VerticalAlignment="Center" Spacing="1">
                                             <TextBlock x:Name="TextDiffTitleText" Text="文本对比 (Text Diff)" FontWeight="SemiBold" FontSize="13" />
@@ -75,8 +75,8 @@
                             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
                                 <StackPanel Spacing="8">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
-                                        <Border Background="#15107C41" CornerRadius="6" Width="28" Height="28">
-                                            <FontIcon Glyph="&#xF0EC;" FontSize="14" Foreground="#107C41" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        <Border Background="{ThemeResource HelpOfficeGreenBgBrush}" CornerRadius="6" Width="28" Height="28">
+                                            <FontIcon Glyph="&#xF0EC;" FontSize="14" Foreground="{ThemeResource HelpOfficeGreenBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
                                         <StackPanel VerticalAlignment="Center" Spacing="1">
                                             <TextBlock x:Name="ExcelDiffTitleText" Text="表格对比 (Excel Diff)" FontWeight="SemiBold" FontSize="13" />
@@ -92,8 +92,8 @@
                             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
                                 <StackPanel Spacing="8">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
-                                        <Border Background="#15185ABD" CornerRadius="6" Width="28" Height="28">
-                                            <FontIcon Glyph="&#xE8A5;" FontSize="14" Foreground="#185ABD" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        <Border Background="{ThemeResource HelpOfficeNavyBgBrush}" CornerRadius="6" Width="28" Height="28">
+                                            <FontIcon Glyph="&#xE8A5;" FontSize="14" Foreground="{ThemeResource HelpOfficeNavyBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
                                         <StackPanel VerticalAlignment="Center" Spacing="1">
                                             <TextBlock x:Name="WordDiffTitleText" Text="Word 对比 (Word Diff)" FontWeight="SemiBold" FontSize="13" />
@@ -109,8 +109,8 @@
                             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
                                 <StackPanel Spacing="8">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
-                                        <Border Background="#15E88100" CornerRadius="6" Width="28" Height="28">
-                                            <FontIcon Glyph="&#xED25;" FontSize="14" Foreground="#E88100" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        <Border Background="{ThemeResource HelpOfficeOrangeBgBrush}" CornerRadius="6" Width="28" Height="28">
+                                            <FontIcon Glyph="&#xED25;" FontSize="14" Foreground="{ThemeResource HelpOfficeOrangeBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
                                         <StackPanel VerticalAlignment="Center" Spacing="1">
                                             <TextBlock x:Name="FolderDiffHelpTitleText" Text="文件夹对比 (Folder Diff)" FontWeight="SemiBold" FontSize="13" />
@@ -126,8 +126,8 @@
                             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
                                 <StackPanel Spacing="10">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
-                                        <Border Background="#158B5CF6" CornerRadius="6" Width="28" Height="28">
-                                            <FontIcon Glyph="&#xE8D7;" FontSize="14" Foreground="#8B5CF6" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        <Border Background="{ThemeResource AIAccentBgSubtleBrush}" CornerRadius="6" Width="28" Height="28">
+                                            <FontIcon Glyph="&#xE8D7;" FontSize="14" Foreground="{ThemeResource AIAccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
                                         <StackPanel VerticalAlignment="Center" Spacing="1">
                                             <TextBlock x:Name="MergeHelpTitleText" Text="三向合并与 Git 集成 (3-Way Merge &amp; Git Integration)" FontWeight="SemiBold" FontSize="13" />
@@ -150,18 +150,35 @@
                                                 </Button>
                                             </Grid>
                                             <TextBlock x:Name="GitCmdSnippet" Text="git config --global merge.tool wincompare&#x0a;git config --global mergetool.wincompare.cmd &quot;wincompare.exe merge \&quot;$LOCAL\&quot; \&quot;$BASE\&quot; \&quot;$REMOTE\&quot; -o \&quot;$MERGED\&quot;&quot;&#x0a;git config --global mergetool.wincompare.trustExitCode true"
-                                                       FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" Foreground="#0078D4" IsTextSelectionEnabled="True" LineHeight="16" />
+                                                       FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" Foreground="{ThemeResource HelpOfficeBlueBrush}" IsTextSelectionEnabled="True" LineHeight="16" />
                                         </StackPanel>
                                     </Border>
                                 </StackPanel>
                             </Border>
 
-                            <!-- 6. AI 助手 -->
+                            <!-- 6. 标签页拖拽与多窗口 -->
                             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
                                 <StackPanel Spacing="8">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
-                                        <Border Background="#158B5CF6" CornerRadius="6" Width="28" Height="28">
-                                            <FontIcon Glyph="&#xE945;" FontSize="14" Foreground="#8B5CF6" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        <Border Background="{ThemeResource HelpOfficeBlueBgBrush}" CornerRadius="6" Width="28" Height="28">
+                                            <FontIcon Glyph="&#xE737;" FontSize="14" Foreground="{ThemeResource HelpOfficeBlueBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <StackPanel VerticalAlignment="Center" Spacing="1">
+                                            <TextBlock x:Name="TabDragHelpTitleText" Text="标签页拖拽与多窗口 (Tab Drag &amp; Multi-Window)" FontWeight="SemiBold" FontSize="13" />
+                                            <TextBlock x:Name="TabDragHelpDescText" Text="支持跨标签页任意拖动重排，向外拖拽即刻独立窗口，拖回即刻自动合并多窗口。" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <TextBlock x:Name="TabDragDetailText" Text="• 自由拖动重排：可自由拖拽标签页调整顺序，或将文件拖至标签栏快速新建对比。&#x0a;• 独立与合并窗口：向外拖拽标签页即可分离为独立窗口；双窗口之间拖拽标签页可自动合并为单窗口。"
+                                               FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" LineHeight="17" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 7. AI 助手 -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                                <StackPanel Spacing="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Background="{ThemeResource AIAccentBgSubtleBrush}" CornerRadius="6" Width="28" Height="28">
+                                            <FontIcon Glyph="&#xE945;" FontSize="14" Foreground="{ThemeResource AIAccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
                                         <StackPanel VerticalAlignment="Center" Spacing="1">
                                             <TextBlock x:Name="AiHelpTitleText" Text="本地端侧与云端 AI 助手 (AI Assistant)" FontWeight="SemiBold" FontSize="13" />
@@ -189,7 +206,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="新建文本对比" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ShortcutNewTextText" Text="新建文本对比" FontSize="12" VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
                                         <TextBlock Text="Ctrl + N" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                                     </Border>
@@ -202,7 +219,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="新建表格对比" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ShortcutNewExcelText" Text="新建表格对比" FontSize="12" VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
                                         <TextBlock Text="Ctrl + Shift + E" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                                     </Border>
@@ -215,7 +232,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="新建 Word 对比" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ShortcutNewWordText" Text="新建 Word 对比" FontSize="12" VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
                                         <TextBlock Text="Ctrl + Shift + D" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                                     </Border>
@@ -228,7 +245,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="新建文件夹对比" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ShortcutNewFolderText" Text="新建文件夹对比" FontSize="12" VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
                                         <TextBlock Text="Ctrl + Shift + N" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                                     </Border>
@@ -241,7 +258,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="新建三向合并" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ShortcutNewMergeText" Text="新建三向合并" FontSize="12" VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
                                         <TextBlock Text="Ctrl + Shift + M" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                                     </Border>
@@ -254,7 +271,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="切换到下一个标签页" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ShortcutNextTabText" Text="切换到下一个标签页" FontSize="12" VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
                                         <TextBlock Text="Ctrl + Tab" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
                                     </Border>
@@ -267,7 +284,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="切换到上一个标签页" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ShortcutPrevTabText" Text="切换到上一个标签页" FontSize="12" VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
                                         <TextBlock Text="Ctrl + Shift + Tab" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
                                     </Border>
@@ -280,7 +297,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="打开文件..." FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ShortcutOpenFileText" Text="打开文件..." FontSize="12" VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
                                         <TextBlock Text="Ctrl + O" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
                                     </Border>
@@ -293,7 +310,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="保存当前修改" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ShortcutSaveText" Text="保存当前修改" FontSize="12" VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
                                         <TextBlock Text="Ctrl + S" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
                                     </Border>
@@ -306,7 +323,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="关闭当前标签页" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ShortcutCloseTabText" Text="关闭当前标签页" FontSize="12" VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
                                         <TextBlock Text="Ctrl + W" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
                                     </Border>
@@ -319,7 +336,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="刷新对比" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ShortcutRefreshText" Text="刷新对比" FontSize="12" VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
                                         <TextBlock Text="F5  /  Ctrl + R" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
                                     </Border>
@@ -332,7 +349,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="跳转到下一个差异" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ShortcutNextDiffText" Text="跳转到下一个差异" FontSize="12" VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
                                         <TextBlock Text="Ctrl + ]  /  Ctrl + ↓" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
                                     </Border>
@@ -345,7 +362,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="跳转到上一个差异" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ShortcutPrevDiffText" Text="跳转到上一个差异" FontSize="12" VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
                                         <TextBlock Text="Ctrl + [  /  Ctrl + ↑" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
                                     </Border>
@@ -358,7 +375,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="采用左侧修改 (Take Left)" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ShortcutTakeLeftText" Text="采用左侧修改 (Take Left)" FontSize="12" VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
                                         <TextBlock Text="Alt + ←" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
                                     </Border>
@@ -371,7 +388,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="采用右侧修改 (Take Right)" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ShortcutTakeRightText" Text="采用右侧修改 (Take Right)" FontSize="12" VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
                                         <TextBlock Text="Alt + →" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
                                     </Border>
@@ -384,7 +401,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="切换忽略空白字符" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ShortcutIgnoreWsText" Text="切换忽略空白字符" FontSize="12" VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
                                         <TextBlock Text="Ctrl + Shift + W" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
                                     </Border>
@@ -397,7 +414,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="切换忽略大小写" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ShortcutIgnoreCaseText" Text="切换忽略大小写" FontSize="12" VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
                                         <TextBlock Text="Ctrl + Shift + C" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
                                     </Border>
@@ -410,9 +427,48 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="生成 AI 改动总结" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="ShortcutAiSummaryText" Text="生成 AI 改动总结" FontSize="12" VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
-                                        <TextBlock Text="Ctrl + I" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" Foreground="#8B5CF6" />
+                                        <TextBlock Text="Ctrl + I" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource AIAccentBrush}" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="ShortcutSettingsText" Text="打开偏好设置" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Ctrl + ," FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="ShortcutHelpText" Text="打开帮助与用户指南" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="F1" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="ShortcutCancelText" Text="取消标签页拖拽 / 关闭弹窗" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="ESC" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" />
                                     </Border>
                                 </Grid>
                             </Border>
@@ -433,22 +489,32 @@
 
                             <StackPanel Spacing="2" HorizontalAlignment="Center">
                                 <TextBlock Text="WinCompare" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" />
-                                <TextBlock Text="版本 1.0.0 (Windows 11 Fluent Edition)" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="AboutVersionText" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
                             </StackPanel>
 
                             <!-- Native Architecture Capsule Badge -->
-                            <Border Background="#1510B981" BorderBrush="#3010B981" BorderThickness="1" CornerRadius="12" Padding="10,3" HorizontalAlignment="Center">
-                                <TextBlock Text="x64 / ARM64 Windows Native · Rust Driven" FontSize="11" Foreground="#10B981" FontWeight="Medium" />
+                            <Border Background="{ThemeResource SuccessSubtleBgBrush}" BorderBrush="{ThemeResource SuccessBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="10,3" HorizontalAlignment="Center">
+                                <TextBlock Text="x64 / ARM64 Windows Native · Rust Driven" FontSize="11" Foreground="{ThemeResource StatusSuccessBrush}" FontWeight="Medium" />
                             </Border>
 
-                            <TextBlock Text="WinCompare 是与 macOS 原生 MacCompare 保持 100% 体验与功能对齐的现代化代码与文档差分利器。底层采用 Rust 原生核心驱动，实现高吞吐 Myers 差分算法；上层深度结合 Windows 11 Fluent Design 与 Mica 材质。"
+                            <TextBlock x:Name="AboutDescText" Text="WinCompare 是与 macOS 原生 MacCompare 保持 100% 体验与功能对齐的现代化代码与文档差分利器。底层采用 Rust 原生核心驱动，实现高吞吐 Myers 差分算法；上层深度结合 Windows 11 Fluent Design 与 Mica 材质。"
                                        FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" TextAlignment="Center" LineHeight="18" />
 
-                            <MenuFlyoutSeparator Margin="0,4" />
+                            <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,4" />
+
+                            <!-- Check for Updates in About Tab -->
+                            <Button x:Name="AboutCheckUpdateBtn" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Center" Padding="16,6" CornerRadius="6" Click="OnCheckUpdateClicked">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon x:Name="AboutUpdateIcon" Glyph="&#xE777;" FontSize="13" />
+                                    <TextBlock x:Name="AboutCheckUpdateBtnText" Text="检查更新" FontSize="12" />
+                                </StackPanel>
+                            </Button>
+                            <ProgressRing x:Name="AboutUpdateProgressRing" Width="16" Height="16" IsActive="False" Visibility="Collapsed" HorizontalAlignment="Center" />
+                            <TextBlock x:Name="AboutUpdateStatusText" Text="" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
 
                             <HyperlinkButton Content="GitHub: https://github.com/andychao217/FileCompare"
                                              NavigateUri="https://github.com/andychao217/FileCompare"
-                                             HorizontalAlignment="Center" FontSize="11" />
+                                             HorizontalAlignment="Center" FontSize="11" Margin="0,-4,0,0" />
                         </StackPanel>
                     </ScrollViewer>
                 </TabViewItem>

@@ -18,8 +18,51 @@ public sealed class RecentCompareRecord
     public string Title { get; set; } = string.Empty;
     public string LeftPath { get; set; } = string.Empty;
     public string RightPath { get; set; } = string.Empty;
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public CompareType Type { get; set; } = CompareType.TextDiff;
     public DateTime Timestamp { get; set; } = DateTime.Now;
+
+    [JsonIgnore]
+    public CompareType EffectiveType
+    {
+        get
+        {
+            // If explicit type is FolderDiff or either path is an existing directory
+            if (Type == CompareType.FolderDiff ||
+                Directory.Exists(LeftPath) || Directory.Exists(RightPath))
+            {
+                return CompareType.FolderDiff;
+            }
+
+            // Check file extensions
+            string leftExt = Path.GetExtension(LeftPath).ToLowerInvariant();
+            string rightExt = Path.GetExtension(RightPath).ToLowerInvariant();
+
+            if (leftExt is ".xlsx" or ".xls" or ".csv" || rightExt is ".xlsx" or ".xls" or ".csv" || Type == CompareType.ExcelDiff)
+            {
+                return CompareType.ExcelDiff;
+            }
+
+            if (leftExt is ".docx" or ".doc" || rightExt is ".docx" or ".doc" || Type == CompareType.WordDiff)
+            {
+                return CompareType.WordDiff;
+            }
+
+            if (Type == CompareType.ThreeWayMerge)
+            {
+                return CompareType.ThreeWayMerge;
+            }
+
+            // If neither path has a file extension and contains directory separators, treat as FolderDiff
+            if (string.IsNullOrEmpty(leftExt) && string.IsNullOrEmpty(rightExt) &&
+                (LeftPath.Contains('\\') || LeftPath.Contains('/') || RightPath.Contains('\\') || RightPath.Contains('/')))
+            {
+                return CompareType.FolderDiff;
+            }
+
+            return CompareType.TextDiff;
+        }
+    }
 
     [JsonIgnore]
     public string FormattedDate

@@ -13,7 +13,7 @@
                     BorderThickness="1" CornerRadius="12" Padding="20">
                 <StackPanel Spacing="16">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon Glyph="&#xE945;" Foreground="#8B5CF6" FontSize="18" VerticalAlignment="Center" />
+                        <FontIcon Glyph="&#xE945;" Foreground="{ThemeResource AIAccentBrush}" FontSize="18" VerticalAlignment="Center" />
                         <TextBlock Text="AI 智能引擎设置" FontWeight="SemiBold" FontSize="15" VerticalAlignment="Center" />
                     </StackPanel>
 

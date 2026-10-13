@@ -1,4 +1,4 @@
-using WinCompare.Core.Models;
+﻿using WinCompare.Core.Models;
 
 namespace WinCompare.Core.Services;
 
@@ -59,6 +59,126 @@ public sealed class LanguageManager
 
     private static readonly Dictionary<string, Dictionary<AppLanguage, string>> Translations = new()
     {
+        ["dialogNoticeTitle"] = new()
+        {
+            [AppLanguage.ZhHans] = "格式提示",
+            [AppLanguage.En] = "Notice",
+            [AppLanguage.Ja] = "お知らせ"
+        },
+        ["suggestSwitchModeTitle"] = new()
+        {
+            [AppLanguage.ZhHans] = "推荐切换对比模式",
+            [AppLanguage.En] = "Switch Comparison Mode",
+            [AppLanguage.Ja] = "比較モードの切り替え"
+        },
+        ["errFolderDroppedInFileMode"] = new()
+        {
+            [AppLanguage.ZhHans] = "您选择的是文件夹，当前模式仅支持对比单个文件。\n是否切换至【文件夹对比】模式？",
+            [AppLanguage.En] = "The selected item is a folder, but the current mode only supports single files.\nWould you like to switch to 'Folder Diff' mode?",
+            [AppLanguage.Ja] = "選択された項目はフォルダーですが、現在のモードは単一ファイルのみ対応しています。\n「フォルダー比較」モードに切り替えますか？"
+        },
+        ["errFileDroppedInFolderMode"] = new()
+        {
+            [AppLanguage.ZhHans] = "当前为【文件夹对比】模式，请拖入或选择文件夹。\n若需比对单个文件，请选择文本、Word 或 Excel 对比模式。",
+            [AppLanguage.En] = "Current mode is 'Folder Diff'. Please choose or drop a folder.\nTo compare individual files, please use Text, Word, or Excel Diff mode.",
+            [AppLanguage.Ja] = "現在は「フォルダー比較」モードです。フォルダーを選択またはドロップしてください。\n個別のファイルを比較するには、テキスト、Word、または Excel 比較モードを使用してください。"
+        },
+        ["errWordInvalidFormat"] = new()
+        {
+            [AppLanguage.ZhHans] = "Word 对比模式仅支持 .docx、.doc 及 .rtf 格式。\n检测到不兼容的文件格式。",
+            [AppLanguage.En] = "Word Diff only supports .docx, .doc, and .rtf formats.\nUnsupported file format detected.",
+            [AppLanguage.Ja] = "Word 比較モードは .docx、.doc、.rtf 形式のみ対応しています。\n対応していないファイル形式です。"
+        },
+        ["errExcelInvalidFormat"] = new()
+        {
+            [AppLanguage.ZhHans] = "Excel 对比模式仅支持 .xlsx、.xls、.csv 及 .tsv 格式。\n检测到不兼容的文件格式。",
+            [AppLanguage.En] = "Excel Diff only supports .xlsx, .xls, .csv, and .tsv formats.\nUnsupported file format detected.",
+            [AppLanguage.Ja] = "Excel 比較モードは .xlsx、.xls、.csv、.tsv 形式のみ対応しています。\n対応していないファイル形式です。"
+        },
+        ["errBinaryFileNotSupported"] = new()
+        {
+            [AppLanguage.ZhHans] = "所选文件为二进制文件（如程序、压缩包或媒体），文本对比模式无法对其进行有效比对。",
+            [AppLanguage.En] = "The selected file is a binary file (e.g. executable, archive, or media) and cannot be compared as text.",
+            [AppLanguage.Ja] = "選択されたファイルはバイナリファイル（実行可能ファイル、アーカイブ、メディアなど）であり、テキストとして比較できません。"
+        },
+        ["suggestSwitchToWord"] = new()
+        {
+            [AppLanguage.ZhHans] = "检测到您选择的是 Word 文档，文本模式无法解析其排版与格式。\n是否切换至【Word 对比】模式？",
+            [AppLanguage.En] = "The selected file is a Word document. Text mode cannot parse its layout and formatting.\nWould you like to switch to 'Word Diff' mode?",
+            [AppLanguage.Ja] = "選択されたファイルは Word 文書です。テキストモードではレイアウトを解析できません。\n「Word 比較」モードに切り替えますか？"
+        },
+        ["suggestSwitchToExcel"] = new()
+        {
+            [AppLanguage.ZhHans] = "检测到您选择的是表格文件，建议使用多工作表对比引擎。\n是否切换至【Excel 对比】模式？",
+            [AppLanguage.En] = "The selected file is a spreadsheet. We recommend using the dedicated multi-sheet engine.\nWould you like to switch to 'Excel Diff' mode?",
+            [AppLanguage.Ja] = "選択されたファイルはスプレッドシートです。専用の表比較エンジンの使用を推奨します。\n「Excel 比較」モードに切り替えますか？"
+        },
+        ["suggestSwitchToFolder"] = new()
+        {
+            [AppLanguage.ZhHans] = "检测到所选项目为文件夹，是否切换至【文件夹对比】模式？",
+            [AppLanguage.En] = "The selected item is a folder. Would you like to switch to 'Folder Diff' mode?",
+            [AppLanguage.Ja] = "選択された項目はフォルダーです。「フォルダー比較」モードに切り替えますか？"
+        },
+        ["btnSwitchMode"] = new()
+        {
+            [AppLanguage.ZhHans] = "切换模式并打开",
+            [AppLanguage.En] = "Switch Mode & Open",
+            [AppLanguage.Ja] = "切り替えて開く"
+        },
+        ["btnGotIt"] = new()
+        {
+            [AppLanguage.ZhHans] = "我知道了",
+            [AppLanguage.En] = "Got It",
+            [AppLanguage.Ja] = "了解"
+        },
+        ["cancel"] = new()
+        {
+            [AppLanguage.ZhHans] = "取消",
+            [AppLanguage.En] = "Cancel",
+            [AppLanguage.Ja] = "キャンセル"
+        },
+        ["clear"] = new()
+        {
+            [AppLanguage.ZhHans] = "清空",
+            [AppLanguage.En] = "Clear",
+            [AppLanguage.Ja] = "クリア"
+        },
+        ["delete"] = new()
+        {
+            [AppLanguage.ZhHans] = "删除",
+            [AppLanguage.En] = "Delete",
+            [AppLanguage.Ja] = "削除"
+        },
+        ["deleteRecord"] = new()
+        {
+            [AppLanguage.ZhHans] = "删除此记录",
+            [AppLanguage.En] = "Delete this record",
+            [AppLanguage.Ja] = "この記録を削除"
+        },
+        ["confirmClearTitle"] = new()
+        {
+            [AppLanguage.ZhHans] = "确认清空全部内容？",
+            [AppLanguage.En] = "Clear All Content?",
+            [AppLanguage.Ja] = "すべての内容をクリアしますか？"
+        },
+        ["confirmClearMessage"] = new()
+        {
+            [AppLanguage.ZhHans] = "此操作将卸载当前标签页中已加载的所有文件/文件夹并重置对比状态，未保存的修改将会丢失。",
+            [AppLanguage.En] = "This will unload all loaded files/folders and reset comparison state in this tab. Unsaved changes will be lost.",
+            [AppLanguage.Ja] = "このタブで読み込まれたすべてのファイル/フォルダをクリアし、比較状態をリセットします。未保存の変更は失われます。"
+        },
+        ["confirmClearHistoryTitle"] = new()
+        {
+            [AppLanguage.ZhHans] = "确认清除全部历史记录？",
+            [AppLanguage.En] = "Clear All Recent History?",
+            [AppLanguage.Ja] = "すべての比較履歴を消去しますか？"
+        },
+        ["confirmClearHistoryMessage"] = new()
+        {
+            [AppLanguage.ZhHans] = "此操作将清空欢迎页面中记录的所有最近比对历史，已保存的文件不受影响。",
+            [AppLanguage.En] = "This will remove all recent comparison records from the welcome screen. Your files will not be affected.",
+            [AppLanguage.Ja] = "ようこそ画面の最近の比較履歴がすべて削除されます。保存されたファイルには影響しません。"
+        },
         ["appTitle"] = new()
         {
             [AppLanguage.ZhHans] = "WinCompare",
@@ -149,6 +269,12 @@ public sealed class LanguageManager
             [AppLanguage.En] = "Clear All",
             [AppLanguage.Ja] = "すべて消去"
         },
+        ["viewAllHistory"] = new()
+        {
+            [AppLanguage.ZhHans] = "查看全部比对记录...",
+            [AppLanguage.En] = "View All History...",
+            [AppLanguage.Ja] = "すべての比較履歴を表示..."
+        },
         ["languageMenu"] = new()
         {
             [AppLanguage.ZhHans] = "语言",
@@ -196,6 +322,36 @@ public sealed class LanguageManager
             [AppLanguage.ZhHans] = "重新分析",
             [AppLanguage.En] = "Reanalyze",
             [AppLanguage.Ja] = "再分析"
+        },
+        ["copyText"] = new()
+        {
+            [AppLanguage.ZhHans] = "复制文本",
+            [AppLanguage.En] = "Copy Text",
+            [AppLanguage.Ja] = "テキストをコピー"
+        },
+        ["copied"] = new()
+        {
+            [AppLanguage.ZhHans] = "已复制",
+            [AppLanguage.En] = "Copied",
+            [AppLanguage.Ja] = "コピーしました"
+        },
+        ["aiAnalyzing"] = new()
+        {
+            [AppLanguage.ZhHans] = "正在分析改动意图...",
+            [AppLanguage.En] = "Analyzing changes...",
+            [AppLanguage.Ja] = "変更意図を分析中..."
+        },
+        ["aiCloudBadge"] = new()
+        {
+            [AppLanguage.ZhHans] = "云端 API",
+            [AppLanguage.En] = "Cloud API",
+            [AppLanguage.Ja] = "クラウド API"
+        },
+        ["aiLocalOfflineBadge"] = new()
+        {
+            [AppLanguage.ZhHans] = "本地离线",
+            [AppLanguage.En] = "Local Offline",
+            [AppLanguage.Ja] = "ローカルオフライン"
         },
         ["settingsTitle"] = new()
         {
@@ -301,9 +457,9 @@ public sealed class LanguageManager
         },
         ["upToDateTitle"] = new()
         {
-            [AppLanguage.ZhHans] = "当前已是最新版本 (v1.0.0)",
-            [AppLanguage.En] = "You're up to date (v1.0.0)",
-            [AppLanguage.Ja] = "最新バージョンです (v1.0.0)"
+            [AppLanguage.ZhHans] = "当前已是最新版本",
+            [AppLanguage.En] = "You're Up to Date",
+            [AppLanguage.Ja] = "最新バージョンです"
         },
         ["lastChecked"] = new()
         {
@@ -346,6 +502,24 @@ public sealed class LanguageManager
             [AppLanguage.ZhHans] = "服务商预设",
             [AppLanguage.En] = "Provider Preset",
             [AppLanguage.Ja] = "プロバイダプリセット"
+        },
+        ["aiCloudPresetDesc"] = new()
+        {
+            [AppLanguage.ZhHans] = "选择主流 AI 大模型服务商快速填充",
+            [AppLanguage.En] = "Select popular AI provider to auto-fill",
+            [AppLanguage.Ja] = "主要なAIプロバイダーを選択して自動入力"
+        },
+        ["apiConfiguration"] = new()
+        {
+            [AppLanguage.ZhHans] = "API 配置信息",
+            [AppLanguage.En] = "API Configuration",
+            [AppLanguage.Ja] = "API 設定情報"
+        },
+        ["winNativeArch"] = new()
+        {
+            [AppLanguage.ZhHans] = "x64 / ARM64 Windows 原生 · Rust 引擎驱动",
+            [AppLanguage.En] = "x64 / ARM64 Windows Native · Rust Driven",
+            [AppLanguage.Ja] = "x64 / ARM64 Windows ネイティブ · Rust 駆動"
         },
         ["aiCloudBaseURL"] = new()
         {
@@ -1217,6 +1391,30 @@ public sealed class LanguageManager
             [AppLanguage.En] = "Drop or select right folder",
             [AppLanguage.Ja] = "右側のフォルダをドロップまたは選択"
         },
+        ["folderColName"] = new()
+        {
+            [AppLanguage.ZhHans] = "名称",
+            [AppLanguage.En] = "Name",
+            [AppLanguage.Ja] = "名前"
+        },
+        ["folderColSize"] = new()
+        {
+            [AppLanguage.ZhHans] = "大小",
+            [AppLanguage.En] = "Size",
+            [AppLanguage.Ja] = "サイズ"
+        },
+        ["folderColModified"] = new()
+        {
+            [AppLanguage.ZhHans] = "修改时间",
+            [AppLanguage.En] = "Modified",
+            [AppLanguage.Ja] = "更新日時"
+        },
+        ["folderColHash"] = new()
+        {
+            [AppLanguage.ZhHans] = "CRC32",
+            [AppLanguage.En] = "CRC32",
+            [AppLanguage.Ja] = "CRC32"
+        },
         ["folderColStatus"] = new()
         {
             [AppLanguage.ZhHans] = "状态",
@@ -1252,6 +1450,18 @@ public sealed class LanguageManager
             [AppLanguage.ZhHans] = "选择两端目录并比对",
             [AppLanguage.En] = "Select Folders & Compare",
             [AppLanguage.Ja] = "フォルダを選択して比較"
+        },
+        ["scannedItemsPleaseSelectTarget"] = new()
+        {
+            [AppLanguage.ZhHans] = "已扫描 {0} 项，请选择目标文件夹以开始比对",
+            [AppLanguage.En] = "Scanned {0} items, please select target folder to compare",
+            [AppLanguage.Ja] = "{0} 件をスキャンしました。比較する対象フォルダーを選択してください"
+        },
+        ["scannedItemsPleaseSelectSource"] = new()
+        {
+            [AppLanguage.ZhHans] = "已扫描 {0} 项，请选择源文件夹以开始比对",
+            [AppLanguage.En] = "Scanned {0} items, please select source folder to compare",
+            [AppLanguage.Ja] = "{0} 件をスキャンしました。比較する元フォルダーを選択してください"
         },
         ["folderSummaryStats"] = new()
         {
@@ -1318,6 +1528,492 @@ public sealed class LanguageManager
             [AppLanguage.ZhHans] = "确定要将右侧所有文件变更同步覆盖到左侧吗？\n源目录: {0}\n目标目录: {1}\n此操作不可逆，请谨慎确认。",
             [AppLanguage.En] = "Are you sure you want to sync all file changes from Right to Left?\nSource: {0}\nTarget: {1}\nThis action cannot be undone.",
             [AppLanguage.Ja] = "右側のすべてのファイルの変更を左側に同期して上書きしますか？\nソース: {0}\nターゲット: {1}\nこの操作は取り消せません。"
+        },
+        ["noSourceFile"] = new()
+        {
+            [AppLanguage.ZhHans] = "未选择源文件",
+            [AppLanguage.En] = "No Source File Selected",
+            [AppLanguage.Ja] = "未選択のソースファイル"
+        },
+        ["noTargetFile"] = new()
+        {
+            [AppLanguage.ZhHans] = "未选择目标文件",
+            [AppLanguage.En] = "No Target File Selected",
+            [AppLanguage.Ja] = "未選択のターゲットファイル"
+        },
+        ["loadingSourceFolder"] = new()
+        {
+            [AppLanguage.ZhHans] = "正在读取源文件夹...",
+            [AppLanguage.En] = "Reading source folder...",
+            [AppLanguage.Ja] = "ソースフォルダーを読み込み中..."
+        },
+        ["loadingTargetFolder"] = new()
+        {
+            [AppLanguage.ZhHans] = "正在读取目标文件夹...",
+            [AppLanguage.En] = "Reading target folder...",
+            [AppLanguage.Ja] = "ターゲットフォルダーを読み込み中..."
+        },
+        ["loadingSourceFile"] = new()
+        {
+            [AppLanguage.ZhHans] = "正在读取源文件...",
+            [AppLanguage.En] = "Reading source file...",
+            [AppLanguage.Ja] = "ソースファイルを読み込み中..."
+        },
+        ["loadingTargetFile"] = new()
+        {
+            [AppLanguage.ZhHans] = "正在读取目标文件...",
+            [AppLanguage.En] = "Reading target file...",
+            [AppLanguage.Ja] = "ターゲットファイルを読み込み中..."
+        },
+        ["loadingSourceDoc"] = new()
+        {
+            [AppLanguage.ZhHans] = "正在解析源文档...",
+            [AppLanguage.En] = "Parsing source document...",
+            [AppLanguage.Ja] = "ソース文書を解析中..."
+        },
+        ["loadingTargetDoc"] = new()
+        {
+            [AppLanguage.ZhHans] = "正在解析目标文档...",
+            [AppLanguage.En] = "Parsing target document...",
+            [AppLanguage.Ja] = "ターゲット文書を解析中..."
+        },
+        ["loadingSourceSheet"] = new()
+        {
+            [AppLanguage.ZhHans] = "正在读取源工作表...",
+            [AppLanguage.En] = "Reading source sheet...",
+            [AppLanguage.Ja] = "ソースシートを読み込み中..."
+        },
+        ["loadingTargetSheet"] = new()
+        {
+            [AppLanguage.ZhHans] = "正在读取目标工作表...",
+            [AppLanguage.En] = "Reading target sheet...",
+            [AppLanguage.Ja] = "ターゲットシートを読み込み中..."
+        },
+        ["docOutline"] = new()
+        {
+            [AppLanguage.ZhHans] = "文档章节大纲",
+            [AppLanguage.En] = "Document Outline",
+            [AppLanguage.Ja] = "ドキュメント見出し概要"
+        },
+        ["noOutlineDetected"] = new()
+        {
+            [AppLanguage.ZhHans] = "未检测到标题大纲",
+            [AppLanguage.En] = "No outline detected",
+            [AppLanguage.Ja] = "見出し概要が見つかりません"
+        },
+        ["outlineExtractHint"] = new()
+        {
+            [AppLanguage.ZhHans] = "Word 标题样式 (H1~H6) 将自动在此提取为章节大纲",
+            [AppLanguage.En] = "Word heading styles (H1~H6) will be automatically extracted here as outline",
+            [AppLanguage.Ja] = "Wordの見出しスタイル(H1〜H6)が自動的に概要として抽出されます"
+        },
+        ["collapseOutline"] = new()
+        {
+            [AppLanguage.ZhHans] = "折叠大纲",
+            [AppLanguage.En] = "Collapse Outline",
+            [AppLanguage.Ja] = "概要を折りたたむ"
+        },
+        ["expandOutline"] = new()
+        {
+            [AppLanguage.ZhHans] = "展开大纲",
+            [AppLanguage.En] = "Expand Outline",
+            [AppLanguage.Ja] = "概要を展開"
+        },
+        ["dropWordPrompt"] = new()
+        {
+            [AppLanguage.ZhHans] = "拖拽 .docx 或 .doc 文档至此处开始比对",
+            [AppLanguage.En] = "Drag .docx or .doc files here to compare",
+            [AppLanguage.Ja] = ".docx または .doc ファイルをここにドラッグして比較"
+        },
+        ["loadedSourceDocPleaseSelectTarget"] = new()
+        {
+            [AppLanguage.ZhHans] = "已载入源文档 (共 {0} 段落)，请选择目标文件开始比对",
+            [AppLanguage.En] = "Source document loaded ({0} paragraphs), please select target document to compare",
+            [AppLanguage.Ja] = "元ドキュメントを読み込みました ({0} 段落)。比較する対象ファイルを選択してください"
+        },
+        ["loadedTargetDocPleaseSelectSource"] = new()
+        {
+            [AppLanguage.ZhHans] = "已载入目标文档 (共 {0} 段落)，请选择源文件开始比对",
+            [AppLanguage.En] = "Target document loaded ({0} paragraphs), please select source document to compare",
+            [AppLanguage.Ja] = "対象ドキュメントを読み込みました ({0} 段落)。比較する元ファイルを選択してください"
+        },
+        ["loadedSourceFilePleaseSelectTarget"] = new()
+        {
+            [AppLanguage.ZhHans] = "已载入源文件，请选择目标文件开始比对",
+            [AppLanguage.En] = "Source file loaded, please select target file to compare",
+            [AppLanguage.Ja] = "元ファイルを読み込みました。比較する対象ファイルを選択してください"
+        },
+        ["loadedTargetFilePleaseSelectSource"] = new()
+        {
+            [AppLanguage.ZhHans] = "已载入目标文件，请选择源文件开始比对",
+            [AppLanguage.En] = "Target file loaded, please select source file to compare",
+            [AppLanguage.Ja] = "対象ファイルを読み込みました。比較する元ファイルを選択してください"
+        },
+        ["noSourceFolder"] = new()
+        {
+            [AppLanguage.ZhHans] = "未选择源文件夹",
+            [AppLanguage.En] = "No Source Folder Selected",
+            [AppLanguage.Ja] = "未選択のソースフォルダ"
+        },
+        ["noTargetFolder"] = new()
+        {
+            [AppLanguage.ZhHans] = "未选择目标文件夹",
+            [AppLanguage.En] = "No Target Folder Selected",
+            [AppLanguage.Ja] = "未選択のターゲットフォルダ"
+        },
+        ["dropFolderPrompt"] = new()
+        {
+            [AppLanguage.ZhHans] = "拖拽文件夹至此处或点击下方按钮选择",
+            [AppLanguage.En] = "Drag & drop a directory here or click below to choose",
+            [AppLanguage.Ja] = "フォルダをここにドラッグ＆ドロップまたは選択"
+        },
+        ["chooseSourceFolder"] = new()
+        {
+            [AppLanguage.ZhHans] = "选择源文件夹...",
+            [AppLanguage.En] = "Choose Source Directory...",
+            [AppLanguage.Ja] = "ソースフォルダを選択..."
+        },
+        ["chooseTargetFolder"] = new()
+        {
+            [AppLanguage.ZhHans] = "选择目标文件夹...",
+            [AppLanguage.En] = "Choose Target Directory...",
+            [AppLanguage.Ja] = "ターゲットフォルダを選択..."
+        },
+        ["quickPlaces"] = new()
+        {
+            [AppLanguage.ZhHans] = "常用位置",
+            [AppLanguage.En] = "Quick Places",
+            [AppLanguage.Ja] = "よく使う場所"
+        },
+        ["documents"] = new()
+        {
+            [AppLanguage.ZhHans] = "文稿目录 (Documents)",
+            [AppLanguage.En] = "Documents",
+            [AppLanguage.Ja] = "書類 (Documents)"
+        },
+        ["downloads"] = new()
+        {
+            [AppLanguage.ZhHans] = "下载目录 (Downloads)",
+            [AppLanguage.En] = "Downloads",
+            [AppLanguage.Ja] = "ダウンロード (Downloads)"
+        },
+        ["desktop"] = new()
+        {
+            [AppLanguage.ZhHans] = "桌面 (Desktop)",
+            [AppLanguage.En] = "Desktop",
+            [AppLanguage.Ja] = "デスクトップ (Desktop)"
+        },
+        ["browseFolder"] = new()
+        {
+            [AppLanguage.ZhHans] = "浏览文件夹...",
+            [AppLanguage.En] = "Browse Folder...",
+            [AppLanguage.Ja] = "フォルダを参照..."
+        },
+        ["tools"] = new()
+        {
+            [AppLanguage.ZhHans] = "工具",
+            [AppLanguage.En] = "Tools",
+            [AppLanguage.Ja] = "ツール"
+        },
+        ["rescanFolders"] = new()
+        {
+            [AppLanguage.ZhHans] = "重新扫描目录",
+            [AppLanguage.En] = "Rescan Folders",
+            [AppLanguage.Ja] = "フォルダを再スキャン"
+        },
+        ["selectTwoFoldersPrompt"] = new()
+        {
+            [AppLanguage.ZhHans] = "请选择左右两侧文件夹以开始比对。",
+            [AppLanguage.En] = "Select two folders to begin comparison.",
+            [AppLanguage.Ja] = "比較を開始するには2つのフォルダを選択してください。"
+        },
+        ["dryRunPreview"] = new()
+        {
+            [AppLanguage.ZhHans] = "预览同步",
+            [AppLanguage.En] = "Preview Sync",
+            [AppLanguage.Ja] = "同期プレビュー"
+        },
+        ["syncPreviewTitle"] = new()
+        {
+            [AppLanguage.ZhHans] = "同步预览",
+            [AppLanguage.En] = "Sync Preview",
+            [AppLanguage.Ja] = "同期プレビュー"
+        },
+        ["syncPreviewContent"] = new()
+        {
+            [AppLanguage.ZhHans] = "当前共检测到 {0} 处差异文件需要同步更新。\n点击同步按钮即可执行双向/单向文件镜像覆盖。",
+            [AppLanguage.En] = "Detected {0} different item(s) pending sync.\nClick confirm to execute synchronization.",
+            [AppLanguage.Ja] = "{0} 件の差分項目が検出されました。\n同期を実行して上書きします。"
+        },
+        ["dryRunTitle"] = new()
+        {
+            [AppLanguage.ZhHans] = "预演: 文件同步操作清单",
+            [AppLanguage.En] = "Dry Run: Sync Actions Preview",
+            [AppLanguage.Ja] = "プレビュー: 同期アクション一覧"
+        },
+        ["dryRunSubtitle"] = new()
+        {
+            [AppLanguage.ZhHans] = "在执行实际磁盘写操作前仔细检查以下变更项目。",
+            [AppLanguage.En] = "Review pending disk operations before executing.",
+            [AppLanguage.Ja] = "実際の同期を実行する前に変更内容を確認してください。"
+        },
+        ["completelyInSync"] = new()
+        {
+            [AppLanguage.ZhHans] = "两侧文件夹内容完全一致，无需同步。",
+            [AppLanguage.En] = "Directories are completely in sync.",
+            [AppLanguage.Ja] = "両側のフォルダは完全に一致しています。"
+        },
+        ["pendingOperations"] = new()
+        {
+            [AppLanguage.ZhHans] = "待执行同步项",
+            [AppLanguage.En] = "Pending Sync Operations",
+            [AppLanguage.Ja] = "保留中の同期項目"
+        },
+        ["itemsCount"] = new()
+        {
+            [AppLanguage.ZhHans] = "项",
+            [AppLanguage.En] = "items",
+            [AppLanguage.Ja] = "項目"
+        },
+        ["executeSync"] = new()
+        {
+            [AppLanguage.ZhHans] = "执行同步",
+            [AppLanguage.En] = "Execute Sync",
+            [AppLanguage.Ja] = "同期を実行"
+        },
+        ["executing"] = new()
+        {
+            [AppLanguage.ZhHans] = "正在执行...",
+            [AppLanguage.En] = "Executing...",
+            [AppLanguage.Ja] = "実行中..."
+        },
+        ["syncPlanResult"] = new()
+        {
+            [AppLanguage.ZhHans] = "同步完成: {0} 个成功, {1} 个失败",
+            [AppLanguage.En] = "Sync completed: {0} succeeded, {1} errors",
+            [AppLanguage.Ja] = "同期完了: 成功 {0} 件、失敗 {1} 件"
+        },
+        ["previewLimitNote"] = new()
+        {
+            [AppLanguage.ZhHans] = "(仅预览前 {0} 项，其余 {1} 项将在确认后一并同步)",
+            [AppLanguage.En] = "(Previewing first {0} items, remaining {1} items will be synced on confirmation)",
+            [AppLanguage.Ja] = "(最初の {0} 項目のみプレビュー、残りの {1} 項目は確認後に同期されます)"
+        },
+        ["syncActionCopyLeftToRight"] = new()
+        {
+            [AppLanguage.ZhHans] = "从源复制到目标",
+            [AppLanguage.En] = "Copy from Source to Target",
+            [AppLanguage.Ja] = "ソースからターゲットへコピー"
+        },
+        ["syncActionCopyRightToLeft"] = new()
+        {
+            [AppLanguage.ZhHans] = "从目标复制到源",
+            [AppLanguage.En] = "Copy from Target to Source",
+            [AppLanguage.Ja] = "ターゲットからソースへコピー"
+        },
+        ["syncActionOverwriteLeftToRight"] = new()
+        {
+            [AppLanguage.ZhHans] = "以源覆盖目标",
+            [AppLanguage.En] = "Overwrite Target with Source",
+            [AppLanguage.Ja] = "ソースでターゲットを上書き"
+        },
+        ["syncActionOverwriteRightToLeft"] = new()
+        {
+            [AppLanguage.ZhHans] = "以目标覆盖源",
+            [AppLanguage.En] = "Overwrite Source with Target",
+            [AppLanguage.Ja] = "ターゲットでソースを上書き"
+        },
+        ["syncActionDeleteRight"] = new()
+        {
+            [AppLanguage.ZhHans] = "从目标删除多余文件",
+            [AppLanguage.En] = "Delete orphan on Target",
+            [AppLanguage.Ja] = "ターゲットの孤立ファイルを削除"
+        },
+        ["syncActionDeleteLeft"] = new()
+        {
+            [AppLanguage.ZhHans] = "从源删除多余文件",
+            [AppLanguage.En] = "Delete orphan on Source",
+            [AppLanguage.Ja] = "ソースの孤立ファイルを削除"
+        },
+        ["mediaContentChanged"] = new()
+        {
+            [AppLanguage.ZhHans] = "媒体资源内容已更改",
+            [AppLanguage.En] = "Media content modified",
+            [AppLanguage.Ja] = "メディアリソースの内容が変更されました"
+        },
+        ["modifiedCount"] = new()
+        {
+            [AppLanguage.ZhHans] = "处修改",
+            [AppLanguage.En] = "modified",
+            [AppLanguage.Ja] = "件の変更"
+        },
+        ["addedCount"] = new()
+        {
+            [AppLanguage.ZhHans] = "处新增",
+            [AppLanguage.En] = "added",
+            [AppLanguage.Ja] = "件の追加"
+        },
+        ["deletedCount"] = new()
+        {
+            [AppLanguage.ZhHans] = "处删除",
+            [AppLanguage.En] = "deleted",
+            [AppLanguage.Ja] = "件の削除"
+        },
+        ["totalChanges"] = new()
+        {
+            [AppLanguage.ZhHans] = "处修改",
+            [AppLanguage.En] = "changes",
+            [AppLanguage.Ja] = "箇所の変更"
+        },
+        ["additions"] = new()
+        {
+            [AppLanguage.ZhHans] = "处新增",
+            [AppLanguage.En] = "additions",
+            [AppLanguage.Ja] = "箇所の追加"
+        },
+        ["deletions"] = new()
+        {
+            [AppLanguage.ZhHans] = "处删除",
+            [AppLanguage.En] = "deletions",
+            [AppLanguage.Ja] = "箇所の削除"
+        },
+        ["excelDifferenceRows"] = new()
+        {
+            [AppLanguage.ZhHans] = "处差异行",
+            [AppLanguage.En] = "difference row(s)",
+            [AppLanguage.Ja] = "件の差異行"
+        },
+        ["excelSameRows"] = new()
+        {
+            [AppLanguage.ZhHans] = "行相同",
+            [AppLanguage.En] = "identical row(s)",
+            [AppLanguage.Ja] = "行が一致"
+        },
+        ["excelLoadTime"] = new()
+        {
+            [AppLanguage.ZhHans] = "耗时",
+            [AppLanguage.En] = "Load Time",
+            [AppLanguage.Ja] = "読込時間"
+        },
+        ["formatChanged"] = new()
+        {
+            [AppLanguage.ZhHans] = "格式变动",
+            [AppLanguage.En] = "Format Changed",
+            [AppLanguage.Ja] = "書式変更"
+        },
+        ["mediaChanges"] = new()
+        {
+            [AppLanguage.ZhHans] = "媒体变动",
+            [AppLanguage.En] = "Media Changed",
+            [AppLanguage.Ja] = "メディア変更"
+        },
+        ["conflictsRemaining"] = new()
+        {
+            [AppLanguage.ZhHans] = "处冲突待解决",
+            [AppLanguage.En] = "conflicts remaining",
+            [AppLanguage.Ja] = "件の競合が未解決"
+        },
+        ["allConflictsResolved"] = new()
+        {
+            [AppLanguage.ZhHans] = "所有冲突已解决",
+            [AppLanguage.En] = "All conflicts resolved",
+            [AppLanguage.Ja] = "すべての競合が解決済み"
+        },
+        ["close"] = new()
+        {
+            [AppLanguage.ZhHans] = "关闭",
+            [AppLanguage.En] = "Close",
+            [AppLanguage.Ja] = "閉じる"
+        },
+        ["wordModeStruct"] = new()
+        {
+            [AppLanguage.ZhHans] = "结构化内容比对",
+            [AppLanguage.En] = "Structured Content Diff",
+            [AppLanguage.Ja] = "構造化コンテンツ比較"
+        },
+        ["wordModeStyle"] = new()
+        {
+            [AppLanguage.ZhHans] = "样式格式比对",
+            [AppLanguage.En] = "Style & Formatting Diff",
+            [AppLanguage.Ja] = "スタイル・書式比較"
+        },
+        ["wordModeTable"] = new()
+        {
+            [AppLanguage.ZhHans] = "表格网格比对",
+            [AppLanguage.En] = "Table Grid Diff",
+            [AppLanguage.Ja] = "テーブルグリッド比較"
+        },
+        ["wordModeMeta"] = new()
+        {
+            [AppLanguage.ZhHans] = "文档元数据比对",
+            [AppLanguage.En] = "Document Metadata Diff",
+            [AppLanguage.Ja] = "メタデータ比較"
+        },
+        ["searchParagraphsPlaceholder"] = new()
+        {
+            [AppLanguage.ZhHans] = "搜索与过滤段落...",
+            [AppLanguage.En] = "Search & filter paragraphs...",
+            [AppLanguage.Ja] = "段落を検索・フィルター..."
+        },
+        ["diffRules"] = new()
+        {
+            [AppLanguage.ZhHans] = "比对规则",
+            [AppLanguage.En] = "Comparison Rules",
+            [AppLanguage.Ja] = "比較ルール"
+        },
+        ["searchCellsPlaceholder"] = new()
+        {
+            [AppLanguage.ZhHans] = "搜索与过滤单元格...",
+            [AppLanguage.En] = "Search & filter cells...",
+            [AppLanguage.Ja] = "セルを検索・フィルター..."
+        },
+        ["acceptedLeftToRight"] = new()
+        {
+            [AppLanguage.ZhHans] = "已采纳左侧表格至右侧",
+            [AppLanguage.En] = "Accepted left table to right",
+            [AppLanguage.Ja] = "左の表を右へ適用しました"
+        },
+        ["acceptedRightToLeft"] = new()
+        {
+            [AppLanguage.ZhHans] = "已采纳右侧表格至左侧",
+            [AppLanguage.En] = "Accepted right table to left",
+            [AppLanguage.Ja] = "右の表を左へ適用しました"
+        },
+        ["acceptFailed"] = new()
+        {
+            [AppLanguage.ZhHans] = "采纳失败: {0}",
+            [AppLanguage.En] = "Accept failed: {0}",
+            [AppLanguage.Ja] = "適用に失敗しました: {0}"
+        },
+        ["mergeWorkspace"] = new()
+        {
+            [AppLanguage.ZhHans] = "合并工作区",
+            [AppLanguage.En] = "Merge Workspace",
+            [AppLanguage.Ja] = "マージワークスペース"
+        },
+        ["localBranchCurrent"] = new()
+        {
+            [AppLanguage.ZhHans] = "本地 (Local / Current)",
+            [AppLanguage.En] = "Local (Current)",
+            [AppLanguage.Ja] = "ローカル (Current)"
+        },
+        ["baseBranchAncestor"] = new()
+        {
+            [AppLanguage.ZhHans] = "祖先 (Base / Ancestor)",
+            [AppLanguage.En] = "Base (Ancestor)",
+            [AppLanguage.Ja] = "ベース (Ancestor)"
+        },
+        ["remoteBranchIncoming"] = new()
+        {
+            [AppLanguage.ZhHans] = "远端 (Remote / Incoming)",
+            [AppLanguage.En] = "Remote (Incoming)",
+            [AppLanguage.Ja] = "リモート (Incoming)"
+        },
+        ["newDiffAndMore"] = new()
+        {
+            [AppLanguage.ZhHans] = "新建对比与更多选项",
+            [AppLanguage.En] = "New Compare & More Options",
+            [AppLanguage.Ja] = "新規比較とその他のオプション"
         },
         ["threeWayMergeDesc"] = new()
         {
@@ -1591,9 +2287,9 @@ public sealed class LanguageManager
         },
         ["engineStatusRust"] = new()
         {
-            [AppLanguage.ZhHans] = "MacCompare Core v0.2.0 [Auto / Rust 极速引擎]",
-            [AppLanguage.En] = "MacCompare Core v0.2.0 [Auto / Rust Engine]",
-            [AppLanguage.Ja] = "MacCompare Core v0.2.0 [Auto / Rust 高速エンジン]"
+            [AppLanguage.ZhHans] = "MacCompare Core v{0} [Auto / Rust 极速引擎]",
+            [AppLanguage.En] = "MacCompare Core v{0} [Auto / Rust Engine]",
+            [AppLanguage.Ja] = "MacCompare Core v{0} [Auto / Rust 高速エンジン]"
         },
         ["engineStatusFallback"] = new()
         {
@@ -1786,6 +2482,378 @@ public sealed class LanguageManager
             [AppLanguage.ZhHans] = "选择...",
             [AppLanguage.En] = "Choose...",
             [AppLanguage.Ja] = "選択..."
+        },
+        ["sourceFileSaved"] = new()
+        {
+            [AppLanguage.ZhHans] = "源文件已保存",
+            [AppLanguage.En] = "Source file saved",
+            [AppLanguage.Ja] = "ソースファイルを保存しました"
+        },
+        ["targetFileSaved"] = new()
+        {
+            [AppLanguage.ZhHans] = "目标文件已保存",
+            [AppLanguage.En] = "Target file saved",
+            [AppLanguage.Ja] = "ターゲットファイルを保存しました"
+        },
+        ["allConflictsResolved"] = new()
+        {
+            [AppLanguage.ZhHans] = "所有冲突已解决",
+            [AppLanguage.En] = "All conflicts resolved",
+            [AppLanguage.Ja] = "すべての競合が解決されました"
+        },
+        ["recommendedCommit"] = new()
+        {
+            [AppLanguage.ZhHans] = "推荐 Conventional Commit:",
+            [AppLanguage.En] = "Recommended Conventional Commit:",
+            [AppLanguage.Ja] = "推奨 Conventional Commit:"
+        },
+        ["ignoreWhitespaceTooltip"] = new()
+        {
+            [AppLanguage.ZhHans] = "比对时忽略空格和制表符差异",
+            [AppLanguage.En] = "Ignore whitespace and tab differences during comparison",
+            [AppLanguage.Ja] = "比較時に空白とタブの差分を無視"
+        },
+        ["ignoreCaseTooltip"] = new()
+        {
+            [AppLanguage.ZhHans] = "比对时忽略字母大小写差异",
+            [AppLanguage.En] = "Ignore letter casing differences during comparison",
+            [AppLanguage.Ja] = "比較時に大文字・小文字の差分を無視"
+        },
+        ["takeLeftTooltip"] = new()
+        {
+            [AppLanguage.ZhHans] = "采纳左侧内容至右侧",
+            [AppLanguage.En] = "Take left content to right",
+            [AppLanguage.Ja] = "左側の内容を右側に適用"
+        },
+        ["takeRightTooltip"] = new()
+        {
+            [AppLanguage.ZhHans] = "采纳右侧内容至左侧",
+            [AppLanguage.En] = "Take right content to left",
+            [AppLanguage.Ja] = "右側の内容を左側に適用"
+        },
+        ["aiSummaryTooltip"] = new()
+        {
+            [AppLanguage.ZhHans] = "智能分析改动意图",
+            [AppLanguage.En] = "Intelligently analyze change intent",
+            [AppLanguage.Ja] = "変更意図をスマートに分析"
+        },
+        ["clearAllTooltip"] = new()
+        {
+            [AppLanguage.ZhHans] = "一键清空对比内容与文件",
+            [AppLanguage.En] = "Clear all compare content and files",
+            [AppLanguage.Ja] = "比較内容とファイルをすべてクリア"
+        },
+        ["autoResolveTooltip"] = new()
+        {
+            [AppLanguage.ZhHans] = "自动融合非冲突代码变更",
+            [AppLanguage.En] = "Automatically merge non-conflicting code changes",
+            [AppLanguage.Ja] = "非競合コード変更を自動マージ"
+        },
+        ["clearAllMergeTooltip"] = new()
+        {
+            [AppLanguage.ZhHans] = "清空全部合并输入与结果",
+            [AppLanguage.En] = "Clear all merge inputs and results",
+            [AppLanguage.Ja] = "マージ入力と結果をすべてクリア"
+        },
+        ["saveMergedTooltip"] = new()
+        {
+            [AppLanguage.ZhHans] = "保存合并结果到文件并完成合并",
+            [AppLanguage.En] = "Save merged result to file and complete merge",
+            [AppLanguage.Ja] = "マージ結果をファイルに保存して完了"
+        },
+        ["sourceDocument"] = new()
+        {
+            [AppLanguage.ZhHans] = "左侧原文档",
+            [AppLanguage.En] = "Source Document",
+            [AppLanguage.Ja] = "左側元文書"
+        },
+        ["fileSize"] = new()
+        {
+            [AppLanguage.ZhHans] = "文件大小",
+            [AppLanguage.En] = "File Size",
+            [AppLanguage.Ja] = "ファイルサイズ"
+        },
+        ["targetDocument"] = new()
+        {
+            [AppLanguage.ZhHans] = "右侧修订文档",
+            [AppLanguage.En] = "Target Document",
+            [AppLanguage.Ja] = "右側改訂文書"
+        },
+        ["creationTime"] = new()
+        {
+            [AppLanguage.ZhHans] = "创建时间",
+            [AppLanguage.En] = "Creation Time",
+            [AppLanguage.Ja] = "作成日時"
+        },
+        ["modificationTime"] = new()
+        {
+            [AppLanguage.ZhHans] = "修改时间",
+            [AppLanguage.En] = "Modification Time",
+            [AppLanguage.Ja] = "更新日時"
+        },
+        ["totalParagraphs"] = new()
+        {
+            [AppLanguage.ZhHans] = "段落总数",
+            [AppLanguage.En] = "Total Paragraphs",
+            [AppLanguage.Ja] = "段落総数"
+        },
+        ["totalTables"] = new()
+        {
+            [AppLanguage.ZhHans] = "表格总数",
+            [AppLanguage.En] = "Total Tables",
+            [AppLanguage.Ja] = "表総数"
+        },
+        ["bytes"] = new()
+        {
+            [AppLanguage.ZhHans] = "字节",
+            [AppLanguage.En] = "bytes",
+            [AppLanguage.Ja] = "バイト"
+        },
+        ["row"] = new()
+        {
+            [AppLanguage.ZhHans] = "行",
+            [AppLanguage.En] = "Row",
+            [AppLanguage.Ja] = "行"
+        },
+        ["status"] = new()
+        {
+            [AppLanguage.ZhHans] = "状态",
+            [AppLanguage.En] = "Status",
+            [AppLanguage.Ja] = "状態"
+        },
+        ["version"] = new()
+        {
+            [AppLanguage.ZhHans] = "版本",
+            [AppLanguage.En] = "Version",
+            [AppLanguage.Ja] = "バージョン"
+        },
+        ["aboutVersion"] = new()
+        {
+            [AppLanguage.ZhHans] = "版本 {0} (Windows 11 Fluent Edition)",
+            [AppLanguage.En] = "Version {0} (Windows 11 Fluent Edition)",
+            [AppLanguage.Ja] = "バージョン {0} (Windows 11 Fluent Edition)"
+        },
+        ["aboutDesc"] = new()
+        {
+            [AppLanguage.ZhHans] = "WinCompare 是与 macOS 原生 MacCompare 保持 100% 体验与功能对齐的现代化代码与文档差分利器。底层采用 Rust 原生核心驱动，实现高吞吐 Myers 差分算法；上层深度结合 Windows 11 Fluent Design 与 Mica 材质。",
+            [AppLanguage.En] = "WinCompare is a modern code and document comparison tool offering 100% feature parity with macOS MacCompare. Powered by high-throughput Rust Myers diff engine and designed with Windows 11 Fluent Design and Mica.",
+            [AppLanguage.Ja] = "WinCompare は macOS 向け MacCompare と機能・体験を完全同期したモダンなコード・文書差分ツールです。Rust による高速 Myers 差分エンジンと Windows 11 Fluent Design / Mica 質感を採用しています。"
+        },
+        ["openFile"] = new()
+        {
+            [AppLanguage.ZhHans] = "打开文件...",
+            [AppLanguage.En] = "Open File...",
+            [AppLanguage.Ja] = "ファイルを開く..."
+        },
+        ["saveChanges"] = new()
+        {
+            [AppLanguage.ZhHans] = "保存当前修改",
+            [AppLanguage.En] = "Save Changes",
+            [AppLanguage.Ja] = "変更を保存"
+        },
+        ["closeTab"] = new()
+        {
+            [AppLanguage.ZhHans] = "关闭当前标签页",
+            [AppLanguage.En] = "Close Tab",
+            [AppLanguage.Ja] = "タブを閉じる"
+        },
+        ["aiLocalOfflineDesc"] = new()
+        {
+            [AppLanguage.ZhHans] = "本地端侧离线模型 (SLM / 零出网 / 100% 隐私安全)",
+            [AppLanguage.En] = "Local Offline SLM (Zero Network / 100% Privacy)",
+            [AppLanguage.Ja] = "ローカルオフラインSLM (完全オフライン / 100% プライバシー)"
+        },
+        ["aiCloudApiDesc"] = new()
+        {
+            [AppLanguage.ZhHans] = "云端大模型 API (DeepSeek / OpenAI / 本地 Ollama)",
+            [AppLanguage.En] = "Cloud LLM API (DeepSeek / OpenAI / Local Ollama)",
+            [AppLanguage.Ja] = "クラウドLLM API (DeepSeek / OpenAI / ローカル Ollama)"
+        },
+        ["themeDark"] = new()
+        {
+            [AppLanguage.ZhHans] = "深色模式 (Dark)",
+            [AppLanguage.En] = "Dark Mode",
+            [AppLanguage.Ja] = "ダークモード"
+        },
+        ["themeLight"] = new()
+        {
+            [AppLanguage.ZhHans] = "浅色模式 (Light)",
+            [AppLanguage.En] = "Light Mode",
+            [AppLanguage.Ja] = "ライトモード"
+        },
+        ["engineRustFirst"] = new()
+        {
+            [AppLanguage.ZhHans] = "自动优选 (Rust First)",
+            [AppLanguage.En] = "Auto (Rust First)",
+            [AppLanguage.Ja] = "自動 (Rust優先)"
+        },
+        ["engineRustOnly"] = new()
+        {
+            [AppLanguage.ZhHans] = "Rust 原生引擎 (maccompare_ffi)",
+            [AppLanguage.En] = "Rust Native Engine (maccompare_ffi)",
+            [AppLanguage.Ja] = "Rustネイティブエンジン (maccompare_ffi)"
+        },
+        ["engineFallback"] = new()
+        {
+            [AppLanguage.ZhHans] = "托管备用引擎 (C# Fallback)",
+            [AppLanguage.En] = "Managed Engine (C# Fallback)",
+            [AppLanguage.Ja] = "マネージドエンジン (C# フォールバック)"
+        },
+        ["gemma1bDesc"] = new()
+        {
+            [AppLanguage.ZhHans] = "轻量低功耗 · 极速启动 · 适合日常代码对比 (780 MB)",
+            [AppLanguage.En] = "Lightweight & low power · Instant launch · Everyday code diff (780 MB)",
+            [AppLanguage.Ja] = "軽量・低消費電力 · 高速起動 · 日常的なコード比較 (780 MB)"
+        },
+        ["gemma4bDesc"] = new()
+        {
+            [AppLanguage.ZhHans] = "高精度逻辑推理 · 深度语义分析 · 复杂重构比对 (2.5 GB)",
+            [AppLanguage.En] = "High accuracy logic reasoning · Deep semantics · Complex refactoring (2.5 GB)",
+            [AppLanguage.Ja] = "高精度推論 · 詳細セマンティクス · 複雑なリファクタリング比較 (2.5 GB)"
+        },
+        ["modelInUse"] = new()
+        {
+            [AppLanguage.ZhHans] = "正在使用",
+            [AppLanguage.En] = "In Use",
+            [AppLanguage.Ja] = "使用中"
+        },
+        ["enable"] = new()
+        {
+            [AppLanguage.ZhHans] = "启用",
+            [AppLanguage.En] = "Enable",
+            [AppLanguage.Ja] = "有効化"
+        },
+        ["downloadModel"] = new()
+        {
+            [AppLanguage.ZhHans] = "下载模型",
+            [AppLanguage.En] = "Download Model",
+            [AppLanguage.Ja] = "モデルをダウンロード"
+        },
+        ["cleanModelTooltip"] = new()
+        {
+            [AppLanguage.ZhHans] = "清理本地模型文件释放空间",
+            [AppLanguage.En] = "Clean local model file to free disk space",
+            [AppLanguage.Ja] = "ローカルモデルファイルを削除して容量を確保"
+        },
+        ["retry"] = new()
+        {
+            [AppLanguage.ZhHans] = "重试",
+            [AppLanguage.En] = "Retry",
+            [AppLanguage.Ja] = "再試行"
+        },
+        ["tabDragMergeTitle"] = new()
+        {
+            [AppLanguage.ZhHans] = "标签页拖拽与多窗口",
+            [AppLanguage.En] = "Tab Dragging & Multi-Window",
+            [AppLanguage.Ja] = "タブドラッグ＆マルチウィンドウ"
+        },
+        ["tabDragMergeDesc"] = new()
+        {
+            [AppLanguage.ZhHans] = "支持跨标签页任意拖动重排，向外拖拽即刻独立窗口，拖回即刻自动合并多窗口。",
+            [AppLanguage.En] = "Drag tabs freely to rearrange, drag out to create an independent window, or drag back to merge.",
+            [AppLanguage.Ja] = "タブをドラッグして並べ替え、外側にドラッグして独立ウィンドウ化、戻して結合。"
+        },
+        ["cancelTabDragDesc"] = new()
+        {
+            [AppLanguage.ZhHans] = "取消标签页拖拽 / 关闭弹窗",
+            [AppLanguage.En] = "Cancel Tab Drag / Close Dialog",
+            [AppLanguage.Ja] = "タブドラッグキャンセル / ダイアログを閉じる"
+        },
+        ["openPreferences"] = new()
+        {
+            [AppLanguage.ZhHans] = "偏好设置",
+            [AppLanguage.En] = "Preferences",
+            [AppLanguage.Ja] = "環境設定"
+        },
+        ["helpAndGuide"] = new()
+        {
+            [AppLanguage.ZhHans] = "帮助与用户指南",
+            [AppLanguage.En] = "Help & User Guide",
+            [AppLanguage.Ja] = "ヘルプとユーザーガイド"
+        },
+        ["aboutApp"] = new()
+        {
+            [AppLanguage.ZhHans] = "关于 WinCompare",
+            [AppLanguage.En] = "About WinCompare",
+            [AppLanguage.Ja] = "WinCompare について"
+        },
+        ["softwareUpdateTitle"] = new()
+        {
+            [AppLanguage.ZhHans] = "软件更新",
+            [AppLanguage.En] = "Software Update",
+            [AppLanguage.Ja] = "ソフトウェアアップデート"
+        },
+        ["newVersionAvailableTitle"] = new()
+        {
+            [AppLanguage.ZhHans] = "发现新版本",
+            [AppLanguage.En] = "New Version Available",
+            [AppLanguage.Ja] = "新しいバージョンが利用可能です"
+        },
+        ["newVersionAvailableMessage"] = new()
+        {
+            [AppLanguage.ZhHans] = "WinCompare 有新版本可供下载更新。",
+            [AppLanguage.En] = "A new version of WinCompare is available for download.",
+            [AppLanguage.Ja] = "WinCompare の新しいバージョンがダウンロード可能です。"
+        },
+        ["newVersionPromptFormat"] = new()
+        {
+            [AppLanguage.ZhHans] = "WinCompare {0} 现已发布（当前版本为 {1}）。是否立即下载更新？",
+            [AppLanguage.En] = "WinCompare {0} is now available (you have {1}). Would you like to download it now?",
+            [AppLanguage.Ja] = "WinCompare {0} が利用可能です（現在のバージョンは {1}）。今すぐダウンロードしますか？"
+        },
+        ["downloadUpdate"] = new()
+        {
+            [AppLanguage.ZhHans] = "立即下载更新",
+            [AppLanguage.En] = "Download Update",
+            [AppLanguage.Ja] = "今すぐアップデートをダウンロード"
+        },
+        ["installUpdate"] = new()
+        {
+            [AppLanguage.ZhHans] = "下载并更新",
+            [AppLanguage.En] = "Download & Install",
+            [AppLanguage.Ja] = "ダウンロードと更新"
+        },
+        ["releaseNotes"] = new()
+        {
+            [AppLanguage.ZhHans] = "版本更新说明",
+            [AppLanguage.En] = "Release Notes",
+            [AppLanguage.Ja] = "リリースノート"
+        },
+        ["noReleaseNotes"] = new()
+        {
+            [AppLanguage.ZhHans] = "此版本暂无更新说明。",
+            [AppLanguage.En] = "No release notes provided for this release.",
+            [AppLanguage.Ja] = "このリリースのリリースノートはありません。"
+        },
+        ["skipThisVersion"] = new()
+        {
+            [AppLanguage.ZhHans] = "跳过此版本",
+            [AppLanguage.En] = "Skip This Version",
+            [AppLanguage.Ja] = "このバージョンをスキップ"
+        },
+        ["later"] = new()
+        {
+            [AppLanguage.ZhHans] = "稍后提醒",
+            [AppLanguage.En] = "Later",
+            [AppLanguage.Ja] = "後で"
+        },
+        ["upToDateTitle"] = new()
+        {
+            [AppLanguage.ZhHans] = "当前已是最新版本",
+            [AppLanguage.En] = "You're Up to Date",
+            [AppLanguage.Ja] = "最新バージョンです"
+        },
+        ["upToDateMessage"] = new()
+        {
+            [AppLanguage.ZhHans] = "WinCompare 当前已经是最新版本，无需更新。",
+            [AppLanguage.En] = "WinCompare is currently at the latest version.",
+            [AppLanguage.Ja] = "WinCompare は現在最新バージョンです。更新の必要はありません。"
+        },
+        ["checkFailed"] = new()
+        {
+            [AppLanguage.ZhHans] = "检查更新失败，请检查您的网络连接。",
+            [AppLanguage.En] = "Failed to check for updates. Please check your network connection.",
+            [AppLanguage.Ja] = "アップデートの確認に失敗しました。ネットワーク接続を確認してください。"
         }
     };
 }

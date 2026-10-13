@@ -31,9 +31,9 @@ public sealed class FolderDiffEntry
     [JsonIgnore]
     public FolderEntryStatus Status => StatusString switch
     {
-        "Modified" => FolderEntryStatus.Modified,
-        "Added" => FolderEntryStatus.Added,
-        "Deleted" => FolderEntryStatus.Deleted,
+        "RightOnly" or "Added" => FolderEntryStatus.Added,
+        "LeftOnly" or "Deleted" => FolderEntryStatus.Deleted,
+        "ContentDifferent" or "MetadataDifferent" or "Modified" => FolderEntryStatus.Modified,
         _ => FolderEntryStatus.Identical
     };
 
@@ -52,9 +52,29 @@ public sealed class FolderDiffEntry
     [JsonPropertyName("right_size")]
     public long? RightSize { get; set; }
 
+    [JsonPropertyName("left_modified_timestamp")]
+    public long? LeftModifiedTimestamp { get; set; }
+
+    [JsonPropertyName("right_modified_timestamp")]
+    public long? RightModifiedTimestamp { get; set; }
+
     [JsonPropertyName("left_modified")]
-    public long? LeftModified { get; set; }
+    public long? LeftModified
+    {
+        get => LeftModifiedTimestamp;
+        set => LeftModifiedTimestamp ??= value;
+    }
 
     [JsonPropertyName("right_modified")]
-    public long? RightModified { get; set; }
+    public long? RightModified
+    {
+        get => RightModifiedTimestamp;
+        set => RightModifiedTimestamp ??= value;
+    }
+
+    [JsonPropertyName("left_hash")]
+    public string? LeftHash { get; set; }
+
+    [JsonPropertyName("right_hash")]
+    public string? RightHash { get; set; }
 }

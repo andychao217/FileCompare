@@ -1,7 +1,9 @@
-using Microsoft.UI.Xaml;
+﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Windows.ApplicationModel.DataTransfer;
 using WinCompare.Core.Models;
 using WinCompare.Core.Services;
+using WinCompare.UI.ViewModels;
 
 namespace WinCompare.UI.Views;
 
@@ -14,7 +16,6 @@ public sealed partial class WelcomePage : Page
         UpdateLocalization();
         LanguageManager.Instance.LanguageChanged += UpdateLocalization;
 
-        RecentListView.ItemsSource = RecentHistoryManager.Instance.Records;
         UpdateRecentHistoryVisibility();
         RecentHistoryManager.Instance.HistoryChanged += UpdateRecentHistoryVisibility;
 
@@ -41,51 +42,139 @@ public sealed partial class WelcomePage : Page
         NoRecentBlock.Text = LanguageManager.Instance.Text("noRecentRecords");
         ClearHistoryBtnText.Text = LanguageManager.Instance.Text("clearHistory");
 
-        // Refresh list items to update multi-language relative timestamps
-        if (RecentHistoryManager.Instance.Records.Count > 0)
-        {
-            RecentListView.ItemsSource = null;
-            RecentListView.ItemsSource = RecentHistoryManager.Instance.Records;
-        }
+        RefreshRecentList();
     }
 
-    private void UpdateRecentHistoryVisibility()
+    private void RefreshRecentList()
+    {
+        var records = RecentHistoryManager.Instance.Records;
+        var displayItems = records.Select(RecentCompareDisplayItem.Create).ToList();
+        RecentListView.ItemsSource = displayItems;
+    }
+
+    public void UpdateRecentHistoryVisibility()
     {
         bool hasRecords = RecentHistoryManager.Instance.Records.Count > 0;
         EmptyHistoryPanel.Visibility = hasRecords ? Visibility.Collapsed : Visibility.Visible;
         RecentListView.Visibility = hasRecords ? Visibility.Visible : Visibility.Collapsed;
         ClearHistoryBtn.Visibility = hasRecords ? Visibility.Visible : Visibility.Collapsed;
+        RefreshRecentList();
     }
 
     private void OnClearHistoryClicked(object sender, RoutedEventArgs e)
     {
-        RecentHistoryManager.Instance.ClearAll();
-        UpdateRecentHistoryVisibility();
+        if (RecentHistoryManager.Instance.Records.Count == 0) return;
+
+        var targetWindow = GetTargetWindow();
+        if (targetWindow != null)
+        {
+            targetWindow.ShowConfirmDialog(
+                LanguageManager.Instance.Text("confirmClearHistoryTitle"),
+                LanguageManager.Instance.Text("confirmClearHistoryMessage"),
+                LanguageManager.Instance.Text("clear"),
+                () =>
+                {
+                    RecentHistoryManager.Instance.ClearAll();
+                    UpdateRecentHistoryVisibility();
+                },
+                isDestructive: true);
+        }
+        else
+        {
+            RecentHistoryManager.Instance.ClearAll();
+            UpdateRecentHistoryVisibility();
+        }
+    }
+
+    private void OnDeleteRecentItemClicked(object sender, RoutedEventArgs e)
+    {
+        RecentCompareRecord? targetRecord = null;
+        if (sender is FrameworkElement fe)
+        {
+            if (fe.Tag is RecentCompareRecord rec)
+            {
+                targetRecord = rec;
+            }
+            else if (fe.DataContext is RecentCompareDisplayItem displayItem)
+            {
+                targetRecord = displayItem.Record;
+            }
+            else if (fe.DataContext is RecentCompareRecord ctxRec)
+            {
+                targetRecord = ctxRec;
+            }
+        }
+
+        if (targetRecord != null)
+        {
+            RecentHistoryManager.Instance.RemoveRecord(targetRecord.Id);
+            UpdateRecentHistoryVisibility();
+        }
     }
 
     private MainWindow? GetTargetWindow() => (App.GetWindowForElement(this) as MainWindow) ?? App.ActiveWindow ?? App.MainWindowInstance;
 
     private void OnRecentItemClicked(object sender, ItemClickEventArgs e)
     {
-        if (e.ClickedItem is RecentCompareRecord record)
+        RecentCompareRecord? record = null;
+        if (e.ClickedItem is RecentCompareDisplayItem displayItem)
+        {
+            record = displayItem.Record;
+        }
+        else if (e.ClickedItem is RecentCompareRecord rec)
+        {
+            record = rec;
+        }
+
+        if (record == null) return;
+
+        try
         {
             var target = GetTargetWindow();
-            if (record.Type == CompareType.ExcelDiff)
+            if (target == null) return;
+
+            var effectiveType = record.EffectiveType;
+
+            // Defensive check: Verify existence of at least one path
+            bool leftExists = File.Exists(record.LeftPath) || Directory.Exists(record.LeftPath);
+            bool rightExists = File.Exists(record.RightPath) || Directory.Exists(record.RightPath);
+
+            if (!leftExists && !rightExists)
             {
-                target?.OpenExcelDiffTab(record.LeftPath, record.RightPath);
+                target.ShowNoticeDialog(
+                    LanguageManager.Instance.Text("recentComparisons"),
+                    $"{LanguageManager.Instance.Text("noFileSelected")}:\n{record.LeftPath}\n{record.RightPath}"
+                );
+                return;
             }
-            else if (record.Type == CompareType.FolderDiff)
+
+            switch (effectiveType)
             {
-                target?.OpenFolderDiffTab(record.LeftPath, record.RightPath);
+                case CompareType.FolderDiff:
+                    target.OpenFolderDiffTab(record.LeftPath, record.RightPath);
+                    break;
+                case CompareType.ExcelDiff:
+                    target.OpenExcelDiffTab(record.LeftPath, record.RightPath);
+                    break;
+                case CompareType.WordDiff:
+                    target.OpenWordDiffTab(record.LeftPath, record.RightPath);
+                    break;
+                case CompareType.ThreeWayMerge:
+                    target.OpenThreeWayMergeTab(record.LeftPath, null, record.RightPath);
+                    break;
+                default:
+                    target.OpenTextDiffTab(record.LeftPath, record.RightPath);
+                    break;
             }
-            else if (record.Type == CompareType.WordDiff)
-            {
-                target?.OpenWordDiffTab(record.LeftPath, record.RightPath);
-            }
-            else
-            {
-                target?.OpenTextDiffTab(record.LeftPath, record.RightPath);
-            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[WelcomePage] OnRecentItemClicked error: {ex}");
+            var target = GetTargetWindow();
+            target?.ShowNoticeDialog(
+                LanguageManager.Instance.Text("recentComparisons"),
+                ex.Message
+            );
         }
     }
 
@@ -107,6 +196,40 @@ public sealed partial class WelcomePage : Page
     private void OnFolderDiffClicked(object sender, RoutedEventArgs e)
     {
         GetTargetWindow()?.OpenFolderDiffTab();
+    }
+
+    private void OnWelcomeDragOver(object sender, DragEventArgs e)
+    {
+        if (e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            e.AcceptedOperation = DataPackageOperation.Copy;
+        }
+    }
+
+    private async void OnWelcomeDrop(object sender, DragEventArgs e)
+    {
+        e.Handled = true;
+        try
+        {
+            if (e.DataView.Contains(StandardDataFormats.StorageItems))
+            {
+                var items = await e.DataView.GetStorageItemsAsync();
+                if (items != null && items.Count > 0)
+                {
+                    var paths = items.Select(i => i.Path).Where(p => !string.IsNullOrEmpty(p)).ToList();
+                    var win = GetTargetWindow();
+                    if (win != null && paths.Count > 0)
+                    {
+                        var pos = e.GetPosition(this);
+                        win.HandleGlobalDrop(paths, pos, this.ActualWidth);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            App.Log($"[WelcomePage] OnWelcomeDrop error: {ex.Message}");
+        }
     }
 }
 

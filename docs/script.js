@@ -1,6 +1,6 @@
 const i18n = {
   zh: {
-    badge: "⚡ macOS 原生架构 • Rust 双引擎 • 端侧离线与云端双模 AI • Universal Binary 2 v0.5.0",
+    badge: "⚡ macOS 原生架构 • Rust 双引擎 • 端侧离线与云端双模 AI • Universal Binary 2 v0.6.0",
     heroTitle: "下一代 macOS <span class='gradient-text'>文件比对与合并套件</span>",
     heroSubtitle: "基于 Rust 高吞吐差分引擎与原生 SwiftUI 深度构建。内置双模 AI 代码意图分析、海量数据流式视口分页与双引擎调度，专为 macOS 打造。",
     downloadBtn: "免费下载 DMG",
@@ -50,7 +50,7 @@ const i18n = {
     footerDesc: "基于 MIT / Apache-2.0 许可证开源。"
   },
   en: {
-    badge: "⚡ macOS Native • Rust Dual-Engine • Dual-Mode AI Assistant • Universal Binary 2 v0.5.0",
+    badge: "⚡ macOS Native • Rust Dual-Engine • Dual-Mode AI Assistant • Universal Binary 2 v0.6.0",
     heroTitle: "Next-Gen File Comparison <span class='gradient-text'>& 3-Way Merge for macOS</span>",
     heroSubtitle: "Engineered with a high-throughput Rust core, native SwiftUI, and dual-mode AI intent summarization. Featuring Viewport Paging for big-data spreadsheets.",
     downloadBtn: "Download DMG",
@@ -100,7 +100,7 @@ const i18n = {
     footerDesc: "Open source under MIT / Apache-2.0 license."
   },
   ja: {
-    badge: "⚡ macOS ネイティブ • Rust デュアルエンジン • 双模 AI アシスタント • Universal Binary 2 v0.5.0",
+    badge: "⚡ macOS ネイティブ • Rust デュアルエンジン • 双模 AI アシスタント • Universal Binary 2 v0.6.0",
     heroTitle: "次世代 macOS <span class='gradient-text'>ファイル比較＆3方向マージ</span>",
     heroSubtitle: "高性能 Rust コア、ネイティブ SwiftUI、双模 AI 要約機能を搭載。大容量データに対応した視口ストリーミングと柔軟なエンジン切り替えを実現。",
     downloadBtn: "DMG をダウンロード",

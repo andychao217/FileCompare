@@ -213,11 +213,44 @@ public struct WordParagraph: Identifiable, Sendable, Codable, Equatable {
     public let text: String
     public let runs: [WordTextRun]
     public let style: WordParagraphStyle
+    public let styleName: String?
     public let bulletPrefix: String?
     public var mediaItems: [WordMediaItem]
     public var table: WordTable?
 
-    public var isHeading: Bool { headingLevel != nil }
+    public var isHeading: Bool {
+        if headingLevel != nil { return true }
+        if let s = styleName, WordParagraph.isHeadingStyle(s) { return true }
+        return WordParagraph.isTextHeadingPattern(text)
+    }
+
+    public static func isHeadingStyle(_ style: String) -> Bool {
+        let s = style.trimmingCharacters(in: .whitespacesAndNewlines)
+        if s.isEmpty { return false }
+        if s.localizedCaseInsensitiveContains("heading") ||
+           s.localizedCaseInsensitiveContains("标题") ||
+           s.localizedCaseInsensitiveContains("title") ||
+           s.localizedCaseInsensitiveContains("subtitle") {
+            return true
+        }
+        if s.count == 1, let ch = s.first, ch >= "1" && ch <= "6" { return true }
+        if s.count == 2, (s.hasPrefix("h") || s.hasPrefix("H")), let ch = s.last, ch >= "1" && ch <= "6" { return true }
+        return false
+    }
+
+    public static func isTextHeadingPattern(_ text: String?) -> Bool {
+        guard let text = text?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty, text.count <= 60 else {
+            return false
+        }
+        if text.hasPrefix("# ") || text.hasPrefix("## ") || text.hasPrefix("### ") { return true }
+        let pattern = #"^(第[0-9一二三四五六七八九十百]+[章节部分篇条]|(一|二|三|四|五|六|七|八|九|十)[、.．]|\d+(\.\d+)*[、.．\s]|【[^】]+】|事项\s*\d+|会议\s*\d+|重点\s*\d+|今日|明天|收获|反思)"#
+        if let regex = try? NSRegularExpression(pattern: pattern),
+           regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) != nil {
+            return true
+        }
+        return false
+    }
+
     public var hasMedia: Bool { !mediaItems.isEmpty }
     public var isTableBlock: Bool { table != nil }
 
@@ -228,6 +261,7 @@ public struct WordParagraph: Identifiable, Sendable, Codable, Equatable {
         text: String,
         runs: [WordTextRun] = [],
         style: WordParagraphStyle = WordParagraphStyle(),
+        styleName: String? = nil,
         bulletPrefix: String? = nil,
         mediaItems: [WordMediaItem] = [],
         table: WordTable? = nil
@@ -238,6 +272,7 @@ public struct WordParagraph: Identifiable, Sendable, Codable, Equatable {
         self.text = text
         self.runs = runs
         self.style = style
+        self.styleName = styleName
         self.bulletPrefix = bulletPrefix
         self.mediaItems = mediaItems
         self.table = table

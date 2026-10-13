@@ -1,19 +1,23 @@
-using Microsoft.UI.Xaml;
+﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using WinCompare.Core.Models;
 using WinCompare.Core.Services;
 using WinCompare.UI.Helpers;
+using Microsoft.UI.Xaml.Media;
 
 namespace WinCompare.UI.Views;
 
-public sealed partial class ThreeWayMergePage : Page
+public sealed partial class ThreeWayMergePage : Page, IDisposable
 {
     private string? _localPath;
     private string? _basePath;
     private string? _remotePath;
     private int _currentConflictIndex = -1;
+
+    private static Brush ConflictWarningBrush => App.GetThemeBrush("StatusModTextBrush");
+    private static Brush ConflictSuccessBrush => App.GetThemeBrush("StatusAddTextBrush");
 
     public ThreeWayMergePage()
     {
@@ -34,6 +38,9 @@ public sealed partial class ThreeWayMergePage : Page
         if (LocalBrowseBtn != null) LocalBrowseBtn.Content = LanguageManager.Instance.Text("chooseButton");
         if (BaseBrowseBtn != null) BaseBrowseBtn.Content = LanguageManager.Instance.Text("chooseButton");
         if (RemoteBrowseBtn != null) RemoteBrowseBtn.Content = LanguageManager.Instance.Text("chooseButton");
+        if (LocalEmptyPickBtn != null) LocalEmptyPickBtn.Content = LanguageManager.Instance.Text("chooseButton");
+        if (BaseEmptyPickBtn != null) BaseEmptyPickBtn.Content = LanguageManager.Instance.Text("chooseButton");
+        if (RemoteEmptyPickBtn != null) RemoteEmptyPickBtn.Content = LanguageManager.Instance.Text("chooseButton");
 
         if (LocalEmptyTitle != null) LocalEmptyTitle.Text = LanguageManager.Instance.Text("noFileSelected");
         if (BaseEmptyTitle != null) BaseEmptyTitle.Text = LanguageManager.Instance.Text("noFileSelected");
@@ -44,6 +51,12 @@ public sealed partial class ThreeWayMergePage : Page
         if (SaveMergedText != null) SaveMergedText.Text = LanguageManager.Instance.Text("saveAndCompleteMerge");
         if (SaveMergedBottomText != null) SaveMergedBottomText.Text = LanguageManager.Instance.Text("saveAndCompleteMerge");
         if (OutputHeader != null) OutputHeader.Text = LanguageManager.Instance.Text("mergedOutputResult");
+
+        if (PrevConflictBtn != null) ToolTipService.SetToolTip(PrevConflictBtn, LanguageManager.Instance.Text("prevConflict"));
+        if (NextConflictBtn != null) ToolTipService.SetToolTip(NextConflictBtn, LanguageManager.Instance.Text("nextConflict"));
+        if (AutoResolveBtn != null) ToolTipService.SetToolTip(AutoResolveBtn, LanguageManager.Instance.Text("autoResolveTooltip"));
+        if (ClearAllBtn != null) ToolTipService.SetToolTip(ClearAllBtn, LanguageManager.Instance.Text("clearAllMergeTooltip"));
+        if (SaveMergedBtn != null) ToolTipService.SetToolTip(SaveMergedBtn, LanguageManager.Instance.Text("saveMergedTooltip"));
 
         UpdateTitlesAndVisibility();
         ComputeMerge();
@@ -67,15 +80,17 @@ public sealed partial class ThreeWayMergePage : Page
         string displayPath = _localPath ?? _remotePath ?? _basePath ?? "";
         bool hasAnyFile = hasLocal || hasBase || hasRemote;
         string title = hasAnyFile
-            ? (string.IsNullOrEmpty(displayPath) ? "合并工作区" : System.IO.Path.GetFileName(displayPath))
+            ? (string.IsNullOrEmpty(displayPath) ? LanguageManager.Instance.Text("mergeWorkspace") : System.IO.Path.GetFileName(displayPath))
             : LanguageManager.Instance.Text("noFilesSelected");
 
         if (TopFilePathText != null) TopFilePathText.Text = title;
         if (OutputSubHeader != null) OutputSubHeader.Text = title;
 
-        if (LocalSubText != null) LocalSubText.Text = string.IsNullOrEmpty(_localPath) ? "Local (Current)" : System.IO.Path.GetFileName(_localPath);
-        if (BaseSubText != null) BaseSubText.Text = string.IsNullOrEmpty(_basePath) ? "Base (Ancestor)" : System.IO.Path.GetFileName(_basePath);
-        if (RemoteSubText != null) RemoteSubText.Text = string.IsNullOrEmpty(_remotePath) ? "Remote (Incoming)" : System.IO.Path.GetFileName(_remotePath);
+        if (LocalSubText != null) LocalSubText.Text = string.IsNullOrEmpty(_localPath) ? LanguageManager.Instance.Text("localBranchCurrent") : System.IO.Path.GetFileName(_localPath);
+        if (BaseSubText != null) BaseSubText.Text = string.IsNullOrEmpty(_basePath) ? LanguageManager.Instance.Text("baseBranchAncestor") : System.IO.Path.GetFileName(_basePath);
+        if (RemoteSubText != null) RemoteSubText.Text = string.IsNullOrEmpty(_remotePath) ? LanguageManager.Instance.Text("remoteBranchIncoming") : System.IO.Path.GetFileName(_remotePath);
+
+        if (ClearAllBtn != null) ClearAllBtn.IsEnabled = hasAnyFile;
     }
 
     public void LoadFiles(string? localPath, string? basePath, string? remotePath)
@@ -99,6 +114,7 @@ public sealed partial class ThreeWayMergePage : Page
 
         UpdateTitlesAndVisibility();
         ComputeMerge();
+        UpdateTabHeader();
     }
 
     private void OnEditorTextChanged(object sender, TextChangedEventArgs e)
@@ -119,6 +135,7 @@ public sealed partial class ThreeWayMergePage : Page
             if (ConflictCountText != null) ConflictCountText.Text = $"{LanguageManager.Instance.Text("conflictCountFormat")} (0 / 0)";
             if (PrevConflictBtn != null) PrevConflictBtn.IsEnabled = false;
             if (NextConflictBtn != null) NextConflictBtn.IsEnabled = false;
+            if (ConflictStatusBadge != null) ConflictStatusBadge.Visibility = Visibility.Collapsed;
             if (MergeStatusDetail != null) MergeStatusDetail.Text = "";
             return;
         }
@@ -139,13 +156,32 @@ public sealed partial class ThreeWayMergePage : Page
         if (PrevConflictBtn != null) PrevConflictBtn.IsEnabled = totalConflicts > 0;
         if (NextConflictBtn != null) NextConflictBtn.IsEnabled = totalConflicts > 0;
 
+        if (ConflictStatusBadge != null) ConflictStatusBadge.Visibility = Visibility.Visible;
         if (result.HasConflicts)
         {
-            if (MergeStatusDetail != null) MergeStatusDetail.Text = $"• {totalConflicts} 个冲突待解决";
+            if (ConflictStatusIcon != null)
+            {
+                ConflictStatusIcon.Glyph = "\uE7BA";
+                ConflictStatusIcon.Foreground = ConflictWarningBrush;
+            }
+            if (ConflictStatusText != null)
+            {
+                ConflictStatusText.Text = $"{totalConflicts} {LanguageManager.Instance.Text("conflictsRemaining")}";
+                ConflictStatusText.Foreground = ConflictWarningBrush;
+            }
         }
         else
         {
-            if (MergeStatusDetail != null) MergeStatusDetail.Text = "• 所有冲突已解决";
+            if (ConflictStatusIcon != null)
+            {
+                ConflictStatusIcon.Glyph = "\uE73E";
+                ConflictStatusIcon.Foreground = ConflictSuccessBrush;
+            }
+            if (ConflictStatusText != null)
+            {
+                ConflictStatusText.Text = LanguageManager.Instance.Text("allConflictsResolved");
+                ConflictStatusText.Foreground = ConflictSuccessBrush;
+            }
         }
     }
 
@@ -211,6 +247,32 @@ public sealed partial class ThreeWayMergePage : Page
 
     private void OnClearAllClicked(object sender, RoutedEventArgs e)
     {
+        bool hasLocal = !string.IsNullOrEmpty(_localPath) || !string.IsNullOrEmpty(LocalEditor?.Text);
+        bool hasBase = !string.IsNullOrEmpty(_basePath) || !string.IsNullOrEmpty(BaseEditor?.Text);
+        bool hasRemote = !string.IsNullOrEmpty(_remotePath) || !string.IsNullOrEmpty(RemoteEditor?.Text);
+        if (!hasLocal && !hasBase && !hasRemote)
+        {
+            return;
+        }
+
+        var targetWindow = (App.GetWindowForElement(this) as MainWindow) ?? App.ActiveWindow ?? App.MainWindowInstance;
+        if (targetWindow != null)
+        {
+            targetWindow.ShowConfirmDialog(
+                LanguageManager.Instance.Text("confirmClearTitle"),
+                LanguageManager.Instance.Text("confirmClearMessage"),
+                LanguageManager.Instance.Text("clear"),
+                () => ExecuteClearAll(),
+                isDestructive: true);
+        }
+        else
+        {
+            ExecuteClearAll();
+        }
+    }
+
+    private void ExecuteClearAll()
+    {
         _localPath = null;
         _basePath = null;
         _remotePath = null;
@@ -223,6 +285,7 @@ public sealed partial class ThreeWayMergePage : Page
 
         UpdateTitlesAndVisibility();
         ComputeMerge();
+        UpdateTabHeader();
     }
 
     private async void OnPickLocalClicked(object sender, RoutedEventArgs e)
@@ -230,10 +293,13 @@ public sealed partial class ThreeWayMergePage : Page
         var file = await PickerHelper.PickSingleFileAsync(new[] { "*" }, App.MainWindowInstance);
         if (file != null)
         {
+            if (!CheckFileValidation(file.Path)) return;
+
             _localPath = file.Path;
             if (LocalEditor != null) LocalEditor.Text = await System.IO.File.ReadAllTextAsync(file.Path, SettingsManager.Instance.GetEncoding());
             UpdateTitlesAndVisibility();
             ComputeMerge();
+            UpdateTabHeader();
         }
     }
 
@@ -242,10 +308,13 @@ public sealed partial class ThreeWayMergePage : Page
         var file = await PickerHelper.PickSingleFileAsync(new[] { "*" }, App.MainWindowInstance);
         if (file != null)
         {
+            if (!CheckFileValidation(file.Path)) return;
+
             _basePath = file.Path;
             if (BaseEditor != null) BaseEditor.Text = await System.IO.File.ReadAllTextAsync(file.Path, SettingsManager.Instance.GetEncoding());
             UpdateTitlesAndVisibility();
             ComputeMerge();
+            UpdateTabHeader();
         }
     }
 
@@ -254,10 +323,13 @@ public sealed partial class ThreeWayMergePage : Page
         var file = await PickerHelper.PickSingleFileAsync(new[] { "*" }, App.MainWindowInstance);
         if (file != null)
         {
+            if (!CheckFileValidation(file.Path)) return;
+
             _remotePath = file.Path;
             if (RemoteEditor != null) RemoteEditor.Text = await System.IO.File.ReadAllTextAsync(file.Path, SettingsManager.Instance.GetEncoding());
             UpdateTitlesAndVisibility();
             ComputeMerge();
+            UpdateTabHeader();
         }
     }
 
@@ -283,58 +355,279 @@ public sealed partial class ThreeWayMergePage : Page
             await System.IO.File.WriteAllTextAsync(file.Path, MergedOutputEditor.Text, SettingsManager.Instance.GetEncoding());
             if (MergeStatusDetail != null)
             {
-                MergeStatusDetail.Text = "• " + LanguageManager.Instance.Text("saveMergeSuccess");
+                MergeStatusDetail.Text = "\u2022 " + LanguageManager.Instance.Text("saveMergeSuccess");
             }
         }
     }
 
     // Drag & Drop Handlers
-    private void OnLocalDragOver(object sender, DragEventArgs e) => e.AcceptedOperation = DataPackageOperation.Copy;
-    private void OnBaseDragOver(object sender, DragEventArgs e) => e.AcceptedOperation = DataPackageOperation.Copy;
-    private void OnRemoteDragOver(object sender, DragEventArgs e) => e.AcceptedOperation = DataPackageOperation.Copy;
-
-    private async void OnLocalDrop(object sender, DragEventArgs e)
+    private void OnLocalDragOver(object sender, DragEventArgs e)
     {
         if (e.DataView.Contains(StandardDataFormats.StorageItems))
         {
-            var items = await e.DataView.GetStorageItemsAsync();
-            if (items.Count > 0 && items[0] is StorageFile file)
+            e.AcceptedOperation = DataPackageOperation.Copy;
+        }
+    }
+
+    private void OnBaseDragOver(object sender, DragEventArgs e)
+    {
+        if (e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            e.AcceptedOperation = DataPackageOperation.Copy;
+        }
+    }
+
+    private void OnRemoteDragOver(object sender, DragEventArgs e)
+    {
+        if (e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            e.AcceptedOperation = DataPackageOperation.Copy;
+        }
+    }
+
+    private async void OnLocalDrop(object sender, DragEventArgs e)
+    {
+        e.Handled = true;
+        try
+        {
+            App.Log("[ThreeWayMergePage] OnLocalDrop triggered");
+            if (e.DataView.Contains(StandardDataFormats.StorageItems))
             {
-                _localPath = file.Path;
-                if (LocalEditor != null) LocalEditor.Text = await System.IO.File.ReadAllTextAsync(file.Path, SettingsManager.Instance.GetEncoding());
-                UpdateTitlesAndVisibility();
-                ComputeMerge();
+                var items = await e.DataView.GetStorageItemsAsync();
+                App.Log($"[ThreeWayMergePage] OnLocalDrop items count: {items?.Count ?? 0}");
+                if (items != null && items.Count > 0)
+                {
+                    if (items.Count >= 2)
+                    {
+                        var paths = items.Select(i => i.Path).Where(p => !string.IsNullOrEmpty(p)).ToList();
+                        HandleMultiDrop(paths);
+                        return;
+                    }
+
+                    string targetPath = items[0].Path;
+                    App.Log($"[ThreeWayMergePage] OnLocalDrop targetPath: {targetPath}");
+                    if (!CheckFileValidation(targetPath)) return;
+
+                    _localPath = targetPath;
+                    if (LocalEditor != null) LocalEditor.Text = await System.IO.File.ReadAllTextAsync(targetPath, SettingsManager.Instance.GetEncoding());
+                    UpdateTitlesAndVisibility();
+                    ComputeMerge();
+                    UpdateTabHeader();
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            App.Log($"[ThreeWayMergePage] OnLocalDrop error: {ex.Message}");
         }
     }
 
     private async void OnBaseDrop(object sender, DragEventArgs e)
     {
-        if (e.DataView.Contains(StandardDataFormats.StorageItems))
+        e.Handled = true;
+        try
         {
-            var items = await e.DataView.GetStorageItemsAsync();
-            if (items.Count > 0 && items[0] is StorageFile file)
+            App.Log("[ThreeWayMergePage] OnBaseDrop triggered");
+            if (e.DataView.Contains(StandardDataFormats.StorageItems))
             {
-                _basePath = file.Path;
-                if (BaseEditor != null) BaseEditor.Text = await System.IO.File.ReadAllTextAsync(file.Path, SettingsManager.Instance.GetEncoding());
-                UpdateTitlesAndVisibility();
-                ComputeMerge();
+                var items = await e.DataView.GetStorageItemsAsync();
+                App.Log($"[ThreeWayMergePage] OnBaseDrop items count: {items?.Count ?? 0}");
+                if (items != null && items.Count > 0)
+                {
+                    if (items.Count >= 2)
+                    {
+                        var paths = items.Select(i => i.Path).Where(p => !string.IsNullOrEmpty(p)).ToList();
+                        HandleMultiDrop(paths);
+                        return;
+                    }
+
+                    string targetPath = items[0].Path;
+                    App.Log($"[ThreeWayMergePage] OnBaseDrop targetPath: {targetPath}");
+                    if (!CheckFileValidation(targetPath)) return;
+
+                    _basePath = targetPath;
+                    if (BaseEditor != null) BaseEditor.Text = await System.IO.File.ReadAllTextAsync(targetPath, SettingsManager.Instance.GetEncoding());
+                    UpdateTitlesAndVisibility();
+                    ComputeMerge();
+                    UpdateTabHeader();
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            App.Log($"[ThreeWayMergePage] OnBaseDrop error: {ex.Message}");
         }
     }
 
     private async void OnRemoteDrop(object sender, DragEventArgs e)
     {
-        if (e.DataView.Contains(StandardDataFormats.StorageItems))
+        e.Handled = true;
+        try
         {
-            var items = await e.DataView.GetStorageItemsAsync();
-            if (items.Count > 0 && items[0] is StorageFile file)
+            App.Log("[ThreeWayMergePage] OnRemoteDrop triggered");
+            if (e.DataView.Contains(StandardDataFormats.StorageItems))
             {
-                _remotePath = file.Path;
-                if (RemoteEditor != null) RemoteEditor.Text = await System.IO.File.ReadAllTextAsync(file.Path, SettingsManager.Instance.GetEncoding());
-                UpdateTitlesAndVisibility();
-                ComputeMerge();
+                var items = await e.DataView.GetStorageItemsAsync();
+                App.Log($"[ThreeWayMergePage] OnRemoteDrop items count: {items?.Count ?? 0}");
+                if (items != null && items.Count > 0)
+                {
+                    if (items.Count >= 2)
+                    {
+                        var paths = items.Select(i => i.Path).Where(p => !string.IsNullOrEmpty(p)).ToList();
+                        HandleMultiDrop(paths);
+                        return;
+                    }
+
+                    string targetPath = items[0].Path;
+                    App.Log($"[ThreeWayMergePage] OnRemoteDrop targetPath: {targetPath}");
+                    if (!CheckFileValidation(targetPath)) return;
+
+                    _remotePath = targetPath;
+                    if (RemoteEditor != null) RemoteEditor.Text = await System.IO.File.ReadAllTextAsync(targetPath, SettingsManager.Instance.GetEncoding());
+                    UpdateTitlesAndVisibility();
+                    ComputeMerge();
+                    UpdateTabHeader();
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            App.Log($"[ThreeWayMergePage] OnRemoteDrop error: {ex.Message}");
+        }
+    }
+
+    public async void HandleMultiDrop(IReadOnlyList<string> paths)
+    {
+        if (paths == null || paths.Count == 0) return;
+        try
+        {
+            var enc = SettingsManager.Instance.GetEncoding();
+            if (paths.Count >= 1 && !string.IsNullOrEmpty(paths[0]) && CheckFileValidation(paths[0]))
+            {
+                _localPath = paths[0];
+                if (LocalEditor != null) LocalEditor.Text = await System.IO.File.ReadAllTextAsync(paths[0], enc);
+            }
+            if (paths.Count >= 2 && !string.IsNullOrEmpty(paths[1]) && CheckFileValidation(paths[1]))
+            {
+                _basePath = paths[1];
+                if (BaseEditor != null) BaseEditor.Text = await System.IO.File.ReadAllTextAsync(paths[1], enc);
+            }
+            if (paths.Count >= 3 && !string.IsNullOrEmpty(paths[2]) && CheckFileValidation(paths[2]))
+            {
+                _remotePath = paths[2];
+                if (RemoteEditor != null) RemoteEditor.Text = await System.IO.File.ReadAllTextAsync(paths[2], enc);
+            }
+            UpdateTitlesAndVisibility();
+            ComputeMerge();
+            UpdateTabHeader();
+        }
+        catch (Exception ex)
+        {
+            App.Log($"[ThreeWayMergePage] HandleMultiDrop error: {ex.Message}");
+        }
+    }
+
+    public async void HandleDropFromWindow(string path, int branch)
+    {
+        if (string.IsNullOrEmpty(path)) return;
+        if (!CheckFileValidation(path)) return;
+
+        try
+        {
+            var enc = SettingsManager.Instance.GetEncoding();
+            if (branch == 0)
+            {
+                _localPath = path;
+                if (LocalEditor != null) LocalEditor.Text = await System.IO.File.ReadAllTextAsync(path, enc);
+            }
+            else if (branch == 1)
+            {
+                _basePath = path;
+                if (BaseEditor != null) BaseEditor.Text = await System.IO.File.ReadAllTextAsync(path, enc);
+            }
+            else if (branch == 2)
+            {
+                _remotePath = path;
+                if (RemoteEditor != null) RemoteEditor.Text = await System.IO.File.ReadAllTextAsync(path, enc);
+            }
+            UpdateTitlesAndVisibility();
+            ComputeMerge();
+            UpdateTabHeader();
+        }
+        catch (Exception ex)
+        {
+            App.Log($"[ThreeWayMergePage] HandleDropFromWindow error: {ex.Message}");
+        }
+    }
+
+    private void UpdateTabHeader()
+    {
+        try
+        {
+            string? header = null;
+            var parts = new List<string>();
+            if (!string.IsNullOrEmpty(_localPath)) parts.Add(System.IO.Path.GetFileName(_localPath));
+            if (!string.IsNullOrEmpty(_basePath)) parts.Add(System.IO.Path.GetFileName(_basePath));
+            if (!string.IsNullOrEmpty(_remotePath)) parts.Add(System.IO.Path.GetFileName(_remotePath));
+
+            if (parts.Count > 0)
+            {
+                header = string.Join(" | ", parts);
+            }
+
+            var win = App.GetWindowForElement(this) as MainWindow ?? App.ActiveWindow as MainWindow ?? App.MainWindowInstance;
+            win?.UpdateTabHeaderForPage(this, header);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"UpdateTabHeader error: {ex.Message}");
+        }
+    }
+
+    private bool CheckFileValidation(string path)
+    {
+        var check = FileFormatValidator.Validate(path, CompareType.ThreeWayMerge);
+        if (!check.IsValid)
+        {
+            var targetWindow = (App.GetWindowForElement(this) as MainWindow) ?? App.ActiveWindow ?? App.MainWindowInstance;
+            if (targetWindow != null)
+            {
+                string title = LanguageManager.Instance.Text(check.TitleKey);
+                string msg = LanguageManager.Instance.Text(check.MessageKey);
+                string? btnText = check.PromptType == ValidationPromptType.SuggestSwitch && check.RecommendedMode != null
+                    ? LanguageManager.Instance.Text("btnSwitchMode")
+                    : null;
+                targetWindow.ShowValidationDialog(title, msg, btnText, () =>
+                {
+                    if (check.RecommendedMode != null)
+                    {
+                        targetWindow.OpenSingleTargetTab(path, check.RecommendedMode.Value);
+                    }
+                });
+            }
+            return false;
+        }
+        return true;
+    }
+
+    public void Dispose()
+    {
+        try
+        {
+            App.Log("[ThreeWayMergePage] Disposing resources...");
+            LanguageManager.Instance.LanguageChanged -= UpdateLocalization;
+            _localPath = null;
+            _basePath = null;
+            _remotePath = null;
+            if (LocalEditor != null) LocalEditor.Text = string.Empty;
+            if (BaseEditor != null) BaseEditor.Text = string.Empty;
+            if (RemoteEditor != null) RemoteEditor.Text = string.Empty;
+            if (MergedOutputEditor != null) MergedOutputEditor.Text = string.Empty;
+            App.Log("[ThreeWayMergePage] Dispose completed.");
+        }
+        catch (Exception ex)
+        {
+            App.Log($"[ThreeWayMergePage] Dispose exception: {ex.Message}");
         }
     }
 }

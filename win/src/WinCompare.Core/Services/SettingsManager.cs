@@ -29,6 +29,9 @@ public sealed class UserSettingsData
     public string AiCloudModel { get; set; } = "deepseek-chat";
     public int SelectedLocalModel { get; set; } = 0; // 0 = Gemma3_1B, 1 = Gemma3_4B
     public bool AutoReleaseMemory { get; set; } = true;
+    public bool AutoCheckUpdatesOnLaunch { get; set; } = true;
+    public string SkippedUpdateVersion { get; set; } = "";
+    public long LastUpdateCheckTimestamp { get; set; } = 0;
 }
 
 public sealed class SettingsManager
@@ -184,6 +187,24 @@ public sealed class SettingsManager
     {
         get => _data.AutoReleaseMemory;
         set { _data.AutoReleaseMemory = value; Save(); }
+    }
+
+    public bool AutoCheckUpdatesOnLaunch
+    {
+        get => _data.AutoCheckUpdatesOnLaunch;
+        set { _data.AutoCheckUpdatesOnLaunch = value; Save(); }
+    }
+
+    public string SkippedUpdateVersion
+    {
+        get => _data.SkippedUpdateVersion;
+        set { _data.SkippedUpdateVersion = value; Save(); }
+    }
+
+    public long LastUpdateCheckTimestamp
+    {
+        get => _data.LastUpdateCheckTimestamp;
+        set { _data.LastUpdateCheckTimestamp = value; Save(); }
     }
 
     public Encoding GetEncoding()

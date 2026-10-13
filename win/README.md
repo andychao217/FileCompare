@@ -45,23 +45,25 @@ win/
 > 该脚本会自动编译 `core/` 下的 Rust 代码，生成 `maccompare_ffi.dll` 并自动部署到各项目的输出目录中。
 
 ### 步骤 4：运行与调试图形界面
-**方法 A：Visual Studio（推荐体验）**
-直接在 Visual Studio 2022/2026 中打开 `Z:\FileCompare\win\WinCompare.sln`，设置 `WinCompare.UI` 为启动项，按 **F5** 即可启动并享受 XAML 热重载！
+> ⚠️ **重要注意（虚拟机共享盘用户必读）**：
+> WinUI 3 采用操作系统内核的**内存映射文件（Memory-Mapped Files / 按需分页）**加载 XAML 二进制资源（如 `TextDiffPage.xbf`）。在 Parallels Desktop 或 VMware 的网络共享盘（如 `Z:\`）上直接运行程序时，可能因网络共享驱动不支持缺页中断而偶发报错 **`Fatal error. 0xC0000006 (STATUS_IN_PAGE_ERROR)`** 并闪退。
+> **强烈推荐使用官方提供的本地同步启动脚本：**
 
-**方法 B：命令行运行**
-> 💡 **提示**：由于解决方案包含多个项目（UI、Cli、Core、Tests），不能直接在 `win` 根目录下裸跑 `dotnet run`，需指定 UI 项目：
+**方法 A：一键编译并本地运行（推荐，防 0xC0000006 闪退）**
+在 PowerShell 中执行：
+```powershell
+.\scripts\run_local.ps1
+```
+> 该脚本会在编译后通过 `robocopy` 增量镜像至虚拟机本地安全目录（`%LOCALAPPDATA%\WinCompareDev`）并启动，毫秒级响应且 100% 免疫共享盘分页崩溃。
 
-- **方式 1：进入 UI 目录运行（推荐）**
-  ```powershell
-  cd Z:\FileCompare\win\src\WinCompare.UI
-  dotnet run -p:Platform=x64
-  ```
+**方法 B：Visual Studio 调试**
+直接在 Visual Studio 2022/2026 中打开 `Z:\FileCompare\win\WinCompare.sln`，设置 `WinCompare.UI` 为启动项，按 **F5** 即可启动。
 
-- **方式 2：在 `win` 目录下通过 `--project` 运行**
-  ```powershell
-  # 在 Z:\FileCompare\win 目录下执行：
-  dotnet run --project .\src\WinCompare.UI\WinCompare.UI.csproj -p:Platform=x64
-  ```
+**方法 C：命令行原地运行**
+```powershell
+cd Z:\FileCompare\win\src\WinCompare.UI
+dotnet run -p:Platform=x64
+```
 
 ---
 

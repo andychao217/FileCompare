@@ -1,4 +1,4 @@
-<Page
+﻿<Page
     x:Class="WinCompare.UI.Views.ThreeWayMergePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -105,7 +105,7 @@
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
                         <FontIcon Glyph="&#xE8F4;" FontSize="32" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
                         <TextBlock x:Name="LocalEmptyTitle" Text="未选择文件" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
-                        <Button Content="选择..." FontSize="11" Padding="10,2" CornerRadius="4" Height="24" HorizontalAlignment="Center" Click="OnPickLocalClicked" />
+                        <Button x:Name="LocalEmptyPickBtn" Content="选择..." FontSize="11" Padding="10,2" CornerRadius="4" Height="24" HorizontalAlignment="Center" Click="OnPickLocalClicked" />
                     </StackPanel>
                 </Border>
 
@@ -113,7 +113,8 @@
                 <TextBox x:Name="LocalEditor" Grid.Row="1" AcceptsReturn="True" TextWrapping="NoWrap"
                          FontFamily="{StaticResource CodeFontFamily}" FontSize="12"
                          ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         BorderThickness="0" Background="Transparent" TextChanged="OnEditorTextChanged" Visibility="Collapsed" />
+                         BorderThickness="0" Background="Transparent" TextChanged="OnEditorTextChanged" Visibility="Collapsed"
+                         AllowDrop="True" DragOver="OnLocalDragOver" Drop="OnLocalDrop" />
             </Grid>
 
             <!-- Divider 1 -->
@@ -145,7 +146,7 @@
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
                         <FontIcon Glyph="&#xE8F4;" FontSize="32" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
                         <TextBlock x:Name="BaseEmptyTitle" Text="未选择文件" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
-                        <Button Content="选择..." FontSize="11" Padding="10,2" CornerRadius="4" Height="24" HorizontalAlignment="Center" Click="OnPickBaseClicked" />
+                        <Button x:Name="BaseEmptyPickBtn" Content="选择..." FontSize="11" Padding="10,2" CornerRadius="4" Height="24" HorizontalAlignment="Center" Click="OnPickBaseClicked" />
                     </StackPanel>
                 </Border>
 
@@ -153,7 +154,8 @@
                 <TextBox x:Name="BaseEditor" Grid.Row="1" AcceptsReturn="True" TextWrapping="NoWrap"
                          FontFamily="{StaticResource CodeFontFamily}" FontSize="12"
                          ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         BorderThickness="0" Background="Transparent" TextChanged="OnEditorTextChanged" Visibility="Collapsed" />
+                         BorderThickness="0" Background="Transparent" TextChanged="OnEditorTextChanged" Visibility="Collapsed"
+                         AllowDrop="True" DragOver="OnBaseDragOver" Drop="OnBaseDrop" />
             </Grid>
 
             <!-- Divider 2 -->
@@ -185,7 +187,7 @@
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
                         <FontIcon Glyph="&#xE8F4;" FontSize="32" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
                         <TextBlock x:Name="RemoteEmptyTitle" Text="未选择文件" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
-                        <Button Content="选择..." FontSize="11" Padding="10,2" CornerRadius="4" Height="24" HorizontalAlignment="Center" Click="OnPickRemoteClicked" />
+                        <Button x:Name="RemoteEmptyPickBtn" Content="选择..." FontSize="11" Padding="10,2" CornerRadius="4" Height="24" HorizontalAlignment="Center" Click="OnPickRemoteClicked" />
                     </StackPanel>
                 </Border>
 
@@ -193,7 +195,8 @@
                 <TextBox x:Name="RemoteEditor" Grid.Row="1" AcceptsReturn="True" TextWrapping="NoWrap"
                          FontFamily="{StaticResource CodeFontFamily}" FontSize="12"
                          ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         BorderThickness="0" Background="Transparent" TextChanged="OnEditorTextChanged" Visibility="Collapsed" />
+                         BorderThickness="0" Background="Transparent" TextChanged="OnEditorTextChanged" Visibility="Collapsed"
+                         AllowDrop="True" DragOver="OnRemoteDragOver" Drop="OnRemoteDrop" />
             </Grid>
         </Grid>
 
@@ -213,15 +216,22 @@
                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Left">
                         <TextBlock x:Name="OutputHeader" Text="合并结果预览" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
                         <TextBlock x:Name="OutputSubHeader" Text="未选择合并文件" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                        <TextBlock x:Name="MergeStatusDetail" Text="" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Name="MergeStatusDetail" Text="" FontSize="11" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                     </StackPanel>
 
-                    <Button x:Name="SaveMergedBottomBtn" Click="OnSaveMergedClicked" Style="{StaticResource AccentButtonStyle}" Padding="10,4" CornerRadius="4" Height="28" HorizontalAlignment="Right">
-                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                            <FontIcon Glyph="&#xE73E;" FontSize="11" />
-                            <TextBlock x:Name="SaveMergedBottomText" Text="保存并完成合并" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <Button x:Name="SaveMergedBottomBtn" Click="OnSaveMergedClicked" Style="{StaticResource AccentButtonStyle}" Padding="10,4" CornerRadius="4" Height="28">
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE73E;" FontSize="11" />
+                                <TextBlock x:Name="SaveMergedBottomText" Text="保存并完成合并" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <StackPanel x:Name="ConflictStatusBadge" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center" Visibility="Collapsed">
+                            <FontIcon x:Name="ConflictStatusIcon" Glyph="&#xE7BA;" FontSize="11" Foreground="{ThemeResource StatusModTextBrush}" VerticalAlignment="Center" />
+                            <TextBlock x:Name="ConflictStatusText" Text="" FontSize="11" FontWeight="Medium" Foreground="{ThemeResource StatusModTextBrush}" VerticalAlignment="Center" />
                         </StackPanel>
-                    </Button>
+                    </StackPanel>
                 </Grid>
             </Border>
 
