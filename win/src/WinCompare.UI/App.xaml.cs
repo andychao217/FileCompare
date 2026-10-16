@@ -139,13 +139,20 @@ public partial class App : Application
 
     private static IEnumerable<ResourceDictionary> EnumerateDictionaries(ResourceDictionary? root)
     {
-        if (root == null) yield break;
+        return EnumerateDictionariesInternal(root, new HashSet<ResourceDictionary>(ReferenceEqualityComparer.Instance), 0);
+    }
+
+    private static IEnumerable<ResourceDictionary> EnumerateDictionariesInternal(ResourceDictionary? root, HashSet<ResourceDictionary> visited, int depth)
+    {
+        if (root == null || depth > 10) yield break;
+        if (!visited.Add(root)) yield break;
+
         yield return root;
         if (root.MergedDictionaries != null)
         {
             foreach (var md in root.MergedDictionaries)
             {
-                foreach (var child in EnumerateDictionaries(md))
+                foreach (var child in EnumerateDictionariesInternal(md, visited, depth + 1))
                 {
                     yield return child;
                 }
@@ -395,6 +402,18 @@ public partial class App : Application
     private static ConsoleCtrlDelegate? _consoleCtrlHandler;
     private static UnhandledExceptionFilterDelegate? _nativeFilterDelegate;
 
+    public static void SafeAppendLog(string filename, string content)
+    {
+        try
+        {
+            string logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WinCompare", "logs");
+            Directory.CreateDirectory(logDir);
+            string logPath = Path.Combine(logDir, filename);
+            File.AppendAllText(logPath, content);
+        }
+        catch { }
+    }
+
     public static void Log(string message)
     {
         try
@@ -407,20 +426,7 @@ public partial class App : Application
             }
             catch { }
 
-            try
-            {
-                string logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WinCompare", "logs");
-                Directory.CreateDirectory(logDir);
-                string logPath = Path.Combine(logDir, "app.log");
-                File.AppendAllText(logPath, line + Environment.NewLine);
-            }
-            catch { }
-
-            try
-            {
-                File.AppendAllText("crash_debug.log", line + Environment.NewLine);
-            }
-            catch { }
+            SafeAppendLog("app.log", line + Environment.NewLine);
         }
         catch { }
     }
@@ -448,21 +454,7 @@ public partial class App : Application
             }
             catch { }
 
-            try
-            {
-                // Write to crash_debug.log in current working directory
-                File.AppendAllText("crash_debug.log", message + "\n");
-            }
-            catch { }
-
-            try
-            {
-                string logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WinCompare", "logs");
-                Directory.CreateDirectory(logDir);
-                string logPath = Path.Combine(logDir, "crash.log");
-                File.AppendAllText(logPath, message + "\n");
-            }
-            catch { }
+            SafeAppendLog("crash.log", message + Environment.NewLine);
         }
         catch { }
     }
@@ -540,7 +532,7 @@ public partial class App : Application
 
             string startMsg = $"========================================\n" +
                               $"[WinCompare] \u63A7\u5236\u53F0\u8BCA\u65AD\u901A\u9053\u5DF2\u5C31\u7EEA ({DateTime.Now:yyyy-MM-dd HH:mm:ss.fff})\n" +
-                              $"[WinCompare] \u6240\u6709\u64CD\u4F5C\u65E5\u5FD7\u5C06\u540C\u6B65\u8F93\u51FA\u5230\u672C PowerShell \u7A97\u53E3\u548C crash_debug.log\n" +
+                              $"[WinCompare] \u6240\u6709\u64CD\u4F5C\u65E5\u5FD7\u5C06\u540C\u6B65\u8F93\u51FA\u5230\u672C PowerShell \u7A97\u53E3\u548C %LOCALAPPDATA%\\WinCompare\\logs\n" +
                               $"========================================";
 
             Console.ForegroundColor = ConsoleColor.Cyan;
@@ -548,11 +540,7 @@ public partial class App : Application
             Console.ResetColor();
             Console.Out.Flush();
 
-            try
-            {
-                File.WriteAllText("crash_debug.log", startMsg + Environment.NewLine + Environment.NewLine);
-            }
-            catch { }
+            SafeAppendLog("app.log", startMsg + Environment.NewLine + Environment.NewLine);
 
             try
             {
@@ -573,7 +561,7 @@ public partial class App : Application
                     Console.WriteLine(uipiWarn);
                     Console.ResetColor();
                     Console.Out.Flush();
-                    File.AppendAllText("crash_debug.log", uipiWarn + Environment.NewLine);
+                    SafeAppendLog("app.log", uipiWarn + Environment.NewLine);
                 }
                 else
                 {
@@ -686,11 +674,7 @@ public partial class App : Application
                 }
                 catch { }
 
-                try
-                {
-                    File.AppendAllText("crash_debug.log", msg + Environment.NewLine);
-                }
-                catch { }
+                SafeAppendLog("crash.log", msg + Environment.NewLine);
             }
         }
         catch { }
@@ -732,11 +716,7 @@ public partial class App : Application
             }
             catch { }
 
-            try
-            {
-                File.AppendAllText("crash_debug.log", crashMsg + "\n");
-            }
-            catch { }
+            SafeAppendLog("crash.log", crashMsg + Environment.NewLine);
         }
         catch { }
 
@@ -775,40 +755,8 @@ public partial class App : Application
             e.SetObserved();
         };
 
-        AppDomain.CurrentDomain.FirstChanceException += (sender, e) =>
-        {
-            try
-            {
-                if (e.Exception is OperationCanceledException or TaskCanceledException)
-                {
-                    return;
-                }
-
-                string typeName = e.Exception.GetType().Name;
-                string exMsg = e.Exception.Message;
-                string stack = e.Exception.StackTrace ?? "";
-                string topStack = stack.Split('\n').FirstOrDefault()?.Trim() ?? "";
-
-                string stackSuffix = !string.IsNullOrEmpty(topStack) ? "--> " + topStack : "";
-                string logLine = $"[FirstChanceException] {typeName}: {exMsg} {stackSuffix}";
-
-                try
-                {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.Error.WriteLine(logLine);
-                    Console.ResetColor();
-                    Console.Error.Flush();
-                }
-                catch { }
-
-                try
-                {
-                    File.AppendAllText("crash_debug.log", $"[{DateTime.Now:HH:mm:ss.fff}] {logLine}\n");
-                }
-                catch { }
-            }
-            catch { }
-        };
+        // FirstChanceException 在生产环境中严禁启用，防止其内部任何轻微异常导致与 CLR 无限重入递归并引发 0xc00000fd 栈溢出崩溃
+        // 真正的未捕获致命异常由上方的 SetUnhandledExceptionFilter 和 AppDomain.CurrentDomain.UnhandledException 统一接管
     }
 
     public App()
