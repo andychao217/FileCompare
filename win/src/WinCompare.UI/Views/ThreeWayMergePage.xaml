@@ -71,6 +71,10 @@
 
         <!-- 3-Way Top Pane Split (Local | Base | Remote) -->
         <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="1" />
@@ -79,16 +83,14 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!-- 1. Local Branch (Mine) -->
-            <Grid Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" AllowDrop="True" DragOver="OnLocalDragOver" Drop="OnLocalDrop">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <!-- Local Header -->
-                <Border Grid.Row="0" Padding="12,6" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-                    <Grid>
+            <!-- Column 0: Local Header -->
+            <Border Grid.Row="0" Grid.Column="0" Padding="12,6" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0">
                         <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center" HorizontalAlignment="Left">
                             <TextBlock x:Name="LocalTitleText" Text="本地分支 (Local)" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
                             <StackPanel Orientation="Horizontal" Spacing="4">
@@ -98,38 +100,25 @@
                         </StackPanel>
                         <Button x:Name="LocalBrowseBtn" HorizontalAlignment="Right" Content="选择..." FontSize="11" Padding="8,2" CornerRadius="4" Height="24" Click="OnPickLocalClicked" />
                     </Grid>
-                </Border>
-
-                <!-- Local Empty State -->
-                <Border x:Name="LocalEmptyZone" Grid.Row="1" Background="Transparent" Visibility="Visible">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-                        <FontIcon Glyph="&#xE8F4;" FontSize="32" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
-                        <TextBlock x:Name="LocalEmptyTitle" Text="未选择文件" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
-                        <Button x:Name="LocalEmptyPickBtn" Content="选择..." FontSize="11" Padding="10,2" CornerRadius="4" Height="24" HorizontalAlignment="Center" Click="OnPickLocalClicked" />
+                    <StackPanel x:Name="LocalActionsPanel" Grid.Row="1" Orientation="Horizontal" Spacing="4" Margin="0,6,0,2" Visibility="Collapsed">
+                        <Button x:Name="TakeLocalBtn" Content="采纳本地" FontSize="10" Padding="6,2" Height="22" CornerRadius="3" Click="OnTakeLocalClicked" />
+                        <Button x:Name="TakeBothBtn" Content="保留双方" FontSize="10" Padding="6,2" Height="22" CornerRadius="3" Click="OnTakeBothClicked" />
+                        <Button x:Name="TakeRemoteBtn" Content="采纳远端" FontSize="10" Padding="6,2" Height="22" CornerRadius="3" Click="OnTakeRemoteClicked" />
                     </StackPanel>
-                </Border>
-
-                <!-- Local Editor -->
-                <TextBox x:Name="LocalEditor" Grid.Row="1" AcceptsReturn="True" TextWrapping="NoWrap"
-                         FontFamily="{StaticResource CodeFontFamily}" FontSize="12"
-                         ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         BorderThickness="0" Background="Transparent" TextChanged="OnEditorTextChanged" Visibility="Collapsed"
-                         AllowDrop="True" DragOver="OnLocalDragOver" Drop="OnLocalDrop" />
-            </Grid>
+                </Grid>
+            </Border>
 
             <!-- Divider 1 -->
-            <Rectangle Grid.Column="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+            <Rectangle Grid.Row="0" Grid.Column="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
 
-            <!-- 2. Base Ancestor -->
-            <Grid Grid.Column="2" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" AllowDrop="True" DragOver="OnBaseDragOver" Drop="OnBaseDrop">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <!-- Base Header -->
-                <Border Grid.Row="0" Padding="12,6" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-                    <Grid>
+            <!-- Column 2: Base Header -->
+            <Border Grid.Row="0" Grid.Column="2" Padding="12,6" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0">
                         <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center" HorizontalAlignment="Left">
                             <TextBlock x:Name="BaseTitleText" Text="共同祖先 (Base)" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
                             <StackPanel Orientation="Horizontal" Spacing="4">
@@ -139,38 +128,21 @@
                         </StackPanel>
                         <Button x:Name="BaseBrowseBtn" HorizontalAlignment="Right" Content="选择..." FontSize="11" Padding="8,2" CornerRadius="4" Height="24" Click="OnPickBaseClicked" />
                     </Grid>
-                </Border>
-
-                <!-- Base Empty State -->
-                <Border x:Name="BaseEmptyZone" Grid.Row="1" Background="Transparent" Visibility="Visible">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-                        <FontIcon Glyph="&#xE8F4;" FontSize="32" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
-                        <TextBlock x:Name="BaseEmptyTitle" Text="未选择文件" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
-                        <Button x:Name="BaseEmptyPickBtn" Content="选择..." FontSize="11" Padding="10,2" CornerRadius="4" Height="24" HorizontalAlignment="Center" Click="OnPickBaseClicked" />
-                    </StackPanel>
-                </Border>
-
-                <!-- Base Editor -->
-                <TextBox x:Name="BaseEditor" Grid.Row="1" AcceptsReturn="True" TextWrapping="NoWrap"
-                         FontFamily="{StaticResource CodeFontFamily}" FontSize="12"
-                         ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         BorderThickness="0" Background="Transparent" TextChanged="OnEditorTextChanged" Visibility="Collapsed"
-                         AllowDrop="True" DragOver="OnBaseDragOver" Drop="OnBaseDrop" />
-            </Grid>
+                    <Border x:Name="BaseActionsPlaceholder" Grid.Row="1" Height="24" Visibility="Collapsed" />
+                </Grid>
+            </Border>
 
             <!-- Divider 2 -->
-            <Rectangle Grid.Column="3" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+            <Rectangle Grid.Row="0" Grid.Column="3" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
 
-            <!-- 3. Remote Branch (Theirs) -->
-            <Grid Grid.Column="4" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" AllowDrop="True" DragOver="OnRemoteDragOver" Drop="OnRemoteDrop">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <!-- Remote Header -->
-                <Border Grid.Row="0" Padding="12,6" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-                    <Grid>
+            <!-- Column 4: Remote Header -->
+            <Border Grid.Row="0" Grid.Column="4" Padding="12,6" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0">
                         <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center" HorizontalAlignment="Left">
                             <TextBlock x:Name="RemoteTitleText" Text="远端分支 (Remote)" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
                             <StackPanel Orientation="Horizontal" Spacing="4">
@@ -180,24 +152,158 @@
                         </StackPanel>
                         <Button x:Name="RemoteBrowseBtn" HorizontalAlignment="Right" Content="选择..." FontSize="11" Padding="8,2" CornerRadius="4" Height="24" Click="OnPickRemoteClicked" />
                     </Grid>
-                </Border>
-
-                <!-- Remote Empty State -->
-                <Border x:Name="RemoteEmptyZone" Grid.Row="1" Background="Transparent" Visibility="Visible">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-                        <FontIcon Glyph="&#xE8F4;" FontSize="32" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
-                        <TextBlock x:Name="RemoteEmptyTitle" Text="未选择文件" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
-                        <Button x:Name="RemoteEmptyPickBtn" Content="选择..." FontSize="11" Padding="10,2" CornerRadius="4" Height="24" HorizontalAlignment="Center" Click="OnPickRemoteClicked" />
+                    <StackPanel x:Name="RemoteActionsPanel" Grid.Row="1" Orientation="Horizontal" Spacing="4" Margin="0,6,0,2" Visibility="Collapsed">
+                        <Button x:Name="TakeLocalRightBtn" Content="采纳本地" FontSize="10" Padding="6,2" Height="22" CornerRadius="3" Click="OnTakeLocalClicked" />
+                        <Button x:Name="TakeBothRightBtn" Content="保留双方" FontSize="10" Padding="6,2" Height="22" CornerRadius="3" Click="OnTakeBothClicked" />
+                        <Button x:Name="TakeRemoteRightBtn" Content="采纳远端" FontSize="10" Padding="6,2" Height="22" CornerRadius="3" Click="OnTakeRemoteClicked" />
                     </StackPanel>
-                </Border>
+                </Grid>
+            </Border>
 
-                <!-- Remote Editor -->
-                <TextBox x:Name="RemoteEditor" Grid.Row="1" AcceptsReturn="True" TextWrapping="NoWrap"
-                         FontFamily="{StaticResource CodeFontFamily}" FontSize="12"
-                         ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         BorderThickness="0" Background="Transparent" TextChanged="OnEditorTextChanged" Visibility="Collapsed"
-                         AllowDrop="True" DragOver="OnRemoteDragOver" Drop="OnRemoteDrop" />
+            <!-- Row 1: Content Area -->
+            <!-- 1. Local Empty State -->
+            <Border x:Name="LocalEmptyZone" Grid.Row="1" Grid.Column="0" Background="Transparent" AllowDrop="True" DragOver="OnLocalDragOver" Drop="OnLocalDrop" Visibility="Visible">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                    <FontIcon Glyph="&#xE8F4;" FontSize="32" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
+                    <TextBlock x:Name="LocalEmptyTitle" Text="未选择文件" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                    <Button x:Name="LocalEmptyPickBtn" Content="选择..." FontSize="11" Padding="10,2" CornerRadius="4" Height="24" HorizontalAlignment="Center" Click="OnPickLocalClicked" />
+                </StackPanel>
+            </Border>
+
+            <!-- Empty Divider 1 -->
+            <Rectangle x:Name="EmptyDivider1" Grid.Row="1" Grid.Column="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Visibility="Visible" />
+
+            <!-- 2. Base Empty State -->
+            <Border x:Name="BaseEmptyZone" Grid.Row="1" Grid.Column="2" Background="Transparent" AllowDrop="True" DragOver="OnBaseDragOver" Drop="OnBaseDrop" Visibility="Visible">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                    <FontIcon Glyph="&#xE8F4;" FontSize="32" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
+                    <TextBlock x:Name="BaseEmptyTitle" Text="未选择文件" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                    <Button x:Name="BaseEmptyPickBtn" Content="选择..." FontSize="11" Padding="10,2" CornerRadius="4" Height="24" HorizontalAlignment="Center" Click="OnPickBaseClicked" />
+                </StackPanel>
+            </Border>
+
+            <!-- Empty Divider 2 -->
+            <Rectangle x:Name="EmptyDivider2" Grid.Row="1" Grid.Column="3" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Visibility="Visible" />
+
+            <!-- 3. Remote Empty State -->
+            <Border x:Name="RemoteEmptyZone" Grid.Row="1" Grid.Column="4" Background="Transparent" AllowDrop="True" DragOver="OnRemoteDragOver" Drop="OnRemoteDrop" Visibility="Visible">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                    <FontIcon Glyph="&#xE8F4;" FontSize="32" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
+                    <TextBlock x:Name="RemoteEmptyTitle" Text="未选择文件" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                    <Button x:Name="RemoteEmptyPickBtn" Content="选择..." FontSize="11" Padding="10,2" CornerRadius="4" Height="24" HorizontalAlignment="Center" Click="OnPickRemoteClicked" />
+                </StackPanel>
+            </Border>
+
+            <!-- Synchronized 3-Way Diff ListView (Visible when files loaded) -->
+            <Grid x:Name="MergeListContainer" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Visibility="Collapsed"
+                  Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+                  AllowDrop="True" DragOver="OnDiffContainerDragOver" Drop="OnDiffContainerDrop">
+                <ListView x:Name="MergeListView" SelectionMode="Single" Padding="0"
+                          HorizontalContentAlignment="Stretch"
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                          ScrollViewer.HorizontalScrollMode="Disabled"
+                          AllowDrop="True" DragOver="OnDiffContainerDragOver" Drop="OnDiffContainerDrop">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                            <Setter Property="MinHeight" Value="22" />
+                            <Setter Property="Height" Value="22" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="CornerRadius" Value="0" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Height="22">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="1" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="1" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Column 0: Local Cell -->
+                                <Grid Grid.Column="0" Background="{Binding LocalBgBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="48" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid Grid.Column="0" Background="{ThemeResource SubtleFillColorSecondaryBrush}" Padding="0,0,6,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="14" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding LocalSign}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   FontSize="11" FontWeight="Bold" FontFamily="{StaticResource CodeFontFamily}" Foreground="{Binding LocalFgBrush}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding LocalLineNumText}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                   FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </Grid>
+                                    <TextBlock Grid.Column="1" Text="{Binding LocalText}" VerticalAlignment="Center" Padding="8,0,8,0"
+                                               FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                                </Grid>
+
+                                <!-- Divider 1 -->
+                                <Rectangle Grid.Column="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                                <!-- Column 2: Base Cell -->
+                                <Grid Grid.Column="2" Background="{Binding BaseBgBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="48" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid Grid.Column="0" Background="{ThemeResource SubtleFillColorSecondaryBrush}" Padding="0,0,6,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="14" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding BaseSign}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   FontSize="11" FontWeight="Bold" FontFamily="{StaticResource CodeFontFamily}" Foreground="{Binding BaseFgBrush}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding BaseLineNumText}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                   FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </Grid>
+                                    <TextBlock Grid.Column="1" Text="{Binding BaseText}" VerticalAlignment="Center" Padding="8,0,8,0"
+                                               FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                                </Grid>
+
+                                <!-- Divider 2 -->
+                                <Rectangle Grid.Column="3" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                                <!-- Column 4: Remote Cell -->
+                                <Grid Grid.Column="4" Background="{Binding RemoteBgBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="48" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid Grid.Column="0" Background="{ThemeResource SubtleFillColorSecondaryBrush}" Padding="0,0,6,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="14" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding RemoteSign}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   FontSize="11" FontWeight="Bold" FontFamily="{StaticResource CodeFontFamily}" Foreground="{Binding RemoteFgBrush}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding RemoteLineNumText}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                   FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </Grid>
+                                    <TextBlock Grid.Column="1" Text="{Binding RemoteText}" VerticalAlignment="Center" Padding="8,0,8,0"
+                                               FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                                </Grid>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
             </Grid>
+
+            <!-- Legacy fallback editors -->
+            <TextBox x:Name="LocalEditor" Visibility="Collapsed" AcceptsReturn="True" />
+            <TextBox x:Name="BaseEditor" Visibility="Collapsed" AcceptsReturn="True" />
+            <TextBox x:Name="RemoteEditor" Visibility="Collapsed" AcceptsReturn="True" />
         </Grid>
 
         <!-- Horizontal Splitter (Divider 3) -->

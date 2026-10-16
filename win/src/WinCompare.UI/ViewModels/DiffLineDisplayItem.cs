@@ -32,3 +32,29 @@ public sealed class SingleTextLineDisplayItem
     }
     public string Content { get; set; } = string.Empty;
 }
+
+public sealed class ThreeWayMergeLineDisplayItem
+{
+    public int LineIndex { get; set; }
+
+    public string LocalLineNumText { get; set; } = string.Empty;
+    public string LocalSign { get; set; } = " ";
+    public string LocalText { get; set; } = string.Empty;
+    public Brush LocalBgBrush { get; set; } = new SolidColorBrush(Colors.Transparent);
+    public Brush LocalFgBrush { get; set; } = App.GetThemeBrush("TextFillColorPrimaryBrush");
+
+    public string BaseLineNumText { get; set; } = string.Empty;
+    public string BaseSign { get; set; } = " ";
+    public string BaseText { get; set; } = string.Empty;
+    public Brush BaseBgBrush { get; set; } = new SolidColorBrush(Colors.Transparent);
+    public Brush BaseFgBrush { get; set; } = App.GetThemeBrush("TextFillColorPrimaryBrush");
+
+    public string RemoteLineNumText { get; set; } = string.Empty;
+    public string RemoteSign { get; set; } = " ";
+    public string RemoteText { get; set; } = string.Empty;
+    public Brush RemoteBgBrush { get; set; } = new SolidColorBrush(Colors.Transparent);
+    public Brush RemoteFgBrush { get; set; } = App.GetThemeBrush("TextFillColorPrimaryBrush");
+
+    public string Status { get; set; } = "Unchanged";
+    public bool IsConflict => Status == "Conflict";
+}

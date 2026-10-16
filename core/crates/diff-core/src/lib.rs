@@ -391,6 +391,61 @@ fn compute_token_diff(source: &str, target: &str, change_type: ChangeType) -> Ve
 }
 
 /// 3-Way Merge algorithm between Local, Base, and Remote.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum BaseLineAction {
+    Kept(usize),
+    Modified(usize),
+    Deleted,
+}
+
+fn align_branch_to_base(base_lines: &[&str], branch_lines: &[&str]) -> (Vec<Vec<usize>>, Vec<BaseLineAction>) {
+    let n = base_lines.len();
+    let mut insertions: Vec<Vec<usize>> = vec![Vec::new(); n + 1];
+    let mut actions: Vec<BaseLineAction> = vec![BaseLineAction::Deleted; n];
+
+    let diff = TextDiff::configure()
+        .algorithm(Algorithm::Myers)
+        .diff_slices(base_lines, branch_lines);
+
+    for op in diff.ops() {
+        match *op {
+            DiffOp::Equal { old_index, new_index, len } => {
+                for i in 0..len {
+                    actions[old_index + i] = BaseLineAction::Kept(new_index + i);
+                }
+            }
+            DiffOp::Insert { old_index, new_index, new_len } => {
+                for i in 0..new_len {
+                    insertions[old_index].push(new_index + i);
+                }
+            }
+            DiffOp::Delete { old_index, old_len, .. } => {
+                for i in 0..old_len {
+                    actions[old_index + i] = BaseLineAction::Deleted;
+                }
+            }
+            DiffOp::Replace { old_index, old_len, new_index, new_len } => {
+                let common = old_len.min(new_len);
+                for i in 0..common {
+                    actions[old_index + i] = BaseLineAction::Modified(new_index + i);
+                }
+                if new_len > old_len {
+                    for i in common..new_len {
+                        insertions[old_index + old_len].push(new_index + i);
+                    }
+                } else if old_len > new_len {
+                    for i in common..old_len {
+                        actions[old_index + i] = BaseLineAction::Deleted;
+                    }
+                }
+            }
+        }
+    }
+
+    (insertions, actions)
+}
+
+/// 3-Way Merge algorithm between Local, Base, and Remote using Myers-diff alignment.
 pub fn merge_three_way(
     local_content: &str,
     base_content: &str,
@@ -412,62 +467,144 @@ pub fn merge_three_way(
     let base_lines: Vec<&str> = bas_str.lines().collect();
     let remote_lines: Vec<&str> = rem_str.lines().collect();
 
-    let max_len = local_lines
-        .len()
-        .max(base_lines.len())
-        .max(remote_lines.len());
+    let (loc_insertions, loc_actions) = align_branch_to_base(&base_lines, &local_lines);
+    let (rem_insertions, rem_actions) = align_branch_to_base(&base_lines, &remote_lines);
 
     let mut result = MergeResult::default();
     let mut merged_output = Vec::new();
+    let n = base_lines.len();
 
-    for i in 0..max_len {
-        let loc = local_lines.get(i).copied().unwrap_or("");
-        let bas = base_lines.get(i).copied().unwrap_or("");
-        let rem = remote_lines.get(i).copied().unwrap_or("");
+    for b in 0..=n {
+        // 1. Process insertions before base line b
+        let loc_ins = &loc_insertions[b];
+        let rem_ins = &rem_insertions[b];
+        let max_ins = loc_ins.len().max(rem_ins.len());
 
-        let loc_changed = loc != bas;
-        let rem_changed = rem != bas;
+        for k in 0..max_ins {
+            let has_loc = k < loc_ins.len();
+            let has_rem = k < rem_ins.len();
+            let l_idx = if has_loc { Some(loc_ins[k]) } else { None };
+            let r_idx = if has_rem { Some(rem_ins[k]) } else { None };
 
-        let (status, conflict_idx) = match (loc_changed, rem_changed) {
-            (false, false) => {
-                merged_output.push(bas.to_string());
-                (MergeHunkStatus::Unchanged, None)
-            }
-            (true, false) => {
-                merged_output.push(loc.to_string());
-                result.auto_resolved_count += 1;
-                (MergeHunkStatus::CleanLocal, None)
-            }
-            (false, true) => {
-                merged_output.push(rem.to_string());
-                result.auto_resolved_count += 1;
-                (MergeHunkStatus::CleanRemote, None)
-            }
-            (true, true) => {
-                if loc == rem {
-                    merged_output.push(loc.to_string());
+            let loc_line = l_idx.map(|i| local_lines[i]).unwrap_or("");
+            let rem_line = r_idx.map(|i| remote_lines[i]).unwrap_or("");
+
+            let (status, conflict_idx, resolved) = if has_loc && has_rem {
+                if loc_line == rem_line {
                     result.auto_resolved_count += 1;
-                    (MergeHunkStatus::Unchanged, None)
+                    (MergeHunkStatus::CleanLocal, None, Some(loc_line.to_string()))
                 } else {
                     let c_idx = result.conflict_count as usize;
                     result.conflict_count += 1;
-                    merged_output.push(format!("<<<<<<< Local\n{}\n=======\n{}\n>>>>>>> Remote", loc, rem));
-                    (MergeHunkStatus::Conflict, Some(c_idx))
+                    let block = format!("<<<<<<< Local\n{}\n=======\n{}\n>>>>>>> Remote", loc_line, rem_line);
+                    (MergeHunkStatus::Conflict, Some(c_idx), Some(block))
                 }
-            }
-        };
+            } else if has_loc {
+                result.auto_resolved_count += 1;
+                (MergeHunkStatus::CleanLocal, None, Some(loc_line.to_string()))
+            } else {
+                result.auto_resolved_count += 1;
+                (MergeHunkStatus::CleanRemote, None, Some(rem_line.to_string()))
+            };
 
-        result.lines.push(MergeLine {
-            local_line_number: if i < local_lines.len() { Some((i + 1) as u32) } else { None },
-            base_line_number: if i < base_lines.len() { Some((i + 1) as u32) } else { None },
-            remote_line_number: if i < remote_lines.len() { Some((i + 1) as u32) } else { None },
-            content_local: loc.to_string(),
-            content_base: bas.to_string(),
-            content_remote: rem.to_string(),
-            status,
-            resolved_content: Some(merged_output.last().cloned().unwrap_or_default()),
-            conflict_index: conflict_idx,
-        });
+            if let Some(ref text) = resolved {
+                merged_output.push(text.clone());
+            }
+
+            result.lines.push(MergeLine {
+                local_line_number: l_idx.map(|i| (i + 1) as u32),
+                base_line_number: None,
+                remote_line_number: r_idx.map(|i| (i + 1) as u32),
+                content_local: loc_line.to_string(),
+                content_base: String::new(),
+                content_remote: rem_line.to_string(),
+                status,
+                resolved_content: resolved,
+                conflict_index: conflict_idx,
+            });
+        }
+
+        // 2. Process base line b (if b < n)
+        if b < n {
+            let bas_line = base_lines[b];
+            let loc_act = loc_actions[b];
+            let rem_act = rem_actions[b];
+
+            let (l_idx, loc_line) = match loc_act {
+                BaseLineAction::Kept(i) | BaseLineAction::Modified(i) => (Some(i), local_lines[i]),
+                BaseLineAction::Deleted => (None, ""),
+            };
+
+            let (r_idx, rem_line) = match rem_act {
+                BaseLineAction::Kept(i) | BaseLineAction::Modified(i) => (Some(i), remote_lines[i]),
+                BaseLineAction::Deleted => (None, ""),
+            };
+
+            let (status, conflict_idx, resolved) = match (loc_act, rem_act) {
+                (BaseLineAction::Kept(_), BaseLineAction::Kept(_)) => {
+                    (MergeHunkStatus::Unchanged, None, Some(bas_line.to_string()))
+                }
+                (BaseLineAction::Modified(_), BaseLineAction::Kept(_)) => {
+                    result.auto_resolved_count += 1;
+                    (MergeHunkStatus::CleanLocal, None, Some(loc_line.to_string()))
+                }
+                (BaseLineAction::Kept(_), BaseLineAction::Modified(_)) => {
+                    result.auto_resolved_count += 1;
+                    (MergeHunkStatus::CleanRemote, None, Some(rem_line.to_string()))
+                }
+                (BaseLineAction::Deleted, BaseLineAction::Kept(_)) => {
+                    result.auto_resolved_count += 1;
+                    (MergeHunkStatus::CleanLocal, None, None)
+                }
+                (BaseLineAction::Kept(_), BaseLineAction::Deleted) => {
+                    result.auto_resolved_count += 1;
+                    (MergeHunkStatus::CleanRemote, None, None)
+                }
+                (BaseLineAction::Deleted, BaseLineAction::Deleted) => {
+                    result.auto_resolved_count += 1;
+                    (MergeHunkStatus::CleanLocal, None, None)
+                }
+                (BaseLineAction::Modified(_), BaseLineAction::Modified(_)) => {
+                    if loc_line == rem_line {
+                        result.auto_resolved_count += 1;
+                        (MergeHunkStatus::CleanLocal, None, Some(loc_line.to_string()))
+                    } else {
+                        let c_idx = result.conflict_count as usize;
+                        result.conflict_count += 1;
+                        let block = format!("<<<<<<< Local\n{}\n=======\n{}\n>>>>>>> Remote", loc_line, rem_line);
+                        (MergeHunkStatus::Conflict, Some(c_idx), Some(block))
+                    }
+                }
+                (BaseLineAction::Modified(_), BaseLineAction::Deleted) => {
+                    let c_idx = result.conflict_count as usize;
+                    result.conflict_count += 1;
+                    let block = format!("<<<<<<< Local\n{}\n=======\n\n>>>>>>> Remote", loc_line);
+                    (MergeHunkStatus::Conflict, Some(c_idx), Some(block))
+                }
+                (BaseLineAction::Deleted, BaseLineAction::Modified(_)) => {
+                    let c_idx = result.conflict_count as usize;
+                    result.conflict_count += 1;
+                    let block = format!("<<<<<<< Local\n\n=======\n{}\n>>>>>>> Remote", rem_line);
+                    (MergeHunkStatus::Conflict, Some(c_idx), Some(block))
+                }
+            };
+
+            if let Some(ref text) = resolved {
+                merged_output.push(text.clone());
+            }
+
+            result.lines.push(MergeLine {
+                local_line_number: l_idx.map(|i| (i + 1) as u32),
+                base_line_number: Some((b + 1) as u32),
+                remote_line_number: r_idx.map(|i| (i + 1) as u32),
+                content_local: loc_line.to_string(),
+                content_base: bas_line.to_string(),
+                content_remote: rem_line.to_string(),
+                status,
+                resolved_content: resolved,
+                conflict_index: conflict_idx,
+            });
+        }
     }
 
     result.merged_text = merged_output.join("\n");

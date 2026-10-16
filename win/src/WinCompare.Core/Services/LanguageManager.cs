@@ -1037,11 +1037,23 @@ public sealed class LanguageManager
             [AppLanguage.En] = "Auto Resolve Non-conflicts",
             [AppLanguage.Ja] = "競合以外を自動解決"
         },
+        ["acceptLocal"] = new()
+        {
+            [AppLanguage.ZhHans] = "采纳本地",
+            [AppLanguage.En] = "Accept Local",
+            [AppLanguage.Ja] = "ローカルを採用"
+        },
         ["takeBoth"] = new()
         {
             [AppLanguage.ZhHans] = "保留双方修改",
             [AppLanguage.En] = "Keep Both Changes",
             [AppLanguage.Ja] = "両方の変更を保持"
+        },
+        ["acceptRemote"] = new()
+        {
+            [AppLanguage.ZhHans] = "采纳远端",
+            [AppLanguage.En] = "Accept Remote",
+            [AppLanguage.Ja] = "リモートを採用"
         },
         ["saveMergeSuccess"] = new()
         {

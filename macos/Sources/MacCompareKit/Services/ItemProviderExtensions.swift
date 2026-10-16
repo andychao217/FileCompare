@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 
 extension NSItemProvider {
     public func loadFileURL(completion: @escaping @Sendable (URL?) -> Void) {
-        let provider = self
+        nonisolated(unsafe) let provider = self
         if canLoadObject(ofClass: URL.self) {
             _ = loadObject(ofClass: URL.self) { reading, _ in
                 if let url = reading {

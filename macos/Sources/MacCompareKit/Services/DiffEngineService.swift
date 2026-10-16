@@ -550,66 +550,204 @@ public final class DiffEngineService: DiffEngineProtocol, @unchecked Sendable {
             }
         }
 
-        // 2. Swift Native Fallback
+        // 2. Swift Native Fallback (Myers Diff Alignment)
         let localLines = local.components(separatedBy: .newlines)
         let baseLines = base.components(separatedBy: .newlines)
         let remoteLines = remote.components(separatedBy: .newlines)
 
-        let maxLen = max(localLines.count, max(baseLines.count, remoteLines.count))
+        enum SwiftBaseAction {
+            case kept(Int)
+            case modified(Int)
+            case deleted
+        }
+
+        func alignBranch(branchLines: [String]) -> (insertions: [[Int]], actions: [SwiftBaseAction]) {
+            var insertions = Array(repeating: [Int](), count: baseLines.count + 1)
+            var actions = Array(repeating: SwiftBaseAction.deleted, count: baseLines.count)
+
+            let edits = computeMyersDiff(a: baseLines, b: branchLines, ignoreWhitespace: false, ignoreCase: false)
+            var currentBase = 0
+
+            for edit in edits {
+                switch edit.changeType {
+                case .added:
+                    if let r = edit.rightLineNum {
+                        insertions[currentBase].append(Int(r) - 1)
+                    }
+                case .deleted:
+                    if let l = edit.leftLineNum {
+                        let idx = Int(l) - 1
+                        actions[idx] = .deleted
+                        currentBase = idx + 1
+                    }
+                case .modified:
+                    if let l = edit.leftLineNum, let r = edit.rightLineNum {
+                        let idx = Int(l) - 1
+                        actions[idx] = .modified(Int(r) - 1)
+                        currentBase = idx + 1
+                    }
+                case .unchanged:
+                    if let l = edit.leftLineNum, let r = edit.rightLineNum {
+                        let idx = Int(l) - 1
+                        actions[idx] = .kept(Int(r) - 1)
+                        currentBase = idx + 1
+                    }
+                }
+            }
+            return (insertions, actions)
+        }
+
+        let (locIns, locActs) = alignBranch(branchLines: localLines)
+        let (remIns, remActs) = alignBranch(branchLines: remoteLines)
+
         var mergeLines: [MergeLine] = []
         var mergedOutput: [String] = []
         var conflictCount: UInt32 = 0
         var autoResolvedCount: UInt32 = 0
+        let n = baseLines.count
 
-        for i in 0..<maxLen {
-            let loc = i < localLines.count ? localLines[i] : ""
-            let bas = i < baseLines.count ? baseLines[i] : ""
-            let rem = i < remoteLines.count ? remoteLines[i] : ""
+        for b in 0...n {
+            let lIns = locIns[b]
+            let rIns = remIns[b]
+            let maxIns = max(lIns.count, rIns.count)
 
-            let locChanged = loc != bas
-            let remChanged = rem != bas
+            for k in 0..<maxIns {
+                let hasLoc = k < lIns.count
+                let hasRem = k < rIns.count
+                let lIdx = hasLoc ? lIns[k] : nil
+                let rIdx = hasRem ? rIns[k] : nil
 
-            let status: MergeHunkStatus
-            let resolved: String
-            var conflictIdx: Int?
+                let locLine = lIdx.map { localLines[$0] } ?? ""
+                let remLine = rIdx.map { remoteLines[$0] } ?? ""
 
-            switch (locChanged, remChanged) {
-            case (false, false):
-                status = .unchanged
-                resolved = bas
-            case (true, false):
-                status = .cleanLocal
-                resolved = loc
-                autoResolvedCount += 1
-            case (false, true):
-                status = .cleanRemote
-                resolved = rem
-                autoResolvedCount += 1
-            case (true, true):
-                if loc == rem {
-                    status = .unchanged
-                    resolved = loc
+                let status: MergeHunkStatus
+                let resolved: String?
+                var conflictIdx: Int?
+
+                if hasLoc && hasRem {
+                    if locLine == remLine {
+                        status = .cleanLocal
+                        autoResolvedCount += 1
+                        resolved = locLine
+                    } else {
+                        status = .conflict
+                        conflictIdx = Int(conflictCount)
+                        conflictCount += 1
+                        resolved = "<<<<<<< Local\n\(locLine)\n=======\n\(remLine)\n>>>>>>> Remote"
+                    }
+                } else if hasLoc {
+                    status = .cleanLocal
                     autoResolvedCount += 1
+                    resolved = locLine
                 } else {
+                    status = .cleanRemote
+                    autoResolvedCount += 1
+                    resolved = remLine
+                }
+
+                if let text = resolved {
+                    mergedOutput.append(text)
+                }
+
+                mergeLines.append(MergeLine(
+                    localLineNumber: lIdx.map { UInt32($0 + 1) },
+                    baseLineNumber: nil,
+                    remoteLineNumber: rIdx.map { UInt32($0 + 1) },
+                    contentLocal: locLine,
+                    contentBase: "",
+                    contentRemote: remLine,
+                    status: status,
+                    resolvedContent: resolved,
+                    conflictIndex: conflictIdx
+                ))
+            }
+
+            if b < n {
+                let basLine = baseLines[b]
+                let locAct = locActs[b]
+                let remAct = remActs[b]
+
+                let (lIdx, locLine): (Int?, String) = {
+                    switch locAct {
+                    case .kept(let i), .modified(let i): return (i, localLines[i])
+                    case .deleted: return (nil, "")
+                    }
+                }()
+
+                let (rIdx, remLine): (Int?, String) = {
+                    switch remAct {
+                    case .kept(let i), .modified(let i): return (i, remoteLines[i])
+                    case .deleted: return (nil, "")
+                    }
+                }()
+
+                let status: MergeHunkStatus
+                let resolved: String?
+                var conflictIdx: Int?
+
+                switch (locAct, remAct) {
+                case (.kept, .kept):
+                    status = .unchanged
+                    resolved = basLine
+                case (.modified, .kept):
+                    status = .cleanLocal
+                    autoResolvedCount += 1
+                    resolved = locLine
+                case (.kept, .modified):
+                    status = .cleanRemote
+                    autoResolvedCount += 1
+                    resolved = remLine
+                case (.deleted, .kept):
+                    status = .cleanLocal
+                    autoResolvedCount += 1
+                    resolved = nil
+                case (.kept, .deleted):
+                    status = .cleanRemote
+                    autoResolvedCount += 1
+                    resolved = nil
+                case (.deleted, .deleted):
+                    status = .cleanLocal
+                    autoResolvedCount += 1
+                    resolved = nil
+                case (.modified, .modified):
+                    if locLine == remLine {
+                        status = .cleanLocal
+                        autoResolvedCount += 1
+                        resolved = locLine
+                    } else {
+                        status = .conflict
+                        conflictIdx = Int(conflictCount)
+                        conflictCount += 1
+                        resolved = "<<<<<<< Local\n\(locLine)\n=======\n\(remLine)\n>>>>>>> Remote"
+                    }
+                case (.modified, .deleted):
                     status = .conflict
                     conflictIdx = Int(conflictCount)
                     conflictCount += 1
-                    resolved = "<<<<<<< Local\n\(loc)\n=======\n\(rem)\n>>>>>>> Remote"
+                    resolved = "<<<<<<< Local\n\(locLine)\n=======\n\n>>>>>>> Remote"
+                case (.deleted, .modified):
+                    status = .conflict
+                    conflictIdx = Int(conflictCount)
+                    conflictCount += 1
+                    resolved = "<<<<<<< Local\n\n=======\n\(remLine)\n>>>>>>> Remote"
                 }
-            }
 
-            mergedOutput.append(resolved)
-            mergeLines.append(MergeLine(
-                localLineNumber: i < localLines.count ? UInt32(i + 1) : nil,
-                baseLineNumber: i < baseLines.count ? UInt32(i + 1) : nil,
-                remoteLineNumber: i < remoteLines.count ? UInt32(i + 1) : nil,
-                contentLocal: loc,
-                contentBase: bas,
-                contentRemote: rem,
-                status: status,
-                resolvedContent: resolved,
-                conflictIndex: conflictIdx
-            ))
+                if let text = resolved {
+                    mergedOutput.append(text)
+                }
+
+                mergeLines.append(MergeLine(
+                    localLineNumber: lIdx.map { UInt32($0 + 1) },
+                    baseLineNumber: UInt32(b + 1),
+                    remoteLineNumber: rIdx.map { UInt32($0 + 1) },
+                    contentLocal: locLine,
+                    contentBase: basLine,
+                    contentRemote: remLine,
+                    status: status,
+                    resolvedContent: resolved,
+                    conflictIndex: conflictIdx
+                ))
+            }
         }
 
         return MergeResult(

@@ -337,72 +337,308 @@ public sealed class DiffEngineService
     /// <summary>
     /// Pure C# 3-Way merge fallback when Rust core is disabled or unavailable.
     /// </summary>
-    private static ThreeWayMergeResult MergeThreeWayCSharp(string local, string @base, string remote)
+    private enum CSharpBaseActionType { Kept, Modified, Deleted }
+    private struct CSharpBaseAction
     {
-        var result = new ThreeWayMergeResult();
-        string[] localLines = local.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-        string[] baseLines = @base.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-        string[] remoteLines = remote.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+        public CSharpBaseActionType Type;
+        public int BranchIndex;
+    }
 
-        var mergedLines = new List<string>();
-        int max = Math.Max(baseLines.Length, Math.Max(localLines.Length, remoteLines.Length));
+    private static (List<int>[] insertions, CSharpBaseAction[] actions) AlignBranchToBase(string[] baseLines, string[] branchLines)
+    {
+        int n = baseLines.Length;
+        int m = branchLines.Length;
 
-        for (int i = 0; i < max; i++)
+        int[,] dp = new int[n + 1, m + 1];
+        for (int i = n - 1; i >= 0; i--)
         {
-            string b = i < baseLines.Length ? baseLines[i] : "";
-            string l = i < localLines.Length ? localLines[i] : "";
-            string r = i < remoteLines.Length ? remoteLines[i] : "";
-
-            var mergeLine = new MergeLine
+            for (int j = m - 1; j >= 0; j--)
             {
-                LocalLineNumber = i < localLines.Length ? i + 1 : null,
-                BaseLineNumber = i < baseLines.Length ? i + 1 : null,
-                RemoteLineNumber = i < remoteLines.Length ? i + 1 : null,
-                ContentLocal = l,
-                ContentBase = b,
-                ContentRemote = r
-            };
-
-            if (l == r)
-            {
-                mergeLine.Status = "Unchanged";
-                mergeLine.ResolvedContent = l;
-                mergedLines.Add(l);
+                if (baseLines[i] == branchLines[j])
+                    dp[i, j] = 1 + dp[i + 1, j + 1];
+                else
+                    dp[i, j] = Math.Max(dp[i + 1, j], dp[i, j + 1]);
             }
-            else if (l == b)
+        }
+
+        var insertions = new List<int>[n + 1];
+        for (int i = 0; i <= n; i++) insertions[i] = new List<int>();
+
+        var actions = new CSharpBaseAction[n];
+        for (int i = 0; i < n; i++) actions[i] = new CSharpBaseAction { Type = CSharpBaseActionType.Deleted, BranchIndex = -1 };
+
+        int bi = 0;
+        int bj = 0;
+
+        while (bi < n || bj < m)
+        {
+            if (bi < n && bj < m && baseLines[bi] == branchLines[bj])
             {
-                mergeLine.Status = "CleanRemote";
-                mergeLine.ResolvedContent = r;
-                mergedLines.Add(r);
-                result.AutoResolvedCount++;
-            }
-            else if (r == b)
-            {
-                mergeLine.Status = "CleanLocal";
-                mergeLine.ResolvedContent = l;
-                mergedLines.Add(l);
-                result.AutoResolvedCount++;
+                actions[bi] = new CSharpBaseAction { Type = CSharpBaseActionType.Kept, BranchIndex = bj };
+                bi++;
+                bj++;
             }
             else
             {
-                mergeLine.Status = "Conflict";
-                result.ConflictCount++;
-                mergedLines.Add("<<<<<<< LOCAL");
-                mergedLines.Add(l);
-                mergedLines.Add("=======");
-                mergedLines.Add(r);
-                mergedLines.Add(">>>>>>> REMOTE");
+                int delCount = 0;
+                int insCount = 0;
+                int ti = bi;
+                int tj = bj;
 
-                result.Conflicts.Add(new MergeConflict
+                while (ti < n || tj < m)
                 {
-                    StartLine = i + 1,
-                    LocalContent = l,
-                    BaseContent = b,
-                    RemoteContent = r
+                    if (ti < n && tj < m && baseLines[ti] == branchLines[tj])
+                        break;
+                    if (tj < m && (ti >= n || dp[ti, tj + 1] >= dp[ti + 1, tj]))
+                    {
+                        insCount++;
+                        tj++;
+                    }
+                    else if (ti < n)
+                    {
+                        delCount++;
+                        ti++;
+                    }
+                }
+
+                int common = Math.Min(delCount, insCount);
+                for (int k = 0; k < common; k++)
+                {
+                    actions[bi + k] = new CSharpBaseAction { Type = CSharpBaseActionType.Modified, BranchIndex = bj + k };
+                }
+                for (int k = common; k < delCount; k++)
+                {
+                    actions[bi + k] = new CSharpBaseAction { Type = CSharpBaseActionType.Deleted, BranchIndex = -1 };
+                }
+                for (int k = common; k < insCount; k++)
+                {
+                    insertions[bi + common].Add(bj + k);
+                }
+
+                bi = ti;
+                bj = tj;
+            }
+        }
+
+        return (insertions, actions);
+    }
+
+    private static string[] SplitLines(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return Array.Empty<string>();
+        }
+        return text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+    }
+
+    private static ThreeWayMergeResult MergeThreeWayCSharp(string local, string @base, string remote)
+    {
+        var result = new ThreeWayMergeResult();
+        string[] localLines = SplitLines(local);
+        string[] baseLines = SplitLines(@base);
+        string[] remoteLines = SplitLines(remote);
+
+        var (locIns, locActs) = AlignBranchToBase(baseLines, localLines);
+        var (remIns, remActs) = AlignBranchToBase(baseLines, remoteLines);
+
+        var mergedLines = new List<string>();
+        int n = baseLines.Length;
+
+        for (int b = 0; b <= n; b++)
+        {
+            var lIns = locIns[b];
+            var rIns = remIns[b];
+            int maxIns = Math.Max(lIns.Count, rIns.Count);
+
+            for (int k = 0; k < maxIns; k++)
+            {
+                bool hasLoc = k < lIns.Count;
+                bool hasRem = k < rIns.Count;
+                int? lIdx = hasLoc ? lIns[k] : null;
+                int? rIdx = hasRem ? rIns[k] : null;
+
+                string locLine = lIdx.HasValue ? localLines[lIdx.Value] : string.Empty;
+                string remLine = rIdx.HasValue ? remoteLines[rIdx.Value] : string.Empty;
+
+                string status;
+                string? resolved = null;
+                int? conflictIdx = null;
+
+                if (hasLoc && hasRem)
+                {
+                    if (locLine == remLine)
+                    {
+                        status = "CleanLocal";
+                        result.AutoResolvedCount++;
+                        resolved = locLine;
+                    }
+                    else
+                    {
+                        status = "Conflict";
+                        conflictIdx = result.ConflictCount;
+                        result.ConflictCount++;
+                        resolved = $"<<<<<<< LOCAL{Environment.NewLine}{locLine}{Environment.NewLine}======={Environment.NewLine}{remLine}{Environment.NewLine}>>>>>>> REMOTE";
+                        result.Conflicts.Add(new MergeConflict
+                        {
+                            StartLine = (lIdx ?? rIdx ?? 0) + 1,
+                            LocalContent = locLine,
+                            BaseContent = string.Empty,
+                            RemoteContent = remLine
+                        });
+                    }
+                }
+                else if (hasLoc)
+                {
+                    status = "CleanLocal";
+                    result.AutoResolvedCount++;
+                    resolved = locLine;
+                }
+                else
+                {
+                    status = "CleanRemote";
+                    result.AutoResolvedCount++;
+                    resolved = remLine;
+                }
+
+                if (resolved != null)
+                {
+                    mergedLines.Add(resolved);
+                }
+
+                result.Lines.Add(new MergeLine
+                {
+                    LocalLineNumber = lIdx.HasValue ? lIdx.Value + 1 : null,
+                    BaseLineNumber = null,
+                    RemoteLineNumber = rIdx.HasValue ? rIdx.Value + 1 : null,
+                    ContentLocal = locLine,
+                    ContentBase = string.Empty,
+                    ContentRemote = remLine,
+                    Status = status,
+                    ResolvedContent = resolved,
+                    ConflictIndex = conflictIdx
                 });
             }
 
-            result.Lines.Add(mergeLine);
+            if (b < n)
+            {
+                string basLine = baseLines[b];
+                var locAct = locActs[b];
+                var remAct = remActs[b];
+
+                int? lIdx = locAct.Type != CSharpBaseActionType.Deleted ? locAct.BranchIndex : null;
+                string locLine = lIdx.HasValue ? localLines[lIdx.Value] : string.Empty;
+
+                int? rIdx = remAct.Type != CSharpBaseActionType.Deleted ? remAct.BranchIndex : null;
+                string remLine = rIdx.HasValue ? remoteLines[rIdx.Value] : string.Empty;
+
+                string status;
+                string? resolved = null;
+                int? conflictIdx = null;
+
+                switch (locAct.Type, remAct.Type)
+                {
+                    case (CSharpBaseActionType.Kept, CSharpBaseActionType.Kept):
+                        status = "Unchanged";
+                        resolved = basLine;
+                        break;
+                    case (CSharpBaseActionType.Modified, CSharpBaseActionType.Kept):
+                        status = "CleanLocal";
+                        result.AutoResolvedCount++;
+                        resolved = locLine;
+                        break;
+                    case (CSharpBaseActionType.Kept, CSharpBaseActionType.Modified):
+                        status = "CleanRemote";
+                        result.AutoResolvedCount++;
+                        resolved = remLine;
+                        break;
+                    case (CSharpBaseActionType.Deleted, CSharpBaseActionType.Kept):
+                        status = "CleanLocal";
+                        result.AutoResolvedCount++;
+                        resolved = null;
+                        break;
+                    case (CSharpBaseActionType.Kept, CSharpBaseActionType.Deleted):
+                        status = "CleanRemote";
+                        result.AutoResolvedCount++;
+                        resolved = null;
+                        break;
+                    case (CSharpBaseActionType.Deleted, CSharpBaseActionType.Deleted):
+                        status = "CleanLocal";
+                        result.AutoResolvedCount++;
+                        resolved = null;
+                        break;
+                    case (CSharpBaseActionType.Modified, CSharpBaseActionType.Modified):
+                        if (locLine == remLine)
+                        {
+                            status = "CleanLocal";
+                            result.AutoResolvedCount++;
+                            resolved = locLine;
+                        }
+                        else
+                        {
+                            status = "Conflict";
+                            conflictIdx = result.ConflictCount;
+                            result.ConflictCount++;
+                            resolved = $"<<<<<<< LOCAL{Environment.NewLine}{locLine}{Environment.NewLine}======={Environment.NewLine}{remLine}{Environment.NewLine}>>>>>>> REMOTE";
+                            result.Conflicts.Add(new MergeConflict
+                            {
+                                StartLine = b + 1,
+                                LocalContent = locLine,
+                                BaseContent = basLine,
+                                RemoteContent = remLine
+                            });
+                        }
+                        break;
+                    case (CSharpBaseActionType.Modified, CSharpBaseActionType.Deleted):
+                        status = "Conflict";
+                        conflictIdx = result.ConflictCount;
+                        result.ConflictCount++;
+                        resolved = $"<<<<<<< LOCAL{Environment.NewLine}{locLine}{Environment.NewLine}======={Environment.NewLine}{Environment.NewLine}>>>>>>> REMOTE";
+                        result.Conflicts.Add(new MergeConflict
+                        {
+                            StartLine = b + 1,
+                            LocalContent = locLine,
+                            BaseContent = basLine,
+                            RemoteContent = string.Empty
+                        });
+                        break;
+                    case (CSharpBaseActionType.Deleted, CSharpBaseActionType.Modified):
+                        status = "Conflict";
+                        conflictIdx = result.ConflictCount;
+                        result.ConflictCount++;
+                        resolved = $"<<<<<<< LOCAL{Environment.NewLine}{Environment.NewLine}======={Environment.NewLine}{remLine}{Environment.NewLine}>>>>>>> REMOTE";
+                        result.Conflicts.Add(new MergeConflict
+                        {
+                            StartLine = b + 1,
+                            LocalContent = string.Empty,
+                            BaseContent = basLine,
+                            RemoteContent = remLine
+                        });
+                        break;
+                    default:
+                        status = "Unchanged";
+                        resolved = basLine;
+                        break;
+                }
+
+                if (resolved != null)
+                {
+                    mergedLines.Add(resolved);
+                }
+
+                result.Lines.Add(new MergeLine
+                {
+                    LocalLineNumber = lIdx.HasValue ? lIdx.Value + 1 : null,
+                    BaseLineNumber = b + 1,
+                    RemoteLineNumber = rIdx.HasValue ? rIdx.Value + 1 : null,
+                    ContentLocal = locLine,
+                    ContentBase = basLine,
+                    ContentRemote = remLine,
+                    Status = status,
+                    ResolvedContent = resolved,
+                    ConflictIndex = conflictIdx
+                });
+            }
         }
 
         result.MergedText = string.Join(Environment.NewLine, mergedLines);
