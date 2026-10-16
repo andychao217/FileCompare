@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MacCompare - Next-Gen File Comparison & 3-Way Merge for macOS</title>
+  <title>FileCompare - High-Performance Native Comparison Suite for macOS & Windows 11</title>
   <meta name="description"
-    content="A high-performance macOS native file comparison and 3-way merge tool built with Rust and SwiftUI. Supports Text, Excel, Word, and Folders.">
+    content="A modern, high-performance native file and directory comparison suite for macOS and Windows 11. Powered by a shared Rust differential engine, supporting Text, Excel, Word, and Folders.">
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" type="image/png" href="assets/app_icon.png">
 </head>
@@ -19,14 +19,19 @@
   <header>
     <nav class="navbar">
       <a href="#" class="nav-brand">
-        <img src="assets/app_icon.png" alt="MacCompare Icon" class="app-brand-icon">
-        <span>MacCompare</span>
+        <img src="assets/app_icon.png" alt="FileCompare Icon" class="app-brand-icon">
+        <div class="brand-text-group">
+          <span class="brand-title">FileCompare</span>
+          <span class="brand-badge">macOS & Win11</span>
+        </div>
       </a>
 
       <div class="nav-links">
-        <a href="#features" data-i18n="featuresTitle">核心特性</a>
-        <a href="#showcase" data-i18n="textDiffTab">界面预览</a>
-        <a href="#cli" data-i18n="cliTitle">Git 集成</a>
+        <a href="#matrix" data-i18n="matrixNav">平台技术栈</a>
+        <a href="#showcase" data-i18n="showcaseNav">界面演示</a>
+        <a href="#features" data-i18n="featuresNav">核心特性</a>
+        <a href="#cli" data-i18n="cliNav">Git 集成</a>
+        <a href="#download" data-i18n="downloadNav">下载体验</a>
         <a href="https://github.com/andychao217/FileCompare" target="_blank" rel="noopener">GitHub</a>
       </div>
 
@@ -38,8 +43,7 @@
         </select>
         <button id="theme-toggle-btn" class="theme-btn" title="Toggle Website Theme"
           aria-label="Toggle Website Theme">🌙</button>
-        <a href="https://github.com/andychao217/FileCompare/releases/latest" class="btn-nav-download"
-          data-i18n="downloadBtn">下载 DMG</a>
+        <a href="#download" class="btn-nav-download" data-i18n="navDownloadBtn">获取软件</a>
       </div>
     </nav>
   </header>
@@ -48,13 +52,13 @@
     <!-- Hero Section -->
     <section class="hero">
       <div class="pill-badge" data-i18n="badge">
-        ⚡ macOS 原生架构 • Rust 双引擎 • 端侧离线与云端双模 AI • Universal Binary 2 v0.5.0
+        ⚡ macOS & Windows 11 双生态深度打造 • Rust 2024 高性能核心 • 端侧离线与云端双模 AI • v0.6.0
       </div>
       <h1 class="hero-title" data-i18n="heroTitle">
-        下一代 macOS <span class="gradient-text">文件比对与合并套件</span>
+        跨平台双生态原生 <span class="gradient-text">文件比对与合并套件</span>
       </h1>
       <p class="hero-subtitle" data-i18n="heroSubtitle">
-        基于 Rust 高吞吐差分引擎与原生 SwiftUI 深度构建。内置双模 AI 代码意图分析、海量数据流式视口分页与双引擎调度，专为 macOS 打造。
+        MacCompare (macOS SwiftUI / AppKit) 与 WinCompare (Windows 11 WinUI 3) 搭载同一套高吞吐 Rust 差分底座。毫秒级比对速度、双模 AI 代码意图总结、海量表格流式视口分页与纯粹原生桌面质感。
       </p>
 
       <div class="hero-actions">
@@ -63,8 +67,16 @@
             <path
               d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 1.01-2.85-.9.04-1.98.6-2.62 1.34-.56.64-1.05 1.68-.92 2.71.99.08 2.01-.52 2.53-1.2" />
           </svg>
-          <span data-i18n="downloadBtn">免费下载 DMG</span>
+          <span data-i18n="downloadMacBtn">下载 macOS 版 (DMG)</span>
         </a>
+
+        <a href="https://github.com/andychao217/FileCompare/releases/latest" class="btn-primary btn-win">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/>
+          </svg>
+          <span data-i18n="downloadWinBtn">下载 Windows 11 版 (MSI)</span>
+        </a>
+
         <a href="https://github.com/andychao217/FileCompare" target="_blank" rel="noopener" class="btn-secondary">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path fill-rule="evenodd" clip-rule="evenodd"
@@ -74,25 +86,110 @@
         </a>
       </div>
 
-      <div class="brew-install-banner">
-        <span class="brew-tag">Homebrew</span>
-        <code id="brew-cmd">brew install andychao217/tap/maccompare</code>
-        <button class="brew-copy-btn" onclick="copyBrewCmd()" title="Copy to Clipboard">📋</button>
+      <div class="quick-install-row">
+        <div class="brew-install-banner">
+          <span class="brew-tag">macOS Homebrew</span>
+          <code id="brew-cmd">brew install andychao217/tap/maccompare</code>
+          <button class="brew-copy-btn" onclick="copyBrewCmd()" title="Copy Homebrew command">📋</button>
+        </div>
+        <div class="brew-install-banner win-cmd-banner">
+          <span class="brew-tag win-tag">Windows CLI</span>
+          <code id="win-cli-cmd">wincmp diff file1.xlsx file2.xlsx</code>
+          <button class="brew-copy-btn" onclick="copyWinCliCmd()" title="Copy Windows CLI command">📋</button>
+        </div>
       </div>
     </section>
 
-    <!-- Interactive Showcase Section with Split-Compare Slider -->
+    <!-- Platform Ecosystem Matrix Section -->
+    <section id="matrix" class="matrix-section">
+      <div class="section-header">
+        <h2 class="section-title" data-i18n="matrixTitle">双端原生技术栈与底座共享核心</h2>
+        <p class="section-subtitle" data-i18n="matrixSubtitle">两款各自平台纯原生打造的界面客户端，搭载同一个 Rust 2024 高性能算法底座，毫秒级比对速度与 100% 算法对齐。</p>
+      </div>
+
+      <div class="matrix-grid">
+        <!-- Card 1: MacCompare -->
+        <div class="matrix-card macos-card">
+          <div class="matrix-card-header">
+            <div class="matrix-icon-box mac-icon-box">🍏</div>
+            <div>
+              <h3 class="matrix-card-title">MacCompare</h3>
+              <span class="matrix-badge">macOS Native Edition</span>
+            </div>
+          </div>
+          <ul class="matrix-spec-list">
+            <li><span class="spec-label" data-i18n="specUi">原生界面：</span><strong class="spec-val">SwiftUI + AppKit 深度适配</strong></li>
+            <li><span class="spec-label" data-i18n="specArch">架构形态：</span><span class="spec-val">Universal Binary 2 (Apple Silicon & Intel)</span></li>
+            <li><span class="spec-label" data-i18n="specPackage">打包分发：</span><span class="spec-val">DMG 镜像、免安装 Zip、官方 Homebrew Tap</span></li>
+            <li><span class="spec-label" data-i18n="specCli">命令行工具：</span><code class="spec-code">mcdiff</code>（内置 Git diff/merge 接入）</li>
+          </ul>
+        </div>
+
+        <!-- Card 2: Shared Rust Core -->
+        <div class="matrix-card rust-card">
+          <div class="matrix-card-header">
+            <div class="matrix-icon-box rust-icon-box">⚡</div>
+            <div>
+              <h3 class="matrix-card-title">Shared Core</h3>
+              <span class="matrix-badge rust-badge">Rust 2024 Workspace</span>
+            </div>
+          </div>
+          <ul class="matrix-spec-list">
+            <li><span class="spec-label" data-i18n="specDiff">核心引擎：</span><strong class="spec-val">diff-core（Myers 算法与 3-Way Merge）</strong></li>
+            <li><span class="spec-label" data-i18n="specExcel">表格核心：</span><span class="spec-val">excel-diff-core（calamine, memmap2, ahash）</span></li>
+            <li><span class="spec-label" data-i18n="specScanner">并发扫描：</span><span class="spec-val">fs-scanner（rayon 并发与硬件加速 CRC32）</span></li>
+            <li><span class="spec-label" data-i18n="specInterop">跨语言调度：</span><span class="spec-val">C-ABI / P-Invoke 零拷贝内存映射调度</span></li>
+          </ul>
+        </div>
+
+        <!-- Card 3: WinCompare -->
+        <div class="matrix-card win-card">
+          <div class="matrix-card-header">
+            <div class="matrix-icon-box win-icon-box">🪟</div>
+            <div>
+              <h3 class="matrix-card-title">WinCompare</h3>
+              <span class="matrix-badge win-accent-badge">Windows 11 Native Edition</span>
+            </div>
+          </div>
+          <ul class="matrix-spec-list">
+            <li><span class="spec-label" data-i18n="specUi">原生界面：</span><strong class="spec-val">WinUI 3 + Fluent Design 云母质感</strong></li>
+            <li><span class="spec-label" data-i18n="specArch">架构形态：</span><span class="spec-val">Windows 11 / 10 (x64 与 ARM64)</span></li>
+            <li><span class="spec-label" data-i18n="specPackage">打包分发：</span><span class="spec-val">WiX v4/v5 MSI 原生安装向导、绿色便携 Zip</span></li>
+            <li><span class="spec-label" data-i18n="specCli">命令行工具：</span><code class="spec-code">wincmp</code>（自动注册桌面快捷方式与 PATH）</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Showcase Section with Split-Compare Slider & Platform Switcher -->
     <section id="showcase" class="showcase-container">
+      <div class="section-header">
+        <h2 class="section-title" data-i18n="showcaseTitle">沉浸式双端界面与深浅外观实时演示</h2>
+        <p class="section-subtitle" data-i18n="showcaseSubtitle">自由切换 macOS 与 Windows 11 原生实测截图，左右拖动滑块实时感受深浅色模式。</p>
+      </div>
+
       <div class="showcase-header">
+        <!-- Platform Switcher -->
+        <div class="platform-tabs">
+          <button class="platform-tab active" data-platform="macos">
+            <span class="platform-icon">🍏</span> macOS (MacCompare)
+          </button>
+          <button class="platform-tab" data-platform="win">
+            <span class="platform-icon">🪟</span> Windows 11 (WinCompare)
+          </button>
+        </div>
+
+        <!-- Feature Mode Tabs -->
         <div class="showcase-tabs">
           <button class="showcase-tab active" data-mode="welcome" data-i18n="welcomeTab">启动主页</button>
-          <button class="showcase-tab" data-mode="excel" data-i18n="excelDiffTab">Excel 对比</button>
-          <button class="showcase-tab" data-mode="word" data-i18n="wordDiffTab">Word 对比</button>
           <button class="showcase-tab" data-mode="text" data-i18n="textDiffTab">文本与 AI 对比</button>
+          <button class="showcase-tab" data-mode="excel" data-i18n="excelDiffTab">Excel 表格</button>
+          <button class="showcase-tab" data-mode="word" data-i18n="wordDiffTab">Word 文档</button>
           <button class="showcase-tab" data-mode="folder" data-i18n="folderDiffTab">文件夹对比</button>
           <button class="showcase-tab" data-mode="merge" data-i18n="threeWayMergeTab">三向合并</button>
         </div>
 
+        <!-- Theme Preset Controls -->
         <div class="theme-preview-toggle">
           <button class="theme-opt-btn" data-preset="100" data-i18n="presetDark">🌙 深色</button>
           <button class="theme-opt-btn active" data-preset="50" data-i18n="presetSplit">⚖️ 对半对比</button>
@@ -100,29 +197,46 @@
         </div>
       </div>
 
-      <div class="window-frame">
+      <div class="window-frame" id="window-frame">
         <div class="window-topbar">
-          <div class="window-dots">
+          <!-- macOS Traffic Lights -->
+          <div class="window-dots mac-controls" id="mac-controls">
             <span class="dot red"></span>
             <span class="dot yellow"></span>
             <span class="dot green"></span>
           </div>
-          <span class="window-title"></span>
-          <div class="slider-hint-pill">
-            <span class="hint-icon">↔️</span>
-            <span data-i18n="sliderHint">左右拖拽竖线实时对比深浅外观</span>
+
+          <div class="window-caption win-controls-left" id="win-controls-left" style="display: none;">
+            <img src="assets/app_icon.png" alt="App Icon" class="win-app-icon">
+            <span class="win-app-name">WinCompare</span>
+          </div>
+
+          <span class="window-title" id="window-title">MacCompare - Welcome Hub</span>
+
+          <div class="window-topbar-right">
+            <div class="slider-hint-pill">
+              <span class="hint-icon">↔️</span>
+              <span data-i18n="sliderHint">左右拖拽竖线实时对比深浅外观</span>
+            </div>
+
+            <!-- Windows 11 Caption Controls -->
+            <div class="win-caption-buttons" id="win-caption-buttons" style="display: none;">
+              <span class="win-caption-btn win-min">─</span>
+              <span class="win-caption-btn win-max">□</span>
+              <span class="win-caption-btn win-close">✕</span>
+            </div>
           </div>
         </div>
 
         <!-- Interactive Split-Slider Image Container -->
         <div class="showcase-image-wrapper image-compare-container" id="image-compare">
           <!-- Light Mode Image (Base layer, visible on the right) -->
-          <img id="img-light" class="compare-img compare-img-base" src="assets/welcome_home_light_ui.png"
+          <img id="img-light" class="compare-img compare-img-base" src="assets/macos/welcome_home_light_ui.png"
             alt="Light UI Preview">
 
           <!-- Dark Mode Image (Overlay layer, clipped from left to split point) -->
           <div class="compare-overlay" id="compare-overlay">
-            <img id="img-dark" class="compare-img compare-img-overlay" src="assets/welcome_home_dark_ui.png"
+            <img id="img-dark" class="compare-img compare-img-overlay" src="assets/macos/welcome_home_dark_ui.png"
               alt="Dark UI Preview">
           </div>
 
@@ -156,76 +270,81 @@
     <!-- Features Section -->
     <section id="features" class="features-section">
       <div class="section-header">
-        <h2 class="section-title" data-i18n="featuresTitle">为极速与优雅而生</h2>
-        <p class="section-subtitle" data-i18n="featuresSubtitle">原生级响应速度，兼顾直观的视觉反馈与强大的生产力工具。</p>
+        <h2 class="section-title" data-i18n="featuresTitle">专为极速、全要素对比与极致优雅打造</h2>
+        <p class="section-subtitle" data-i18n="featuresSubtitle">双生态原生级响应速度与端侧大模型赋能，兼顾直观的视觉反馈与企业级生产力。</p>
       </div>
 
       <div class="features-grid">
         <div class="feature-card">
           <div class="feature-icon">🤖</div>
           <h3 class="feature-title" data-i18n="featAITitle">端侧离线与云端双模 AI 智能助手</h3>
-          <p class="feature-desc" data-i18n="featAIDesc">内置 Google Gemma 3 端侧模型（100% 本地离线隐私保护）并兼容 DeepSeek、OpenAI 与本地 Ollama。秒级提炼代码改动意图，生成规范 Git 提交信息。</p>
+          <p class="feature-desc" data-i18n="featAIDesc">集成 Google Gemma 3（1B 与 4B）端侧模型，100% 离线隐私推理，零代码外泄；同时兼容 DeepSeek、OpenAI 与本地/局域网 Ollama。一键提炼代码改动意图，自动生成标准 Conventional Commit 提交信息。</p>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon">🏎️</div>
-          <h3 class="feature-title" data-i18n="feat1Title">Rust 核心与双引擎架构</h3>
-          <p class="feature-desc" data-i18n="feat1Desc">支持在偏好设置中自由切换 Rust 高性能核心或 Swift 原生引擎，支持 Myers 算法与并发 Rayon 扫描。</p>
+          <h3 class="feature-title" data-i18n="feat1Title">Rust 2024 高通量核心与双引擎架构</h3>
+          <p class="feature-desc" data-i18n="feat1Desc">基于 Rust 差分计算底座，Myers 算法与 Token LCS 实现毫秒级行级与内联字符高亮；双端均支持偏好设置动态切换 Rust 极速底座与系统原生引擎，算法 100% 对齐。</p>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon">📊</div>
-          <h3 class="feature-title" data-i18n="featExcelTitle">海量表格与多工作表比对</h3>
-          <p class="feature-desc" data-i18n="featExcelDesc">集成 Calamine 与 Memmap2 流式解析，64位行哈希秒级筛选，视口分页保持 30MB
-            极低内存，表头双向像素级锁定同步滚动。</p>
+          <h3 class="feature-title" data-i18n="featExcelTitle">海量表格与多工作表结构化比对</h3>
+          <p class="feature-desc" data-i18n="featExcelDesc">支持 .xlsx/.xlsb/.xls/.csv/.tsv 全系列表格。Calamine 与 Memmap2 零拷贝解析，64位行哈希秒级跳过无差异行，视口分页保持 30MB 极低内存，主键 Hash Join 极速对齐与浮点容差过滤。</p>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon">📄</div>
-          <h3 class="feature-title" data-i18n="featWordTitle">Word 结构化全要素比对</h3>
-          <p class="feature-desc" data-i18n="featWordDesc">支持 .docx/.doc 段落富文本样式、原生内嵌表格网格、多媒体指纹与矢量图形 Shape 深度对比。</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">🏠</div>
-          <h3 class="feature-title" data-i18n="featHomeTitle">启动欢迎主页与历史记录</h3>
-          <p class="feature-desc" data-i18n="featHomeDesc">2x2 黄金对称四大模式直达、全局持久化历史会话一键恢复与单侧文件即时预览。</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">👻</div>
-          <h3 class="feature-title" data-i18n="feat2Title">对齐幻影行 (Phantom Lines)</h3>
-          <p class="feature-desc" data-i18n="feat2Desc">直观的空白对齐与字符级高亮，差异块一目了然，支持左右双向差异合并采纳。</p>
+          <h3 class="feature-title" data-i18n="featWordTitle">Word 文档结构化全要素比对</h3>
+          <p class="feature-desc" data-i18n="featWordDesc">支持 .docx/.doc 段落富文本样式流（字号、粗体、斜体、下划线、颜色）、内嵌表格网格单元格追踪、多媒体附件 SHA-256 指纹比对与标题大纲快速导航。</p>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon">📁</div>
-          <h3 class="feature-title" data-i18n="feat3Title">双向目录同步</h3>
-          <p class="feature-desc" data-i18n="feat3Desc">支持深度 Hash 与元数据比对模式，带预演 (Dry-Run) 安全机制的一键目录双向同步。</p>
+          <h3 class="feature-title" data-i18n="feat3Title">毫秒级多线程文件夹对比与同步</h3>
+          <p class="feature-desc" data-i18n="feat3Desc">基于 Rayon 与硬件加速 CRC32fast 并发扫描，时间戳/大小快速对比与深度哈希指纹校验，规则化双向同步并提供演练预览 (Dry-Run) 安全机制。</p>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon">🔀</div>
-          <h3 class="feature-title" data-i18n="feat4Title">Git 三向合并 (3-Way Merge)</h3>
-          <p class="feature-desc" data-i18n="feat4Desc">无缝衔接 Local、Base、Remote 冲突分支，智能自动解决非冲突项，提供完整 Git CLI 支持。</p>
+          <h3 class="feature-title" data-i18n="feat4Title">Git 三向冲突合并 (3-Way Merge)</h3>
+          <p class="feature-desc" data-i18n="feat4Desc">可视化三栏对齐 Local vs. Base vs. Remote，智能自动融合非冲突代码变更，提供采纳本地、保留双方、采纳远端一键解决与上下冲突快捷跳转。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🏠</div>
+          <h3 class="feature-title" data-i18n="featHomeTitle">启动欢迎主页与持久化历史记录</h3>
+          <p class="feature-desc" data-i18n="featHomeDesc">2x2 黄金对称四大模式直达、全局持久化历史会话一键恢复、左右独立拖放区 (Drop Zone) 与单侧文件即时预览体验。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">👻</div>
+          <h3 class="feature-title" data-i18n="feat2Title">智能对齐幻影行 (Phantom Lines)</h3>
+          <p class="feature-desc" data-i18n="feat2Desc">像素级直观的空白占位对齐与字符级差异高亮，差异块一目了然，支持左右双向差异合并采纳与快速定位。</p>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon">📑</div>
-          <h3 class="feature-title" data-i18n="feat5Title">多标签与快捷循环切换</h3>
-          <p class="feature-desc" data-i18n="feat5Desc">支持像 Safari 一样自由拖拽拆分与合并窗口，支持 ⌃Tab 快捷键无缝循环切换多任务标签。</p>
+          <h3 class="feature-title" data-i18n="feat5Title">原生多标签与自由分拆组合</h3>
+          <p class="feature-desc" data-i18n="feat5Desc">原生窗口标签体系，支持自由拖拽拆分与合并窗口，支持键盘快捷键无缝循环切换多任务对比标签。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">⌨️</div>
+          <h3 class="feature-title" data-i18n="featCliTitle">终端开发者生态与 Git 深度整合</h3>
+          <p class="feature-desc" data-i18n="featCliDesc">内置 macOS mcdiff 与 Windows wincmp 命令行工具，开箱即用无缝对接 git difftool 与 git mergetool。</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📦</div>
+          <h3 class="feature-title" data-i18n="featUpdateTitle">原生标准化打包与一键更新</h3>
+          <p class="feature-desc" data-i18n="featUpdateDesc">macOS DMG 镜像与 Homebrew Tap 分发；Windows WiX v4/v5 原生 MSI 安装向导与便携版 Zip，内置多语言更新日志感知的在线自动更新。</p>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon">🌓</div>
-          <h3 class="feature-title" data-i18n="feat6Title">原生多语言与深浅外观</h3>
-          <p class="feature-desc" data-i18n="feat6Desc">内置中文、英文、日文支持，完美适配 macOS 全局系统主题自适应与快捷切换。</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">🔄</div>
-          <h3 class="feature-title" data-i18n="featUpdateTitle">就地热更新与 Homebrew 生态</h3>
-          <p class="feature-desc" data-i18n="featUpdateDesc">支持微信同款流式下载与一键重启覆盖，多语言更新日志自动呈现，提供 Homebrew 终端极速分发。</p>
+          <h3 class="feature-title" data-i18n="feat6Title">系统级原生质感与自适应深浅外观</h3>
+          <p class="feature-desc" data-i18n="feat6Desc">macOS SwiftUI / AppKit 与 Windows 11 Fluent 云母设计，内置中、英、日三语支持，完美适配系统主题自适应与快捷切换。</p>
         </div>
       </div>
     </section>
@@ -233,54 +352,106 @@
     <!-- CLI Section -->
     <section id="cli" class="cli-section">
       <div class="section-header">
-        <h2 class="section-title" data-i18n="cliTitle">终端命令行与 Git 工具集成</h2>
-        <p class="section-subtitle" data-i18n="cliSubtitle">一键配置为 Git 默认合并与比对工具，在终端中随时唤起。</p>
+        <h2 class="section-title" data-i18n="cliTitle">终端命令行与 Git 工具生态深度整合</h2>
+        <p class="section-subtitle" data-i18n="cliSubtitle">内置 mcdiff (macOS) 与 wincmp (Windows)，在终端中随时唤起，无缝对接 Git 工作流。</p>
       </div>
 
       <div class="terminal-box">
         <div class="terminal-header">
-          <div class="window-dots">
-            <span class="dot red"></span>
-            <span class="dot yellow"></span>
-            <span class="dot green"></span>
+          <div class="terminal-os-tabs">
+            <button class="term-tab active" data-term="mac">🍏 macOS (mcdiff)</button>
+            <button class="term-tab" data-term="win">🪟 Windows (wincmp)</button>
           </div>
           <button id="copy-btn" class="copy-btn" onclick="copyCli()">Copy</button>
         </div>
-        <pre class="terminal-content" id="cli-code"><code><span class="terminal-comment"># 1. 比较 Excel 表格 (.xlsx/.xlsb/.xls/.csv/.tsv) 与 Word 文档</span>
+
+        <pre class="terminal-content" id="cli-code-mac"><code><span class="terminal-comment"># 1. 比较 Excel 表格 (.xlsx/.xlsb/.xls/.csv/.tsv) 与 Word 文档</span>
 <span class="terminal-prompt">$</span> mcdiff sales_2025.xlsx sales_2026.xlsx
 <span class="terminal-prompt">$</span> mcdiff contract_v1.docx contract_v2.docx
 
-<span class="terminal-comment"># 2. 文本与代码对比</span>
+<span class="terminal-comment"># 2. 文本与代码快速对比</span>
 <span class="terminal-prompt">$</span> mcdiff main.rs main_refactored.rs
 
-<span class="terminal-comment"># 3. 配置为 Git 默认合并工具</span>
+<span class="terminal-comment"># 3. 配置为 Git 默认合并与对比工具</span>
+<span class="terminal-prompt">$</span> git config --global diff.tool maccompare
+<span class="terminal-prompt">$</span> git config --global difftool.maccompare.cmd 'mcdiff "" ""'
 <span class="terminal-prompt">$</span> git config --global merge.tool maccompare
-<span class="terminal-prompt">$</span> git config --global mergetool.maccompare.cmd 'mcdiff "$LOCAL" "$REMOTE" -b "$BASE" -m "$MERGED"'
+<span class="terminal-prompt">$</span> git config --global mergetool.maccompare.cmd 'mcdiff "" "" -b "" -m ""'
 <span class="terminal-prompt">$</span> git config --global mergetool.maccompare.trustExitCode true</code></pre>
+
+        <pre class="terminal-content" id="cli-code-win" style="display: none;"><code><span class="terminal-comment"># 1. 比较 Excel 表格与 Word 文档</span>
+<span class="terminal-prompt">&gt;</span> wincmp diff sales_2025.xlsx sales_2026.xlsx
+<span class="terminal-prompt">&gt;</span> wincmp diff contract_v1.docx contract_v2.docx
+
+<span class="terminal-comment"># 2. 文本与源码文件比对</span>
+<span class="terminal-prompt">&gt;</span> wincmp diff Program.cs Program_v2.cs
+
+<span class="terminal-comment"># 3. 配置为 Git 默认对比与合并工具</span>
+<span class="terminal-prompt">&gt;</span> git config --global diff.tool wincmp
+<span class="terminal-prompt">&gt;</span> git config --global difftool.wincmp.cmd "wincmp diff "" """
+<span class="terminal-prompt">&gt;</span> git config --global merge.tool wincmp
+<span class="terminal-prompt">&gt;</span> git config --global mergetool.wincmp.cmd "wincmp merge "" "" "" """</code></pre>
       </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="cta-section">
-      <h2 class="cta-title" data-i18n="ctaTitle">即刻体验极致流畅的比对体验</h2>
-      <p class="cta-subtitle" data-i18n="ctaSubtitle">支持 macOS 14.0 Sonoma 及以上版本，开源免费。</p>
-      <a href="https://github.com/andychao217/FileCompare/releases/latest" class="btn-primary">
-        <span data-i18n="downloadBtn">免费下载 DMG</span>
-      </a>
+    <!-- Download CTA Section -->
+    <section id="download" class="download-section">
+      <div class="section-header">
+        <h2 class="section-title" data-i18n="downloadSectionTitle">即刻开启极致流畅的双平台比对体验</h2>
+        <p class="section-subtitle" data-i18n="downloadSectionSubtitle">完全开源免费，提供 macOS 原生镜像与 Windows 11 安装包。</p>
+      </div>
+
+      <div class="download-cards-container">
+        <!-- macOS Download Card -->
+        <div class="download-card">
+          <div class="download-card-badge">Apple Silicon & Intel</div>
+          <div class="download-card-icon">🍏</div>
+          <h3 class="download-card-title">MacCompare for macOS</h3>
+          <p class="download-card-desc">兼容 macOS 14.0 Sonoma 及以上系统，Universal Binary 2 原生双架构。</p>
+          <div class="download-card-actions">
+            <a href="https://github.com/andychao217/FileCompare/releases/latest" class="btn-download-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+              <span>下载 DMG 镜像安装包</span>
+            </a>
+            <a href="https://github.com/andychao217/FileCompare/releases/latest" class="btn-download-secondary">免安装 Zip 绿色便携包</a>
+          </div>
+          <div class="download-card-footer">
+            <code>brew install andychao217/tap/maccompare</code>
+          </div>
+        </div>
+
+        <!-- Windows Download Card -->
+        <div class="download-card win-download-card">
+          <div class="download-card-badge win-badge">Windows 11 / 10</div>
+          <div class="download-card-icon">🪟</div>
+          <h3 class="download-card-title">WinCompare for Windows</h3>
+          <p class="download-card-desc">专为 Windows 11 / 10 打造，Fluent Design 现代质感，支持 x64 与 ARM64。</p>
+          <div class="download-card-actions">
+            <a href="https://github.com/andychao217/FileCompare/releases/latest" class="btn-download-primary win-btn-accent">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+              <span>下载 MSI 原生安装向导</span>
+            </a>
+            <a href="https://github.com/andychao217/FileCompare/releases/latest" class="btn-download-secondary">免安装 ZIP 绿色便携版</a>
+          </div>
+          <div class="download-card-footer">
+            <code>wincmp.exe --help</code>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
   <!-- Footer -->
   <footer>
     <div class="footer-links">
-      <a href="https://github.com/andychao217/FileCompare" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://github.com/andychao217/FileCompare/releases" target="_blank" rel="noopener">Releases</a>
-      <a href="https://github.com/andychao217/FileCompare/blob/main/LICENSE" target="_blank" rel="noopener">License (MIT
-        / Apache)</a>
+      <a href="https://github.com/andychao217/FileCompare" target="_blank" rel="noopener">GitHub Repository</a>
+      <a href="https://github.com/andychao217/FileCompare/releases" target="_blank" rel="noopener">Releases & Notes</a>
+      <a href="https://github.com/andychao217/FileCompare/blob/main/LICENSE" target="_blank" rel="noopener">License (MIT)</a>
     </div>
-    <p data-i18n="footerDesc">基于 MIT / Apache-2.0 许可证开源。</p>
-    <p style="margin-top: 6px; font-size: 0.8rem; color: var(--text-muted);">© 2026 MacCompare Team. Built with Swift,
-      SwiftUI & Rust.</p>
+    <p data-i18n="footerDesc">基于 MIT 许可证完全开源。</p>
+    <p style="margin-top: 6px; font-size: 0.8rem; color: var(--text-muted);">
+      © 2026 FileCompare Team (MacCompare &amp; WinCompare). Built with Rust 2024, SwiftUI, and WinUI 3.
+    </p>
   </footer>
 
   <script src="script.js"></script>

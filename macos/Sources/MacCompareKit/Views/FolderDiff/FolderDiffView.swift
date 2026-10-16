@@ -3,13 +3,16 @@ import UniformTypeIdentifiers
 
 public struct FolderDiffView: View {
     @Bindable public var viewModel: FolderDiffViewModel
+    public var tabManager: TabManager?
     @State private var isLeftDropTargeted: Bool = false
     @State private var isRightDropTargeted: Bool = false
     @State private var showClearConfirmation: Bool = false
     @State private var languageManager = LanguageManager.shared
+    @State private var validationResult: ValidationResult?
 
-    public init(viewModel: FolderDiffViewModel) {
+    public init(viewModel: FolderDiffViewModel, tabManager: TabManager? = nil) {
         self.viewModel = viewModel
+        self.tabManager = tabManager
     }
 
     public var body: some View {
@@ -172,17 +175,33 @@ public struct FolderDiffView: View {
                 SyncActionSheet(viewModel: viewModel)
             }
         }
+        .overlay {
+            if let result = validationResult {
+                FileValidationDialogView(
+                    result: result,
+                    onDismiss: {
+                        self.validationResult = nil
+                    },
+                    onSwitchMode: { mode, url in
+                        self.validationResult = nil
+                        tabManager?.openSingleTarget(url: url, mode: mode)
+                    }
+                )
+            }
+        }
     }
 
     private func handleFolderDrop(providers: [NSItemProvider], isLeft: Bool) -> Bool {
         guard let provider = providers.first else { return false }
-        _ = provider.loadObject(ofClass: URL.self) { url, _ in
-            guard let folderURL = url else { return }
-            var isDir: ObjCBool = false
-            if FileManager.default.fileExists(atPath: folderURL.path, isDirectory: &isDir), isDir.boolValue {
-                DispatchQueue.main.async {
-                    self.viewModel.loadSingleFolder(from: folderURL, isLeft: isLeft)
+        provider.loadFileURL { folderURL in
+            guard let folderURL = folderURL else { return }
+            DispatchQueue.main.async {
+                let check = FileFormatValidator.validate(url: folderURL, expectedMode: .folderDiff)
+                if !check.isValid {
+                    self.validationResult = check
+                    return
                 }
+                self.viewModel.loadSingleFolder(from: folderURL, isLeft: isLeft)
             }
         }
         return true

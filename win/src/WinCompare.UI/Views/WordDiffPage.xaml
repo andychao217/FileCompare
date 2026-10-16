@@ -1,0 +1,721 @@
+﻿<Page
+    x:Class="WinCompare.UI.Views.WordDiffPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:helpers="using:WinCompare.UI.Helpers">
+
+    <Grid Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /> <!-- Top Toolbar -->
+            <RowDefinition Height="Auto" /> <!-- Dual Doc Cards Bar -->
+            <RowDefinition Height="*" />    <!-- Main 3-Column Workspace -->
+            <RowDefinition Height="Auto" /> <!-- Bottom Status Bar -->
+        </Grid.RowDefinitions>
+
+        <!-- 1. Top Toolbar (Matching Mac Image 2) -->
+        <Border Grid.Row="0"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="12,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Left Group: 4 Mode Tabs + Search Box -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <!-- Segmented Mode Buttons -->
+                    <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="6" Padding="2">
+                        <StackPanel Orientation="Horizontal" Spacing="2">
+                            <Button x:Name="ModeStructBtn" Click="OnModeStructClicked"
+                                    Background="{ThemeResource BrandPrimaryBrush}" Foreground="{ThemeResource TextOnAccentBrush}" BorderThickness="0"
+                                    CornerRadius="4" Padding="12,4" Height="28" FontSize="11" FontWeight="SemiBold">
+                                <TextBlock x:Name="ModeStructText" Text="&#x7ED3;&#x6784;&#x5316;&#x5185;&#x5BB9;&#x6BD4;&#x5BF9;" VerticalAlignment="Center" />
+                            </Button>
+                            <Button x:Name="ModeStyleBtn" Click="OnModeStyleClicked"
+                                    Background="Transparent" BorderThickness="0"
+                                    CornerRadius="4" Padding="12,4" Height="28" FontSize="11">
+                                <TextBlock x:Name="ModeStyleText" Text="&#x6837;&#x5F0F;&#x683C;&#x5F0F;&#x6BD4;&#x5BF9;" VerticalAlignment="Center" />
+                            </Button>
+                            <Button x:Name="ModeTableBtn" Click="OnModeTableClicked"
+                                    Background="Transparent" BorderThickness="0"
+                                    CornerRadius="4" Padding="12,4" Height="28" FontSize="11">
+                                <TextBlock x:Name="ModeTableText" Text="&#x8868;&#x683C;&#x7F51;&#x683C;&#x6BD4;&#x5BF9;" VerticalAlignment="Center" />
+                            </Button>
+                            <Button x:Name="ModeMetaBtn" Click="OnModeMetaClicked"
+                                    Background="Transparent" BorderThickness="0"
+                                    CornerRadius="4" Padding="12,4" Height="28" FontSize="11">
+                                <TextBlock x:Name="ModeMetaText" Text="&#x6587;&#x6863;&#x5143;&#x6570;&#x636E;&#x6BD4;&#x5BF9;" VerticalAlignment="Center" />
+                            </Button>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Search Box -->
+                    <AutoSuggestBox x:Name="WordSearchBox"
+                                    PlaceholderText="&#x641C;&#x7D22;&#x4E0E;&#x8FC7;&#x6EE4;&#x6BB5;&#x843D;..." QueryIcon="Find"
+                                    Width="220" Height="28" VerticalAlignment="Center"
+                                    TextChanged="OnSearchTextChanged" FontSize="11" />
+                </StackPanel>
+
+                <!-- Right Group: Export Report, Clear All -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <!-- &#x5BFC;&#x51FA;&#x5DEE;&#x5F02;&#x62A5;&#x544A; -->
+                    <Button x:Name="ExportReportBtn" Click="OnExportDiffClicked" Padding="8,4" CornerRadius="4" Height="30" ToolTipService.ToolTip="&#x5BFC;&#x51FA;&#x5DEE;&#x5F02;&#x62A5;&#x544A;">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE8A5;" FontSize="12" />
+                            <TextBlock x:Name="ExportReportText" Text="&#x5BFC;&#x51FA;&#x5DEE;&#x5F02;&#x62A5;&#x544A;" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- &#x4E00;&#x952E;&#x6E05;&#x7A7A; -->
+                    <Button x:Name="ClearAllBtn" Click="OnClearAllClicked" Padding="8,4" CornerRadius="4" Height="30" ToolTipService.ToolTip="&#x4E00;&#x952E;&#x6E05;&#x7A7A;&#x5BF9;&#x6BD4;&#x5185;&#x5BB9;&#x4E0E;&#x6587;&#x6863;">
+                        <FontIcon Glyph="&#xE74D;" FontSize="12" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 2. Dual File Headers (Matching Mac Image 2 Dual Card Bars) -->
+        <Border Grid.Row="1" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="HeaderSidebarCol" Width="220" />
+                    <ColumnDefinition Width="1" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="1" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Sidebar header placeholder -->
+                <Grid Grid.Column="0" Padding="12,6" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE8FD;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Name="OutlineHeaderTitle" Text="&#x6587;&#x6863;&#x7AE0;&#x8282;&#x5927;&#x7EB2;" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="10" Padding="6,1" VerticalAlignment="Center">
+                            <TextBlock x:Name="OutlineCountBadge" Text="0" FontSize="10" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </Border>
+                    </StackPanel>
+                    <Button x:Name="ToggleSidebarBtn" HorizontalAlignment="Right" Click="OnToggleSidebarClicked" Background="Transparent" BorderThickness="0" Padding="4" Height="24" Width="24" ToolTipService.ToolTip="&#x6298;&#x53E0;&#x5927;&#x7EB2;">
+                        <FontIcon Glyph="&#xE711;" FontSize="10" />
+                    </Button>
+                </Grid>
+
+                <!-- Header Divider / Resizer -->
+                <Grid x:Name="HeaderSidebarSplitter" Grid.Column="1" Width="5" Margin="-2,0,-2,0" Canvas.ZIndex="10" Background="Transparent"
+                      PointerEntered="OnSidebarSplitterPointerEntered"
+                      PointerExited="OnSidebarSplitterPointerExited"
+                      PointerPressed="OnSidebarSplitterPointerPressed"
+                      PointerMoved="OnSidebarSplitterPointerMoved"
+                      PointerReleased="OnSidebarSplitterPointerReleased"
+                      PointerCaptureLost="OnSidebarSplitterPointerCaptureLost">
+                    <Rectangle Width="1" HorizontalAlignment="Center" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+                </Grid>
+
+                <!-- Left Source Doc Header Card -->
+                <Grid Grid.Column="2" Padding="12,6" Background="Transparent" AllowDrop="True" DragOver="OnLeftDocDragOver" Drop="OnLeftDocDrop">
+                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Left">
+                        <FontIcon Glyph="&#xE8F4;" FontSize="16" Foreground="{ThemeResource BrandInfoBrush}" />
+                        <StackPanel VerticalAlignment="Center" Spacing="2">
+                            <TextBlock x:Name="LeftDocTitle" Text="&#x9009;&#x62E9;&#x6E90;&#x6587;&#x4EF6;..." FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="280" />
+                            <TextBlock x:Name="LeftDocSubtitle" Text="&#x672A;&#x9009;&#x62E9;&#x6587;&#x4EF6;" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="280" />
+                        </StackPanel>
+                    </StackPanel>
+                    <Button x:Name="LeftBrowseBtn" HorizontalAlignment="Right" Content="&#x9009;&#x62E9;..." FontSize="11" Padding="8,2" Click="OnPickLeftDocClicked" CornerRadius="4" Height="24" VerticalAlignment="Center" />
+                </Grid>
+
+                <Rectangle Grid.Column="3" Fill="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
+
+                <!-- Right Target Doc Header Card -->
+                <Grid Grid.Column="4" Padding="12,6" Background="Transparent" AllowDrop="True" DragOver="OnRightDocDragOver" Drop="OnRightDocDrop">
+                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Left">
+                        <FontIcon Glyph="&#xE8F4;" FontSize="16" Foreground="{ThemeResource BrandInfoBrush}" />
+                        <StackPanel VerticalAlignment="Center" Spacing="2">
+                            <TextBlock x:Name="RightDocTitle" Text="&#x9009;&#x62E9;&#x76EE;&#x6807;&#x6587;&#x4EF6;..." FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="280" />
+                            <TextBlock x:Name="RightDocSubtitle" Text="&#x672A;&#x9009;&#x62E9;&#x6587;&#x4EF6;" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="280" />
+                        </StackPanel>
+                    </StackPanel>
+                    <Button x:Name="RightBrowseBtn" HorizontalAlignment="Right" Content="&#x9009;&#x62E9;..." FontSize="11" Padding="8,2" Click="OnPickRightDocClicked" CornerRadius="4" Height="24" VerticalAlignment="Center" />
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- 3. Main Workspace Area (3 Columns matching Mac Image 2) -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="SidebarCol" Width="220" />
+                <ColumnDefinition Width="1" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Column 1: Document Outline Sidebar -->
+            <Grid Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+                <!-- Outline Empty State -->
+                <StackPanel x:Name="OutlineEmptyState" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" Padding="16">
+                    <FontIcon Glyph="&#xE8FD;" FontSize="44" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
+                    <TextBlock x:Name="OutlineEmptyTitle" Text="&#x672A;&#x68C0;&#x6D4B;&#x5230;&#x6807;&#x9898;&#x5927;&#x7EB2;" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <TextBlock x:Name="OutlineEmptyDesc" Text="Word &#x6807;&#x9898;&#x6837;&#x5F0F; (H1~H6) &#x5C06;&#x81EA;&#x52A8;&#x5728;&#x6B64;&#x63D0;&#x53D6;&#x4E3A;&#x7AE0;&#x8282;&#x5927;&#x7EB2;" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
+                </StackPanel>
+
+                <!-- Active Outline TreeView -->
+                <TreeView x:Name="OutlineTree" Visibility="Collapsed" ItemInvoked="OnOutlineItemInvoked" Padding="4" />
+            </Grid>
+
+            <!-- Vertical Divider / Resizer between Sidebar and Main Content -->
+            <Grid x:Name="SidebarSplitter" Grid.Column="1" Width="5" Margin="-2,0,-2,0" Canvas.ZIndex="10" Background="Transparent"
+                  PointerEntered="OnSidebarSplitterPointerEntered"
+                  PointerExited="OnSidebarSplitterPointerExited"
+                  PointerPressed="OnSidebarSplitterPointerPressed"
+                  PointerMoved="OnSidebarSplitterPointerMoved"
+                  PointerReleased="OnSidebarSplitterPointerReleased"
+                  PointerCaptureLost="OnSidebarSplitterPointerCaptureLost">
+                <Rectangle Width="1" HorizontalAlignment="Center" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+            </Grid>
+
+            <!-- Column 2 & 3: Dual Doc Viewport (Empty State vs Aligned View) -->
+            <!-- Column 2 & 3: Dual Doc Viewport (Empty State / Single Preview vs Aligned Diff View) -->
+            <Grid Grid.Column="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="1" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Left Column Container (Column 0) -->
+                <Grid Grid.Column="0" Background="Transparent" AllowDrop="True" DragOver="OnLeftDocDragOver" Drop="OnLeftDocDrop">
+                    <!-- Left Empty Drop Zone (Source) -->
+                    <Border x:Name="LeftEmptyZone" Background="Transparent" AllowDrop="True" DragOver="OnLeftDocDragOver" Drop="OnLeftDocDrop" Visibility="Visible">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                            <FontIcon Glyph="&#xE8F4;" FontSize="52" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
+                            <TextBlock x:Name="LeftEmptyTitle" Text="&#x672A;&#x9009;&#x62E9;&#x6E90;&#x6587;&#x4EF6;" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                            <TextBlock x:Name="LeftEmptyDesc" Text="&#x62D6;&#x62FD; .docx &#x6216; .doc &#x6587;&#x6863;&#x81F3;&#x6B64;&#x5904;&#x5F00;&#x59CB;&#x6BD4;&#x5BF9;" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,6" />
+                            <Button x:Name="LeftPickBtn" Content="&#x9009;&#x62E9;&#x6E90;&#x6587;&#x4EF6;..." Style="{StaticResource AccentButtonStyle}" CornerRadius="6" Padding="18,8" FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Center" Click="OnPickLeftDocClicked" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Left Single Doc Paragraph List (Single-side preview matching Mac Image 2) -->
+                    <ListView x:Name="LeftSingleListView" SelectionMode="Single" Padding="0" Visibility="Collapsed"
+                              AllowDrop="True" DragOver="OnLeftDocDragOver" Drop="OnLeftDocDrop">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border MinHeight="36" Padding="12,6" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                    <StackPanel Spacing="4">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="{Binding IndexText}" FontSize="10" Foreground="{ThemeResource TextFillColorTertiaryBrush}" FontFamily="{StaticResource CodeFontFamily}" />
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Text}" FontSize="12" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextWrapping="Wrap" LineHeight="18" Visibility="{Binding TextVisibility}" />
+                                        <!-- Embedded Table Grid (Matching macOS Native Grid) -->
+                                        <StackPanel Visibility="{Binding TableVisibility}" Margin="0,4,0,6" Spacing="4">
+                                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                <FontIcon Glyph="&#xEDB3;" FontSize="11" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                                <TextBlock Text="{Binding TableTitle}" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                                            </StackPanel>
+                                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="4"
+                                                    Padding="0">
+                                                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                                    <ItemsControl ItemsSource="{Binding TableRows}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <ItemsControl ItemsSource="{Binding Cells}">
+                                                                    <ItemsControl.ItemsPanel>
+                                                                        <ItemsPanelTemplate>
+                                                                            <StackPanel Orientation="Horizontal" />
+                                                                        </ItemsPanelTemplate>
+                                                                    </ItemsControl.ItemsPanel>
+                                                                    <ItemsControl.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <Border Width="{Binding Width}"
+                                                                                    MinHeight="28"
+                                                                                    Background="{Binding BackgroundBrush}"
+                                                                                    BorderBrush="{Binding BorderBrush}"
+                                                                                    BorderThickness="0.5"
+                                                                                    Padding="8,5">
+                                                                                <TextBlock Text="{Binding Text}"
+                                                                                           FontSize="11"
+                                                                                           FontWeight="{Binding FontWeight}"
+                                                                                           Foreground="{Binding ForegroundBrush}"
+                                                                                           TextWrapping="Wrap"
+                                                                                           LineHeight="16" />
+                                                                            </Border>
+                                                                        </DataTemplate>
+                                                                    </ItemsControl.ItemTemplate>
+                                                                </ItemsControl>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </ScrollViewer>
+                                            </Border>
+                                        </StackPanel>
+                                        <ItemsControl ItemsSource="{Binding MediaItems}" Visibility="{Binding MediaVisibility}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Margin="0,4,0,4">
+                                                        <Border CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" MaxWidth="340" HorizontalAlignment="Left" Visibility="{Binding ImageVisibility}">
+                                                            <StackPanel>
+                                                                <Image Source="{Binding ImageSource}" Stretch="Uniform" MaxHeight="220" HorizontalAlignment="Left" Visibility="{Binding ImageViewVisibility}" />
+                                                                <Border Padding="8,4" Background="{ThemeResource SubtleFillColorSecondaryBrush}" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                                        <FontIcon Glyph="&#xEB9F;" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                        <TextBlock Text="{Binding FileName}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="180" />
+                                                                        <TextBlock Text="{Binding FormattedSize}" FontSize="10" Foreground="{ThemeResource TextFillColorTertiaryBrush}" FontFamily="{StaticResource CodeFontFamily}" />
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <Border CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" MaxWidth="280" Padding="8" HorizontalAlignment="Left" Visibility="{Binding ShapeVisibility}">
+                                                            <StackPanel Spacing="6">
+                                                                <Border Height="26" Width="70" HorizontalAlignment="Left" CornerRadius="4" Background="{Binding ShapeFillBrush}" BorderBrush="{Binding ShapeStrokeBrush}" BorderThickness="1.5" />
+                                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                    <FontIcon Glyph="&#xF158;" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                    <TextBlock Text="{Binding ShapeName}" FontSize="10.5" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                    <TextBlock Text="{Binding FormattedSize}" FontSize="10" Foreground="{ThemeResource TextFillColorTertiaryBrush}" FontFamily="{StaticResource CodeFontFamily}" />
+                                                                </StackPanel>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <!-- Left Loading Overlay -->
+                    <Grid x:Name="LeftLoadingOverlay" Visibility="Collapsed" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                            <ProgressRing IsActive="True" Width="36" Height="36" />
+                            <TextBlock x:Name="LeftLoadingText" Text="&#x6B63;&#x5728;&#x89E3;&#x6790;&#x6E90;&#x6587;&#x6863;..." FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+
+                <!-- Center Divider -->
+                <Rectangle Grid.Column="1" Fill="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
+
+                <!-- Right Column Container (Column 2) -->
+                <Grid Grid.Column="2" Background="Transparent" AllowDrop="True" DragOver="OnRightDocDragOver" Drop="OnRightDocDrop">
+                    <!-- Right Empty Drop Zone (Target) -->
+                    <Border x:Name="RightEmptyZone" Background="Transparent" AllowDrop="True" DragOver="OnRightDocDragOver" Drop="OnRightDocDrop" Visibility="Visible">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                            <FontIcon Glyph="&#xE8F4;" FontSize="52" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
+                            <TextBlock x:Name="RightEmptyTitle" Text="&#x672A;&#x9009;&#x62E9;&#x76EE;&#x6807;&#x6587;&#x4EF6;" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                            <TextBlock x:Name="RightEmptyDesc" Text="&#x62D6;&#x62FD; .docx &#x6216; .doc &#x6587;&#x6863;&#x81F3;&#x6B64;&#x5904;&#x5F00;&#x59CB;&#x6BD4;&#x5BF9;" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,6" />
+                            <Button x:Name="RightPickBtn" Content="&#x9009;&#x62E9;&#x76EE;&#x6807;&#x6587;&#x4EF6;..." Style="{StaticResource AccentButtonStyle}" CornerRadius="6" Padding="18,8" FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Center" Click="OnPickRightDocClicked" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Right Single Doc Paragraph List -->
+                    <ListView x:Name="RightSingleListView" SelectionMode="Single" Padding="0" Visibility="Collapsed"
+                              AllowDrop="True" DragOver="OnRightDocDragOver" Drop="OnRightDocDrop">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border MinHeight="36" Padding="12,6" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                    <StackPanel Spacing="4">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="{Binding IndexText}" FontSize="10" Foreground="{ThemeResource TextFillColorTertiaryBrush}" FontFamily="{StaticResource CodeFontFamily}" />
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Text}" FontSize="12" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextWrapping="Wrap" LineHeight="18" Visibility="{Binding TextVisibility}" />
+                                        <!-- Embedded Table Grid (Matching macOS Native Grid) -->
+                                        <StackPanel Visibility="{Binding TableVisibility}" Margin="0,4,0,6" Spacing="4">
+                                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                <FontIcon Glyph="&#xEDB3;" FontSize="11" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                                <TextBlock Text="{Binding TableTitle}" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                                            </StackPanel>
+                                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="4"
+                                                    Padding="0">
+                                                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                                    <ItemsControl ItemsSource="{Binding TableRows}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <ItemsControl ItemsSource="{Binding Cells}">
+                                                                    <ItemsControl.ItemsPanel>
+                                                                        <ItemsPanelTemplate>
+                                                                            <StackPanel Orientation="Horizontal" />
+                                                                        </ItemsPanelTemplate>
+                                                                    </ItemsControl.ItemsPanel>
+                                                                    <ItemsControl.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <Border Width="{Binding Width}"
+                                                                                    MinHeight="28"
+                                                                                    Background="{Binding BackgroundBrush}"
+                                                                                    BorderBrush="{Binding BorderBrush}"
+                                                                                    BorderThickness="0.5"
+                                                                                    Padding="8,5">
+                                                                                <TextBlock Text="{Binding Text}"
+                                                                                           FontSize="11"
+                                                                                           FontWeight="{Binding FontWeight}"
+                                                                                           Foreground="{Binding ForegroundBrush}"
+                                                                                           TextWrapping="Wrap"
+                                                                                           LineHeight="16" />
+                                                                            </Border>
+                                                                        </DataTemplate>
+                                                                    </ItemsControl.ItemTemplate>
+                                                                </ItemsControl>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </ScrollViewer>
+                                            </Border>
+                                        </StackPanel>
+                                        <ItemsControl ItemsSource="{Binding MediaItems}" Visibility="{Binding MediaVisibility}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Margin="0,4,0,4">
+                                                        <Border CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" MaxWidth="340" HorizontalAlignment="Left" Visibility="{Binding ImageVisibility}">
+                                                            <StackPanel>
+                                                                <Image Source="{Binding ImageSource}" Stretch="Uniform" MaxHeight="220" HorizontalAlignment="Left" Visibility="{Binding ImageViewVisibility}" />
+                                                                <Border Padding="8,4" Background="{ThemeResource SubtleFillColorSecondaryBrush}" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                                        <FontIcon Glyph="&#xEB9F;" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                        <TextBlock Text="{Binding FileName}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="180" />
+                                                                        <TextBlock Text="{Binding FormattedSize}" FontSize="10" Foreground="{ThemeResource TextFillColorTertiaryBrush}" FontFamily="{StaticResource CodeFontFamily}" />
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <Border CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" MaxWidth="280" Padding="8" HorizontalAlignment="Left" Visibility="{Binding ShapeVisibility}">
+                                                            <StackPanel Spacing="6">
+                                                                <Border Height="26" Width="70" HorizontalAlignment="Left" CornerRadius="4" Background="{Binding ShapeFillBrush}" BorderBrush="{Binding ShapeStrokeBrush}" BorderThickness="1.5" />
+                                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                    <FontIcon Glyph="&#xF158;" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                    <TextBlock Text="{Binding ShapeName}" FontSize="10.5" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                    <TextBlock Text="{Binding FormattedSize}" FontSize="10" Foreground="{ThemeResource TextFillColorTertiaryBrush}" FontFamily="{StaticResource CodeFontFamily}" />
+                                                                </StackPanel>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <!-- Right Loading Overlay -->
+                    <Grid x:Name="RightLoadingOverlay" Visibility="Collapsed" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                            <ProgressRing IsActive="True" Width="36" Height="36" />
+                            <TextBlock x:Name="RightLoadingText" Text="&#x6B63;&#x5728;&#x89E3;&#x6790;&#x76EE;&#x6807;&#x6587;&#x6863;..." FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+
+                <!-- Dual-Doc Active Comparison Views (Covers Grid.ColumnSpan="3" when both docs loaded) -->
+                <Grid x:Name="ActiveDiffContainer" Grid.Column="0" Grid.ColumnSpan="3" Visibility="Collapsed" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+                      AllowDrop="True" DragOver="OnDiffContainerDragOver" Drop="OnDiffContainerDrop">
+                    <!-- Mode 1: Aligned Paragraphs List -->
+                    <ListView x:Name="ParagraphsList" SelectionMode="Single" Padding="0" Visibility="Collapsed"
+                              AllowDrop="True" DragOver="OnDiffContainerDragOver" Drop="OnDiffContainerDrop">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0" />
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border MinHeight="36" Padding="0,2" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="24" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Left Paragraph -->
+                                        <Border Grid.Column="0" Background="{Binding LeftBgBrush}" Padding="12,6">
+                                            <StackPanel Spacing="4">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock Text="{Binding LeftIndexText}" FontSize="10" Foreground="{ThemeResource TextFillColorTertiaryBrush}" FontFamily="{StaticResource CodeFontFamily}" />
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding LeftText}"
+                                                           FontSize="12"
+                                                           Foreground="{Binding LeftFgBrush}"
+                                                           TextWrapping="Wrap"
+                                                           LineHeight="18"
+                                                           Visibility="{Binding LeftTextVisibility}" />
+                                                 <!-- Embedded Table Grid (Matching macOS Native Grid) -->
+                                                 <StackPanel Visibility="{Binding LeftTableVisibility}" Margin="0,4,0,6" Spacing="4">
+                                                     <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                         <FontIcon Glyph="&#xEDB3;" FontSize="11" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                                         <TextBlock Text="{Binding LeftTableTitle}" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                                                     </StackPanel>
+                                                     <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                             BorderThickness="1"
+                                                             CornerRadius="4"
+                                                             Padding="0">
+                                                         <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                                             <ItemsControl ItemsSource="{Binding LeftTableRows}">
+                                                                 <ItemsControl.ItemTemplate>
+                                                                     <DataTemplate>
+                                                                         <ItemsControl ItemsSource="{Binding Cells}">
+                                                                             <ItemsControl.ItemsPanel>
+                                                                                 <ItemsPanelTemplate>
+                                                                                     <StackPanel Orientation="Horizontal" />
+                                                                                 </ItemsPanelTemplate>
+                                                                             </ItemsControl.ItemsPanel>
+                                                                             <ItemsControl.ItemTemplate>
+                                                                                 <DataTemplate>
+                                                                                     <Border Width="{Binding Width}"
+                                                                                             MinHeight="28"
+                                                                                             Background="{Binding BackgroundBrush}"
+                                                                                             BorderBrush="{Binding BorderBrush}"
+                                                                                             BorderThickness="0.5"
+                                                                                             Padding="8,5">
+                                                                                         <TextBlock Text="{Binding Text}"
+                                                                                                    FontSize="11"
+                                                                                                    FontWeight="{Binding FontWeight}"
+                                                                                                    Foreground="{Binding ForegroundBrush}"
+                                                                                                    TextWrapping="Wrap"
+                                                                                                    LineHeight="16" />
+                                                                                     </Border>
+                                                                                 </DataTemplate>
+                                                                             </ItemsControl.ItemTemplate>
+                                                                         </ItemsControl>
+                                                                     </DataTemplate>
+                                                                 </ItemsControl.ItemTemplate>
+                                                             </ItemsControl>
+                                                         </ScrollViewer>
+                                                     </Border>
+                                                 </StackPanel>
+                                                <ItemsControl ItemsSource="{Binding LeftMediaItems}" Visibility="{Binding LeftMediaVisibility}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel Margin="0,4,0,4">
+                                                                <Border CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" MaxWidth="340" HorizontalAlignment="Left" Visibility="{Binding ImageVisibility}">
+                                                                    <StackPanel>
+                                                                        <Image Source="{Binding ImageSource}" Stretch="Uniform" MaxHeight="220" HorizontalAlignment="Left" Visibility="{Binding ImageViewVisibility}" />
+                                                                        <Border Padding="8,4" Background="{ThemeResource SubtleFillColorSecondaryBrush}" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                                                            <Grid>
+                                                                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                                                    <FontIcon Glyph="&#xEB9F;" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                                    <TextBlock Text="{Binding FileName}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="160" />
+                                                                                    <TextBlock Text="{Binding FormattedSize}" FontSize="10" Foreground="{ThemeResource TextFillColorTertiaryBrush}" FontFamily="{StaticResource CodeFontFamily}" />
+                                                                                </StackPanel>
+                                                                                <Border HorizontalAlignment="Right" Background="{Binding StatusBadgeBgBrush}" CornerRadius="3" Padding="4,1" Visibility="{Binding StatusBadgeVisibility}">
+                                                                                    <TextBlock Text="{Binding StatusBadgeText}" FontSize="9" FontWeight="SemiBold" Foreground="{Binding StatusBadgeFgBrush}" />
+                                                                                </Border>
+                                                                            </Grid>
+                                                                        </Border>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                                <Border CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" MaxWidth="280" Padding="8" HorizontalAlignment="Left" Visibility="{Binding ShapeVisibility}">
+                                                                    <StackPanel Spacing="6">
+                                                                        <Border Height="26" Width="70" HorizontalAlignment="Left" CornerRadius="4" Background="{Binding ShapeFillBrush}" BorderBrush="{Binding ShapeStrokeBrush}" BorderThickness="1.5" />
+                                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                            <FontIcon Glyph="&#xF158;" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                            <TextBlock Text="{Binding ShapeName}" FontSize="10.5" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                            <TextBlock Text="{Binding FormattedSize}" FontSize="10" Foreground="{ThemeResource TextFillColorTertiaryBrush}" FontFamily="{StaticResource CodeFontFamily}" />
+                                                                        </StackPanel>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Center Gutter (matching macOS) -->
+                                        <Border Grid.Column="1" Background="Transparent" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1,0,1,0">
+                                            <FontIcon Glyph="{Binding CenterIconGlyph}"
+                                                      FontSize="11"
+                                                      Foreground="{Binding CenterIconBrush}"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"
+                                                      Visibility="{Binding CenterIconVisibility}" />
+                                        </Border>
+
+                                        <!-- Right Paragraph -->
+                                        <Border Grid.Column="2" Background="{Binding RightBgBrush}" Padding="12,6">
+                                            <StackPanel Spacing="4">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock Text="{Binding RightIndexText}" FontSize="10" Foreground="{ThemeResource TextFillColorTertiaryBrush}" FontFamily="{StaticResource CodeFontFamily}" />
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding RightText}"
+                                                           FontSize="12"
+                                                           Foreground="{Binding RightFgBrush}"
+                                                           TextWrapping="Wrap"
+                                                           LineHeight="18"
+                                                           Visibility="{Binding RightTextVisibility}" />
+                                                 <!-- Embedded Table Grid (Matching macOS Native Grid) -->
+                                                 <StackPanel Visibility="{Binding RightTableVisibility}" Margin="0,4,0,6" Spacing="4">
+                                                     <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                         <FontIcon Glyph="&#xEDB3;" FontSize="11" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                                         <TextBlock Text="{Binding RightTableTitle}" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                                                     </StackPanel>
+                                                     <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                             BorderThickness="1"
+                                                             CornerRadius="4"
+                                                             Padding="0">
+                                                         <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                                             <ItemsControl ItemsSource="{Binding RightTableRows}">
+                                                                 <ItemsControl.ItemTemplate>
+                                                                     <DataTemplate>
+                                                                         <ItemsControl ItemsSource="{Binding Cells}">
+                                                                             <ItemsControl.ItemsPanel>
+                                                                                 <ItemsPanelTemplate>
+                                                                                     <StackPanel Orientation="Horizontal" />
+                                                                                 </ItemsPanelTemplate>
+                                                                             </ItemsControl.ItemsPanel>
+                                                                             <ItemsControl.ItemTemplate>
+                                                                                 <DataTemplate>
+                                                                                     <Border Width="{Binding Width}"
+                                                                                             MinHeight="28"
+                                                                                             Background="{Binding BackgroundBrush}"
+                                                                                             BorderBrush="{Binding BorderBrush}"
+                                                                                             BorderThickness="0.5"
+                                                                                             Padding="8,5">
+                                                                                         <TextBlock Text="{Binding Text}"
+                                                                                                    FontSize="11"
+                                                                                                    FontWeight="{Binding FontWeight}"
+                                                                                                    Foreground="{Binding ForegroundBrush}"
+                                                                                                    TextWrapping="Wrap"
+                                                                                                    LineHeight="16" />
+                                                                                     </Border>
+                                                                                 </DataTemplate>
+                                                                             </ItemsControl.ItemTemplate>
+                                                                         </ItemsControl>
+                                                                     </DataTemplate>
+                                                                 </ItemsControl.ItemTemplate>
+                                                             </ItemsControl>
+                                                         </ScrollViewer>
+                                                     </Border>
+                                                 </StackPanel>
+                                                <ItemsControl ItemsSource="{Binding RightMediaItems}" Visibility="{Binding RightMediaVisibility}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel Margin="0,4,0,4">
+                                                                <Border CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" MaxWidth="340" HorizontalAlignment="Left" Visibility="{Binding ImageVisibility}">
+                                                                    <StackPanel>
+                                                                        <Image Source="{Binding ImageSource}" Stretch="Uniform" MaxHeight="220" HorizontalAlignment="Left" Visibility="{Binding ImageViewVisibility}" />
+                                                                        <Border Padding="8,4" Background="{ThemeResource SubtleFillColorSecondaryBrush}" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                                                            <Grid>
+                                                                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                                                    <FontIcon Glyph="&#xEB9F;" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                                    <TextBlock Text="{Binding FileName}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="160" />
+                                                                                    <TextBlock Text="{Binding FormattedSize}" FontSize="10" Foreground="{ThemeResource TextFillColorTertiaryBrush}" FontFamily="{StaticResource CodeFontFamily}" />
+                                                                                </StackPanel>
+                                                                                <Border HorizontalAlignment="Right" Background="{Binding StatusBadgeBgBrush}" CornerRadius="3" Padding="4,1" Visibility="{Binding StatusBadgeVisibility}">
+                                                                                    <TextBlock Text="{Binding StatusBadgeText}" FontSize="9" FontWeight="SemiBold" Foreground="{Binding StatusBadgeFgBrush}" />
+                                                                                </Border>
+                                                                            </Grid>
+                                                                        </Border>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                                <Border CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" MaxWidth="280" Padding="8" HorizontalAlignment="Left" Visibility="{Binding ShapeVisibility}">
+                                                                    <StackPanel Spacing="6">
+                                                                        <Border Height="26" Width="70" HorizontalAlignment="Left" CornerRadius="4" Background="{Binding ShapeFillBrush}" BorderBrush="{Binding ShapeStrokeBrush}" BorderThickness="1.5" />
+                                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                            <FontIcon Glyph="&#xF158;" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                            <TextBlock Text="{Binding ShapeName}" FontSize="10.5" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                            <TextBlock Text="{Binding FormattedSize}" FontSize="10" Foreground="{ThemeResource TextFillColorTertiaryBrush}" FontFamily="{StaticResource CodeFontFamily}" />
+                                                                        </StackPanel>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <!-- Mode 2: Table Diff View -->
+                    <ScrollViewer x:Name="TableDiffView" Padding="16" Visibility="Collapsed">
+                        <StackPanel x:Name="TableDiffContainer" Spacing="16" />
+                    </ScrollViewer>
+
+                    <!-- Mode 3: Metadata View -->
+                    <ScrollViewer x:Name="MetadataDiffView" Padding="20" Visibility="Collapsed">
+                        <StackPanel Spacing="16" MaxWidth="600" HorizontalAlignment="Left">
+                            <TextBlock x:Name="MetadataHeader" Text="&#x6587;&#x6863;&#x5C5E;&#x6027;&#x4E0E;&#x5143;&#x6570;&#x636E;&#x5BF9;&#x6BD4;" FontWeight="Bold" FontSize="14" />
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
+                                <TextBlock x:Name="MetadataDetailsText" Text="&#x5C1A;&#x672A;&#x8F7D;&#x5165;&#x6587;&#x6863;" FontFamily="{StaticResource CodeFontFamily}" FontSize="12" TextWrapping="Wrap" />
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Dual Compare Loading Overlay -->
+                    <Grid x:Name="DualCompareLoadingOverlay" Visibility="Collapsed" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="1" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <!-- Left Pane Loading -->
+                        <StackPanel Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                            <ProgressRing IsActive="True" Width="36" Height="36" />
+                            <TextBlock x:Name="DualLeftLoadingText" Text="&#x6B63;&#x5728;&#x89E3;&#x6790;&#x6E90;&#x6587;&#x6863;..." FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <!-- Center Divider -->
+                        <Rectangle Grid.Column="1" Fill="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
+                        <!-- Right Pane Loading -->
+                        <StackPanel Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                            <ProgressRing IsActive="True" Width="36" Height="36" />
+                            <TextBlock x:Name="DualRightLoadingText" Text="&#x6B63;&#x5728;&#x89E3;&#x6790;&#x76EE;&#x6807;&#x6587;&#x6863;..." FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!-- 4. Bottom Status Bar (Matching macOS) -->
+        <Border Grid.Row="3" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="16,4" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+            <Grid>
+                <!-- Left: Sidebar toggle button, divider, and diff stat badges -->
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Left">
+                    <Button Click="OnToggleSidebarClicked" Background="Transparent" BorderThickness="0" Padding="4" Height="24" Width="24" ToolTipService.ToolTip="&#x5C55;&#x5F00;/&#x6536;&#x8D77;&#x7AE0;&#x8282;&#x5927;&#x7EB2;">
+                        <FontIcon Glyph="&#xE8A0;" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Button>
+                    <Rectangle Width="1" Height="12" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                    <!-- Two documents compared stats badges -->
+                    <StackPanel x:Name="WordStatsBadges" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                            <Ellipse Width="6" Height="6" Fill="{ThemeResource StatusAddTextBrush}" VerticalAlignment="Center" />
+                            <TextBlock x:Name="WordAdditionsText" Text="+0 &#x65B0;&#x589E;" FontSize="11" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                            <Ellipse Width="6" Height="6" Fill="{ThemeResource StatusDelTextBrush}" VerticalAlignment="Center" />
+                            <TextBlock x:Name="WordDeletionsText" Text="-0 &#x5220;&#x9664;" FontSize="11" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                            <Ellipse Width="6" Height="6" Fill="{ThemeResource StatusModTextBrush}" VerticalAlignment="Center" />
+                            <TextBlock x:Name="WordModificationsText" Text="~0 &#x4FEE;&#x6539;" FontSize="11" FontWeight="Medium" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Single document or prompt text -->
+                    <TextBlock x:Name="StatusBarText" Text="&#x672A;&#x6BD4;&#x5BF9;" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Right: Words summary & Engine info -->
+                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                    <TextBlock x:Name="WordCountsText" Text="" FontFamily="{StaticResource CodeFontFamily}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                    <TextBlock Text="OpenXML DOM + Myers LCS Engine" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock x:Name="DiffBadge" Visibility="Collapsed" />
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

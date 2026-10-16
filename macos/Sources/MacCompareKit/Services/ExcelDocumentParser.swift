@@ -108,7 +108,15 @@ public final class ExcelDocumentParser: @unchecked Sendable {
             }
         }
 
-        // 5. Parse each Sheet XML
+        // 5. Read Styles (xl/styles.xml) for Date & Number Formatting
+        let stylesPath = tempDir.appendingPathComponent("xl/styles.xml")
+        var dateStyles = Set<Int>()
+        if FileManager.default.fileExists(atPath: stylesPath.path),
+           let stylesContent = try? String(contentsOf: stylesPath, encoding: .utf8) {
+            dateStyles = parseStylesXML(stylesContent)
+        }
+
+        // 6. Parse each Sheet XML
         var sheets: [ExcelSheetModel] = []
         for ref in sheetRefs {
             let sheetFilePath: URL
@@ -122,7 +130,7 @@ public final class ExcelDocumentParser: @unchecked Sendable {
 
             if FileManager.default.fileExists(atPath: sheetFilePath.path),
                let sheetXML = try? String(contentsOf: sheetFilePath, encoding: .utf8) {
-                let sheetModel = parseWorksheetXML(sheetXML, sheetName: ref.name, sheetId: ref.sheetId, sharedStrings: sharedStrings)
+                let sheetModel = parseWorksheetXML(sheetXML, sheetName: ref.name, sheetId: ref.sheetId, sharedStrings: sharedStrings, dateStyles: dateStyles)
                 sheets.append(sheetModel)
             }
         }
@@ -230,15 +238,81 @@ public final class ExcelDocumentParser: @unchecked Sendable {
         return results
     }
 
+    // MARK: - Styles & Number Formats Parser
+    private func parseStylesXML(_ xml: String) -> Set<Int> {
+        var dateStyles = Set<Int>()
+        var customNumFmts = [Int: String]()
+
+        let nfPattern = try? NSRegularExpression(pattern: "<numFmt\\s+numFmtId=\"(\\d+)\"\\s+formatCode=\"([^\"]+)\"", options: [])
+        let nsNf = xml as NSString
+        if let nfPattern = nfPattern {
+            for m in nfPattern.matches(in: xml, range: NSRange(location: 0, length: nsNf.length)) {
+                let id = Int(nsNf.substring(with: m.range(at: 1))) ?? 0
+                let code = nsNf.substring(with: m.range(at: 2))
+                customNumFmts[id] = code
+            }
+        }
+
+        func isDateFormat(numFmtId: Int) -> Bool {
+            let standardDateIds: Set<Int> = [14, 15, 16, 17, 18, 19, 20, 21, 22, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 45, 46, 47, 50, 51, 52, 53, 54, 55, 56, 57, 58]
+            if standardDateIds.contains(numFmtId) {
+                return true
+            }
+            if let code = customNumFmts[numFmtId]?.lowercased() {
+                if code.contains("yy") || code.contains("m/d") || code.contains("d/m") || code.contains("yyyy") || code.contains("hh:") {
+                    return true
+                }
+            }
+            return false
+        }
+
+        if let xfsStart = xml.range(of: "<cellXfs"), let xfsEnd = xml.range(of: "</cellXfs>") {
+            let xfsXml = String(xml[xfsStart.lowerBound..<xfsEnd.upperBound])
+            let xfPattern = try? NSRegularExpression(pattern: "<xf\\b([^>]*?)(?:/>|>(.*?)</xf>)", options: [.dotMatchesLineSeparators])
+            let numFmtAttrPattern = try? NSRegularExpression(pattern: "numFmtId=\"(\\d+)\"", options: [])
+            let nsXf = xfsXml as NSString
+            if let xfPattern = xfPattern {
+                let matches = xfPattern.matches(in: xfsXml, range: NSRange(location: 0, length: nsXf.length))
+                for (idx, m) in matches.enumerated() {
+                    let attr = nsXf.substring(with: m.range(at: 1))
+                    let attrNs = attr as NSString
+                    if let nm = numFmtAttrPattern?.firstMatch(in: attr, range: NSRange(location: 0, length: attrNs.length)) {
+                        let numFmtId = Int(attrNs.substring(with: nm.range(at: 1))) ?? 0
+                        if isDateFormat(numFmtId: numFmtId) {
+                            dateStyles.insert(idx)
+                        }
+                    }
+                }
+            }
+        }
+        return dateStyles
+    }
+
+    private func formatExcelDate(_ serial: Double) -> String {
+        // Excel serial date (days since 1899-12-30) to yyyy/M/d
+        let date = Date(timeIntervalSince1970: (serial - 25569.0) * 86400.0)
+        let fmt = DateFormatter()
+        fmt.timeZone = TimeZone(secondsFromGMT: 0)
+        fmt.dateFormat = "yyyy/M/d"
+        return fmt.string(from: date)
+    }
+
     // MARK: - Worksheet XML Parser
-    private func parseWorksheetXML(_ xml: String, sheetName: String, sheetId: String, sharedStrings: [String]) -> ExcelSheetModel {
+    private func parseWorksheetXML(
+        _ xml: String,
+        sheetName: String,
+        sheetId: String,
+        sharedStrings: [String],
+        dateStyles: Set<Int>
+    ) -> ExcelSheetModel {
         var rowModels: [ExcelRowData] = []
         var maxColumns = 1
 
         let rowPattern = try? NSRegularExpression(pattern: "<row\\s+r=\"(\\d+)\"[^>]*>(.*?)</row>", options: [.dotMatchesLineSeparators])
-        let cellPattern = try? NSRegularExpression(pattern: "<c\\s+([^>]*?)>(.*?)</c>", options: [.dotMatchesLineSeparators])
-        let cellSelfClosingPattern = try? NSRegularExpression(pattern: "<c\\s+([^>]*?)/>", options: [])
+        // Matches BOTH regular <c ...>...</c> and self-closing <c .../> accurately without cross-tag bleeding
+        let cellPattern = try? NSRegularExpression(pattern: "<c\\b([^>/]*?)(?:/>|>(.*?)</c>)", options: [.dotMatchesLineSeparators])
         let rAttrPattern = try? NSRegularExpression(pattern: "r=\"([A-Za-z]+)(\\d+)\"", options: [])
+        let sAttrPattern = try? NSRegularExpression(pattern: "s=\"(\\d+)\"", options: [])
         let tAttrPattern = try? NSRegularExpression(pattern: "t=\"([^\"]+)\"", options: [])
         let vTagPattern = try? NSRegularExpression(pattern: "<v>(.*?)</v>", options: [.dotMatchesLineSeparators])
         let fTagPattern = try? NSRegularExpression(pattern: "<f(?:[^>]*)>(.*?)</f>", options: [.dotMatchesLineSeparators])
@@ -262,7 +336,10 @@ public final class ExcelDocumentParser: @unchecked Sendable {
 
             for cellMatch in cellMatches {
                 let attrStr = rowContentNs.substring(with: cellMatch.range(at: 1))
-                let bodyStr = rowContentNs.substring(with: cellMatch.range(at: 2))
+                var bodyStr = ""
+                if cellMatch.numberOfRanges > 2 && cellMatch.range(at: 2).location != NSNotFound {
+                    bodyStr = rowContentNs.substring(with: cellMatch.range(at: 2))
+                }
                 let attrNs = attrStr as NSString
                 let bodyNs = bodyStr as NSString
 
@@ -273,20 +350,25 @@ public final class ExcelDocumentParser: @unchecked Sendable {
                 let colIdx = ExcelModelsHelper.columnIndex(from: colLetter)
                 maxColumns = max(maxColumns, colIdx + 1)
 
+                var styleIdx = -1
+                if let sMatch = sAttrPattern?.firstMatch(in: attrStr, range: NSRange(location: 0, length: attrNs.length)) {
+                    styleIdx = Int(attrNs.substring(with: sMatch.range(at: 1))) ?? -1
+                }
+
                 var typeAttr = ""
                 if let tMatch = tAttrPattern?.firstMatch(in: attrStr, range: NSRange(location: 0, length: attrNs.length)) {
                     typeAttr = attrNs.substring(with: tMatch.range(at: 1))
                 }
 
                 var formula: String?
-                if let fMatch = fTagPattern?.firstMatch(in: bodyStr, range: NSRange(location: 0, length: bodyNs.length)) {
+                if !bodyStr.isEmpty, let fMatch = fTagPattern?.firstMatch(in: bodyStr, range: NSRange(location: 0, length: bodyNs.length)) {
                     formula = decodeXMLEntities(bodyNs.substring(with: fMatch.range(at: 1)))
                 }
 
                 var rawValue = ""
                 var cellType: ExcelCellType = .string
 
-                if let vMatch = vTagPattern?.firstMatch(in: bodyStr, range: NSRange(location: 0, length: bodyNs.length)) {
+                if !bodyStr.isEmpty, let vMatch = vTagPattern?.firstMatch(in: bodyStr, range: NSRange(location: 0, length: bodyNs.length)) {
                     let vContent = decodeXMLEntities(bodyNs.substring(with: vMatch.range(at: 1)))
                     if typeAttr == "s", let strIndex = Int(vContent), strIndex < sharedStrings.count {
                         rawValue = sharedStrings[strIndex]
@@ -297,16 +379,26 @@ public final class ExcelDocumentParser: @unchecked Sendable {
                     } else if typeAttr == "e" {
                         rawValue = vContent
                         cellType = .error
+                    } else if let num = Double(vContent) {
+                        if dateStyles.contains(styleIdx) && num >= 1.0 && num <= 2958465.0 {
+                            rawValue = formatExcelDate(num)
+                            cellType = .date
+                        } else {
+                            rawValue = vContent
+                            cellType = .number
+                        }
                     } else {
                         rawValue = vContent
-                        cellType = (Double(vContent) != nil) ? .number : .string
+                        cellType = .string
                     }
-                } else if let isMatch = isTagPattern?.firstMatch(in: bodyStr, range: NSRange(location: 0, length: bodyNs.length)) {
+                } else if !bodyStr.isEmpty, let isMatch = isTagPattern?.firstMatch(in: bodyStr, range: NSRange(location: 0, length: bodyNs.length)) {
                     rawValue = decodeXMLEntities(bodyNs.substring(with: isMatch.range(at: 1)))
                     cellType = .string
-                } else if typeAttr == "str" {
+                } else if typeAttr == "str" && !bodyStr.isEmpty {
                     rawValue = bodyStr.trimmingCharacters(in: .whitespacesAndNewlines)
                     cellType = .string
+                } else {
+                    cellType = .blank
                 }
 
                 if formula != nil && cellType != .error {
@@ -321,27 +413,6 @@ public final class ExcelDocumentParser: @unchecked Sendable {
                     formula: formula,
                     cellType: cellType
                 ))
-            }
-
-            // Also check self-closing empty cells (e.g. <c r="A1"/>)
-            if let cellSelfClosingPattern = cellSelfClosingPattern {
-                let scMatches = cellSelfClosingPattern.matches(in: rowContent, range: NSRange(location: 0, length: rowContentNs.length))
-                for scMatch in scMatches {
-                    let attrStr = rowContentNs.substring(with: scMatch.range(at: 1))
-                    let attrNs = attrStr as NSString
-                    if let rMatch = rAttrPattern?.firstMatch(in: attrStr, range: NSRange(location: 0, length: attrNs.length)) {
-                        let colLetter = attrNs.substring(with: rMatch.range(at: 1)).uppercased()
-                        let colIdx = ExcelModelsHelper.columnIndex(from: colLetter)
-                        if !cells.contains(where: { $0.columnIndex == colIdx }) {
-                            cells.append(ExcelCellData(
-                                columnIndex: colIdx,
-                                columnLetter: colLetter,
-                                rawValue: "",
-                                cellType: .blank
-                            ))
-                        }
-                    }
-                }
             }
 
             // Sort cells by column index

@@ -44,3 +44,44 @@ dist/
 /slides_xml
 /docs/assets/output
 
+# Windows, .NET & Visual Studio
+.vs/
+*.user
+*.userosv
+*.suo
+*.userprefs
+*.ide
+
+# Build Results & Dependencies
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+ARM/
+ARM64/
+TestResults/
+*.trx
+*.coverage
+
+# WinUI 3 / MSIX Packaging & Generated Artifacts
+AppPackages/
+BundleArtifacts/
+Package.StoreAssociation.xml
+_pkginfo.txt
+*.msix
+*.msixbundle
+*.appx
+*.appxbundle
+Generated Files/
+Generated\ Files/
+
+# AI Models & Download Temp Files
+*.gguf
+*.downloading
+
+# Keep pre-bundled native dll in source tree if applicable
+!win/src/WinCompare.UI/maccompare_ffi.dll
+test_files/
+

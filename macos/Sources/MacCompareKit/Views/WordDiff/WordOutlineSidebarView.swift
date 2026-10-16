@@ -2,10 +2,12 @@ import SwiftUI
 
 public struct WordOutlineSidebarView: View {
     @Bindable public var viewModel: WordDiffViewModel
+    public var sidebarWidth: CGFloat = 220
     public var onDismiss: (() -> Void)? = nil
 
-    public init(viewModel: WordDiffViewModel, onDismiss: (() -> Void)? = nil) {
+    public init(viewModel: WordDiffViewModel, sidebarWidth: CGFloat = 220, onDismiss: (() -> Void)? = nil) {
         self.viewModel = viewModel
+        self.sidebarWidth = sidebarWidth
         self.onDismiss = onDismiss
     }
 
@@ -99,7 +101,7 @@ public struct WordOutlineSidebarView: View {
                 }
             }
         }
-        .frame(width: 220)
+        .frame(width: sidebarWidth)
         .background(Color(nsColor: .windowBackgroundColor))
     }
 

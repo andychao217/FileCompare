@@ -6,6 +6,7 @@ public struct WelcomeHomeView: View {
     @State private var languageManager = LanguageManager.shared
     @State private var historyManager = RecentHistoryManager.shared
     @State private var hoveredCardType: TabContentType?
+    @State private var showClearAllHistoryConfirmation: Bool = false
 
     public init(tabManager: TabManager) {
         self.tabManager = tabManager
@@ -208,11 +209,21 @@ public struct WelcomeHomeView: View {
 
                     if !historyManager.records.isEmpty {
                         Button(languageManager.text(.clearAll)) {
-                            historyManager.clearAll()
+                            showClearAllHistoryConfirmation = true
                         }
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
                         .buttonStyle(.plain)
+                        .alert(languageManager.text(.confirmClearHistoryTitle), isPresented: $showClearAllHistoryConfirmation) {
+                            Button(languageManager.text(.clear), role: .destructive) {
+                                withAnimation {
+                                    historyManager.clearAll()
+                                }
+                            }
+                            Button(languageManager.text(.cancel), role: .cancel) {}
+                        } message: {
+                            Text(languageManager.text(.confirmClearHistoryMessage))
+                        }
                     }
                 }
 
@@ -224,27 +235,53 @@ public struct WelcomeHomeView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
                             ForEach(historyManager.records) { rec in
-                                Button {
-                                    openRecentRecord(rec)
-                                } label: {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: rec.type.iconName)
-                                            .font(.system(size: 10))
-                                            .foregroundColor(.accentColor)
-                                        Text(rec.title)
-                                            .font(.system(size: 11))
-                                            .lineLimit(1)
-                                        Text("· \(rec.formattedDate)")
-                                            .font(.system(size: 9))
-                                            .foregroundColor(.secondary)
+                                HStack(spacing: 6) {
+                                    Button {
+                                        openRecentRecord(rec)
+                                    } label: {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: rec.type.iconName)
+                                                .font(.system(size: 10))
+                                                .foregroundColor(.accentColor)
+                                            Text(rec.title)
+                                                .font(.system(size: 11))
+                                                .lineLimit(1)
+                                            Text("· \(rec.formattedDate)")
+                                                .font(.system(size: 9))
+                                                .foregroundColor(.secondary)
+                                        }
                                     }
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color(nsColor: .controlBackgroundColor))
-                                    .cornerRadius(6)
+                                    .buttonStyle(.plain)
+                                    .focusEffectDisabled()
+
+                                    Button {
+                                        withAnimation(.easeInOut(duration: 0.2)) {
+                                            historyManager.removeRecord(id: rec.id)
+                                        }
+                                    } label: {
+                                        Image(systemName: "xmark")
+                                            .font(.system(size: 8, weight: .bold))
+                                            .foregroundColor(.secondary.opacity(0.8))
+                                            .padding(3)
+                                            .contentShape(Rectangle())
+                                    }
+                                    .buttonStyle(.plain)
+                                    .help(languageManager.text(.deleteRecord))
                                 }
-                                .buttonStyle(.plain)
-                                .focusEffectDisabled()
+                                .padding(.leading, 8)
+                                .padding(.trailing, 6)
+                                .padding(.vertical, 4)
+                                .background(Color(nsColor: .controlBackgroundColor))
+                                .cornerRadius(6)
+                                .contextMenu {
+                                    Button(role: .destructive) {
+                                        withAnimation(.easeInOut(duration: 0.2)) {
+                                            historyManager.removeRecord(id: rec.id)
+                                        }
+                                    } label: {
+                                        Label(languageManager.text(.delete), systemImage: "trash")
+                                    }
+                                }
                             }
                         }
                     }

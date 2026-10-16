@@ -101,6 +101,66 @@ public final class TabManager: Identifiable {
         tabs.first(where: { $0.id == selectedTabId })
     }
 
+    public func tabTitle(for tab: TabItem) -> String {
+        switch tab.type {
+        case .textDiff:
+            if let vm = textDiffViewModels[tab.id] {
+                if let left = vm.leftFileURL, let right = vm.rightFileURL {
+                    return "\(left.lastPathComponent) ↔ \(right.lastPathComponent)"
+                } else if let left = vm.leftFileURL {
+                    return left.lastPathComponent
+                } else if let right = vm.rightFileURL {
+                    return right.lastPathComponent
+                }
+            }
+        case .wordDiff:
+            if let vm = wordDiffViewModels[tab.id] {
+                if let left = vm.leftFileURL, let right = vm.rightFileURL {
+                    return "\(left.lastPathComponent) ↔ \(right.lastPathComponent)"
+                } else if let left = vm.leftFileURL {
+                    return left.lastPathComponent
+                } else if let right = vm.rightFileURL {
+                    return right.lastPathComponent
+                }
+            }
+        case .excelDiff:
+            if let vm = excelDiffViewModels[tab.id] {
+                if let left = vm.leftURL, let right = vm.rightURL {
+                    return "\(left.lastPathComponent) ↔ \(right.lastPathComponent)"
+                } else if let left = vm.leftURL {
+                    return left.lastPathComponent
+                } else if let right = vm.rightURL {
+                    return right.lastPathComponent
+                }
+            }
+        case .folderDiff:
+            if let vm = folderDiffViewModels[tab.id] {
+                if let left = vm.leftFolderURL, let right = vm.rightFolderURL {
+                    return "\(left.lastPathComponent) ↔ \(right.lastPathComponent)"
+                } else if let left = vm.leftFolderURL {
+                    return left.lastPathComponent
+                } else if let right = vm.rightFolderURL {
+                    return right.lastPathComponent
+                }
+            }
+        case .threeWayMerge:
+            if let vm = threeWayMergeViewModels[tab.id] {
+                let parts = [vm.localFileURL, vm.baseFileURL, vm.remoteFileURL].compactMap { $0?.lastPathComponent }
+                if !parts.isEmpty {
+                    return parts.joined(separator: " | ")
+                }
+            }
+        }
+
+        switch tab.type {
+        case .textDiff: return LanguageManager.shared.text(.newTextCompare)
+        case .wordDiff: return LanguageManager.shared.text(.newWordCompare)
+        case .excelDiff: return LanguageManager.shared.text(.newExcelCompare)
+        case .folderDiff: return LanguageManager.shared.text(.newFolderCompare)
+        case .threeWayMerge: return LanguageManager.shared.text(.newThreeWayMerge)
+        }
+    }
+
     public func selectTab(id: UUID) {
         selectedTabId = id
     }
@@ -219,6 +279,16 @@ public final class TabManager: Identifiable {
     }
 
     public func openAutoDiff(left: URL, right: URL) {
+        var isLeftDir: ObjCBool = false
+        var isRightDir: ObjCBool = false
+        _ = FileManager.default.fileExists(atPath: left.path, isDirectory: &isLeftDir)
+        _ = FileManager.default.fileExists(atPath: right.path, isDirectory: &isRightDir)
+
+        if isLeftDir.boolValue || isRightDir.boolValue {
+            openFolderDiff(left: left, right: right)
+            return
+        }
+
         let leftExt = left.pathExtension.lowercased()
         let rightExt = right.pathExtension.lowercased()
         if ["docx", "doc"].contains(leftExt) || ["docx", "doc"].contains(rightExt) {
@@ -227,6 +297,44 @@ public final class TabManager: Identifiable {
             openExcelDiff(left: left, right: right)
         } else {
             openTextDiff(left: left, right: right)
+        }
+    }
+
+    public func openSingleTarget(url: URL, mode: TabContentType) {
+        switch mode {
+        case .textDiff:
+            let title = url.lastPathComponent
+            let newTab = TabItem(title: title, type: .textDiff)
+            tabs.append(newTab)
+            selectedTabId = newTab.id
+            let vm = TextDiffViewModel(leftURL: url, rightURL: nil)
+            textDiffViewModels[newTab.id] = vm
+        case .wordDiff:
+            let title = url.lastPathComponent
+            let newTab = TabItem(title: title, type: .wordDiff)
+            tabs.append(newTab)
+            selectedTabId = newTab.id
+            let vm = WordDiffViewModel(leftURL: url, rightURL: nil)
+            wordDiffViewModels[newTab.id] = vm
+        case .excelDiff:
+            let title = url.lastPathComponent
+            let newTab = TabItem(title: title, type: .excelDiff)
+            tabs.append(newTab)
+            selectedTabId = newTab.id
+            let vm = ExcelDiffViewModel(leftURL: url, rightURL: nil)
+            excelDiffViewModels[newTab.id] = vm
+        case .folderDiff:
+            let title = url.lastPathComponent
+            let newTab = TabItem(title: title, type: .folderDiff)
+            tabs.append(newTab)
+            selectedTabId = newTab.id
+            let vm = FolderDiffViewModel(leftURL: url, rightURL: nil)
+            vm.onOpenFileDiff = { [weak self] l, r in
+                self?.openAutoDiff(left: l, right: r)
+            }
+            folderDiffViewModels[newTab.id] = vm
+        case .threeWayMerge:
+            break
         }
     }
 

@@ -1,62 +1,84 @@
 <!-- zh-Hans -->
-### ✨ 新增特性
-- **AI 智能双模式引擎**：
-  - 集成 Google Gemma 3 (1B/4B) 本地离线大模型推理，数据 100% 留存本地，断网可用。
-  - 支持自定义 Ollama 与兼容 OpenAI 规范的云端大模型 API。
-- **AI 改动意图总结与 Commit 生成**：
-  - 一键智能生成单句核心意图、结构化差异点分析以及标准化 Conventional Commit 提交建议。
-- **就地热更新（微信/Sparkle 同款体验）**：
-  - 支持应用内流式下载、macOS 原生 `ditto` 自动解压与一键重启覆盖，无需浏览器往返。
-  - 智能多语言 Release Notes 感知（自动识别并呈现中、英、日更新日志）。
-- **Homebrew 官方专属源上线**：
-  - 现已支持终端一行命令直接安装与自动软链接 CLI：`brew install andychao217/tap/maccompare`。
-- **多形态发布资产**：
-  - GitHub Releases 同时提供 DMG 安装包、便携 `.zip` 免安装包以及独立 `mcdiff` 终端 CLI 归档。
-- **Excel & Word 比对性能飞跃**：
-  - 深度优化超大数据表多线程比对引擎与 DOCX 复杂嵌套表格/媒体感知。
+### ✨ 核心新增特性
+- **🎉 WinCompare (Windows 11 原生版) 重磅发布**：
+  - 基于微软官方 **WinUI 3 (Windows App SDK)** 深度构建，采用原生 **Fluent Design System**（Mica 云母材质、圆角几何、Snap Layouts 贴靠布局与 Cascadia Code 字体）。
+  - 底层复用高性能 Rust 核心（`diff-core`、`excel-diff-core`、`fs-scanner`），与 macOS 版实现 100% 算法一致性与处理性能。
+- **📊 全端五大核心比对与合并模式**：
+  - **文本与代码精细对比**：行级与内联字符级精准追踪，支持差异块左右一键采纳。
+  - **Excel 表格全要素比对**：多工作表切换、像素级双向同步网格、主键 Hash Join 对齐与浮点容差过滤。
+  - **Word 文档高保真比对**：段落富文本样式流、内嵌原生表格网格差异、多媒体指纹 SHA-256 比对与标题大纲。
+  - **文件夹秒级对比与双向同步**：时间戳/大小极速扫描与 CRC32 深度校验，提供 Dry-Run 演练预览。
+  - **Git 三向冲突合并 (3-Way Merge)**：直观对比 Local vs Base vs Remote，智能自动合并不冲突代码，一键解决冲突。
+- **🤖 端侧与云端双模 AI 智能助手**：
+  - 支持 Google Gemma 3 本地端侧离线大模型推理，数据 100% 留存本地；同时兼容 DeepSeek、OpenAI 与局域网 Ollama。
+  - 一键提炼「修改核心意图」、生成结构化变更清单并输出规范化 Conventional Commit 提交信息。
+- **📦 WiX 原生 Windows 安装向导与终端集成**：
+  - 提供全新 WiX v4/v5 安装向导（`.msi`），自动创建桌面快捷方式、开始菜单项并向系统注册 `PATH` 环境变量。
+  - 终端输入 `wincmp` 即可全局调用，开箱即用支持 `git difftool` 与 `git mergetool`。
+- **🔄 双平台统一持续发布流水线 (CI/CD)**：
+  - GitHub Actions 支持 macOS（Universal Binary 2）与 Windows（x64）并行构建。
+  - 同一个 Release 中同时提供：`MacCompare-*.dmg`、`MacCompare-*-macos.zip`、`mcdiff-*.tar.gz`、`WinCompare-*-Setup.msi`、`WinCompare-*-windows-x64.zip` 与 `wincmp-*.zip`。
+  - 双端在线检查更新模块精准对齐，智能匹配各自平台的更新包与多语言 Release Notes。
 
-### 🐛 问题修复与优化
-- 优化设置面板 API 配置字段的自适应排版。
-- 升级全流程自动化 CI/CD 构建、Rust 缓存加速与双架构通用二进制（Universal Binary 2）支持。
+### 🐛 性能修复与优化
+- 解决 Parallels Desktop / VMware 虚拟机网络共享盘（`Z:\`）下运行 WinUI 3 报 `0xC0000006` 闪退问题，提供本地增量同步运行机制。
+- 优化 WiX 安装包构建流水线，加入本地临时磁盘高速缓存机制，解决虚拟机网络盘压缩 CAB 缓慢停滞问题。
+- 剔除生产发布包中的 PDB 调试符号，大幅缩减安装包体积并加快启动速度。
+
+---
 
 <!-- en -->
 ### ✨ Key Features
-- **Dual-Mode AI Engine**:
-  - Integrate local offline Google Gemma 3 (1B/4B) on-device inference for 100% privacy and zero code leaks.
-  - Support custom Ollama and OpenAI-compatible cloud LLM endpoints.
-- **AI Change Intent Summary & Conventional Commits**:
-  - One-click synthesis of primary change intent, bulleted difference points, and Conventional Commit messages.
-- **In-App Seamless Auto-Update**:
-  - WeChat/Sparkle-inspired 4-stage update: streamed progress download, auto-extraction via `ditto`, and one-click relaunch.
-  - Multi-language release notes auto-sensing based on system locale.
-- **Official Homebrew Tap Released**:
-  - Install via a single terminal command: `brew install andychao217/tap/maccompare`.
-- **Multi-Asset Release Packages**:
-  - Releases now include DMG installer, portable `.zip` bundle, and standalone `mcdiff` CLI archive.
-- **High-Performance Excel & Word Diff**:
-  - Multithreaded Rust-accelerated diffing for massive Excel spreadsheets and structured DOCX files.
+- **🎉 WinCompare (Windows 11 Native Edition) Official Launch**:
+  - Deeply crafted using Microsoft's official **WinUI 3 (Windows App SDK)** with full **Fluent Design System** adoption (Mica material, rounded geometry, Snap Layouts, and Cascadia Code typography).
+  - Powered by the shared high-performance Rust core (`diff-core`, `excel-diff-core`, `fs-scanner`), achieving 100% feature and algorithm parity with macOS.
+- **📊 5 Core Comparison & Merge Engines Across All Platforms**:
+  - **Text & Code Comparison**: Fine-grained line & character inline diffs with 1-click side-by-side chunk adoption.
+  - **Excel Spreadsheet Diff**: Multi-sheet navigation, pixel-perfect synchronized grid, primary key Hash Join alignment, and numeric tolerance filtering.
+  - **Word Document Diff**: High-fidelity paragraph styling, native table cell diffs, multimedia SHA-256 fingerprinting, and heading outlines.
+  - **Folder Fast Diff & Sync**: Timestamp/size quick checks, deep CRC32 verification, and rule-based bidirectional sync with safe Dry-Run previews.
+  - **Git 3-Way Merge**: Visual conflict resolution across Local vs. Base vs. Remote with smart auto-merge of non-conflicting sections.
+- **🤖 Dual-Mode AI Assistant (Local Offline & Cloud API)**:
+  - Supports 100% on-device offline Google Gemma 3 inference, with seamless compatibility for DeepSeek, OpenAI, and local Ollama endpoints.
+  - 1-click synthesis of core change intent summaries, bulleted modification lists, and standardized Conventional Commit messages.
+- **📦 WiX Native MSI Installer & Global CLI Integration**:
+  - Brand-new WiX v4/v5 installer wizard (`.msi`) creating Desktop shortcuts, Start Menu entries, and automatic system `PATH` registration.
+  - Built-in `wincmp` terminal utility ready for `git difftool` and `git mergetool` anywhere in your console.
+- **🔄 Unified Multi-Platform Release Pipeline (CI/CD)**:
+  - GitHub Actions runs macOS (Universal Binary 2) and Windows (x64) builds in parallel.
+  - Unified multi-asset releases providing: DMG, macOS Zip, mcdiff tarball, WiX MSI installer, Windows portable Zip, and wincmp Zip.
+  - Cross-platform in-app update checkers with intelligent asset resolution and locale-aware release notes display.
 
-### 🐛 Bug Fixes & Improvements
-- Improve Settings layout and responsive UI styling.
-- Upgrade CI/CD workflows with Rust caching and Universal Binary 2 dual-arch packaging.
+### 🐛 Improvements & Fixes
+- Add local VM staging synchronization to prevent `0xC0000006 (STATUS_IN_PAGE_ERROR)` crashes when running WinUI 3 over VMware / Parallels shared folders (`Z:\`).
+- Optimize WiX packaging with a local disk caching strategy, eliminating CAB compression stalls over network drives.
+- Strip PDB debug symbols from production releases, significantly shrinking bundle size and improving startup performance.
+
+---
 
 <!-- ja -->
 ### ✨ 主な新機能
-- **デュアルモード AI エンジン**：
-  - Google Gemma 3 (1B/4B) によるローカルオフライン推论に対応し、プライバシーを完全保護。
-  - カスタム Ollama および OpenAI 互換のクラウド API をサポート。
-- **AI 変更意図の要約と Commit 生成**：
-  - ワンクリックでコアな変更意図、重要ポイント、および Conventional Commit メッセージを自動生成。
-- **シームレスなアプリ内自動更新**：
-  - ストリーミングダウンロード、自動展開、ワンクリック再起動による原地アップデート。
-  - システム言語に応じた多言語リリースノートの自動表示。
-- **公式 Homebrew Tap を公開**：
-  - ターミナルから1行でインストール可能：`brew install andychao217/tap/maccompare`。
-- **マルチアセット配布**：
-  - DMG インストーラー、ポータブル `.zip`、および単体 `mcdiff` CLI アーカイブを同時提供。
-- **Excel & Word 比較の高速化**：
-  - 大規模 Excel シートおよび Word ドキュメントの高速・高精度な構造化差分検出。
+- **🎉 WinCompare (Windows 11 ネイティブ版) 正式リリース**：
+  - マイクロソフト公式 **WinUI 3 (Windows App SDK)** をベースに、**Fluent Design System**（Mica マテリアル、角丸、Snap Layouts、Cascadia Code フォント）を完全採用。
+  - 共通の高性能 Rust コア（`diff-core`、`excel-diff-core`、`fs-scanner`）を統合し、macOS 版と 100% 同等の精度と処理速度を実現。
+- **📊 全プラットフォーム共通の 5 大比較・マージモード**：
+  - **テキスト・コード差分**：行単位およびインライン文字単位の高精度差分検出とワンクリック差分反映。
+  - **Excel 表計算ファイル比較**：マルチシート切替、ピクセル完全同期グリッド、主キー Hash Join 整列、数値許容誤差設定。
+  - **Word ドキュメント比較**：リッチテキストスタイル流、ネイティブ表差分、マルチメディア SHA-256 フィンガープリント、見出しアウトライン。
+  - **フォルダ高速比較・同期**：タイムスタンプ/サイズ判定、CRC32 ハッシュ検証、Dry-Run プレビュー付き双方向同期。
+  - **Git 3方向マージ (3-Way Merge)**：Local vs Base vs Remote の直感的な衝突解決と非競合箇所の自動マージ。
+- **🤖 デュアルモード AI アシスタント（オンデバイス＆クラウド）**：
+  - Google Gemma 3 オフライン推論に対応し、DeepSeek、OpenAI、Ollama とも柔軟に連携。
+  - 変更意図のワンクリック要約、重要ポイント箇条書き、および Conventional Commit メッセージ自動生成。
+- **📦 WiX ネイティブ MSI インストーラーと CLI 統合**：
+  - デスクトップ／スタートメニューのショートカット作成とシステム `PATH` 自動登録を備えた WiX v4/v5 インストーラー（`.msi`）。
+  - `git difftool` や `git mergetool` で即座に利用できる `wincmp` ターミナルコマンド。
+- **🔄 統一 CI/CD パイプラインとマルチアセット配布**：
+  - macOS（Universal Binary 2）と Windows（x64）を GitHub Actions で並列ビルド。
+  - DMG、便携 Zip、WiX MSI、wincmp CLI などの全プラットフォーム資産を単一 Release に一括公開。
+  - システム言語に応じたリリースノート表示と各 OS 向けパッケージのシームレスな自動更新。
 
-### 🐛 不具合修正・改善
-- 設定画面のレイアウトとレスポンシブ表示を最適化。
-- CI/CD パイプラインを Rust キャッシュおよび Universal Binary 2 対応にアップグレード。
+### 🐛 改善と不具合修正
+- 仮想マシン（Parallels / VMware）の共有フォルダ（`Z:\`）における WinUI 3 の `0xC0000006` ページエラークラッシュを解消するローカル同期機構を導入。
+- WiX パッケージングにローカルディスクバッファを導入し、仮想共有ドライブでの CAB 圧縮遅延を完全解消。
+- プロダクションパッケージから PDB デバッグシンボルを除去し、配布サイズの大幅削減と起動速度の向上を実現。

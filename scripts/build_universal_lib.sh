@@ -10,6 +10,11 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 echo "=== Building MacCompare Core Universal Binary ==="
 
+# Ensure ~/.cargo/bin is prioritized in PATH so rustup multi-arch toolchain takes precedence over Homebrew single-arch cargo
+if [ -d "${HOME}/.cargo/bin" ]; then
+    export PATH="${HOME}/.cargo/bin:${PATH}"
+fi
+
 if ! command -v cargo &> /dev/null; then
     echo "Warning: cargo not found in standard PATH. Please install Rust or configure rustup."
     echo "Skipping Rust static lib compilation."

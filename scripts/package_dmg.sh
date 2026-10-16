@@ -6,7 +6,7 @@ set -e
 # Architecture: Universal Binary 2 (arm64 + x86_64)
 # ========================================================
 
-VERSION="${1:-0.5.0}"
+VERSION="${1:-0.6.0}"
 APP_NAME="MacCompare"
 BUNDLE_ID="com.andychao217.MacCompare"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -20,12 +20,24 @@ echo "========================================================"
 echo "📦 Packaging ${APP_NAME} v${VERSION} (Universal Binary 2)"
 echo "========================================================"
 
+# Prioritize rustup in ~/.cargo/bin
+if [ -d "${HOME}/.cargo/bin" ]; then
+    export PATH="${HOME}/.cargo/bin:${PATH}"
+fi
+
 SWIFT_BIN="xcrun --toolchain default swift"
 
 # 0. Compile Rust Universal Binary Core
 if [ -f "${SCRIPT_DIR}/build_universal_lib.sh" ]; then
     echo "[0/4] Building Rust Universal Binary 2 Static Core..."
-    bash "${SCRIPT_DIR}/build_universal_lib.sh"
+    if ! bash "${SCRIPT_DIR}/build_universal_lib.sh"; then
+        if [ -f "${ROOT_DIR}/macos/Sources/CMacCompareCore/lib/libmaccompare_ffi.a" ]; then
+            echo "Notice: rust cross-compilation unavailable, using existing fat universal libmaccompare_ffi.a"
+        else
+            echo "Error: Rust core build failed and no precompiled libmaccompare_ffi.a found!"
+            exit 1
+        fi
+    fi
 fi
 
 # 1. Compile Universal Binary 2 (Dual Architecture: arm64 + x86_64)

@@ -198,7 +198,40 @@ public final class ExcelDiffEngine: Sendable {
         return results
     }
 
-    // MARK: - Row Alignment by LCS / Myers Similarity
+    // MARK: - Row Alignment by Similarity & DP
+
+    private func rowSimilarity(
+        left: ExcelRowData,
+        right: ExcelRowData,
+        maxCols: Int,
+        rules: ExcelCompareRules
+    ) -> Double {
+        var matchCount = 0
+        var totalNonEmpty = 0
+
+        for colIdx in 0..<maxCols {
+            let leftC = left.cell(at: colIdx)
+            let rightC = right.cell(at: colIdx)
+            let (diffType, _, _) = diffTwoCells(left: leftC, right: rightC, rules: rules)
+
+            let leftEmpty = leftC?.rawValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true
+            let rightEmpty = rightC?.rawValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true
+
+            if leftEmpty && rightEmpty {
+                continue
+            }
+
+            totalNonEmpty += 1
+            if diffType == .unchanged {
+                matchCount += 1
+            }
+        }
+
+        if totalNonEmpty == 0 {
+            return 1.0 // Both are blank rows
+        }
+        return Double(matchCount) / Double(totalNonEmpty)
+    }
 
     private func alignRowsByLCS(
         leftRows: [ExcelRowData],
@@ -217,17 +250,36 @@ public final class ExcelDiffEngine: Sendable {
             return leftRows.map { makeSingleSideAlignedRow(leftRow: $0, rightRow: nil, maxCols: maxCols, columnHeaders: columnHeaders, type: .deleted) }
         }
 
-        // Build LCS DP table based on row fingerprint equality
-        var dp = Array(repeating: Array(repeating: 0, count: n + 1), count: m + 1)
-        for i in 0..<m {
-            let leftFP = rowFingerprint(leftRows[i], rules: rules)
-            for j in 0..<n {
-                let rightFP = rowFingerprint(rightRows[j], rules: rules)
-                if leftFP == rightFP {
-                    dp[i + 1][j + 1] = dp[i][j] + 1
-                } else {
-                    dp[i + 1][j + 1] = max(dp[i + 1][j], dp[i][j + 1])
+        // Fast path: When both sheets have matching row count and row indices, check if all rows align in-place
+        if m == n {
+            var canAlignInPlace = true
+            for k in 0..<m {
+                if leftRows[k].rowIndex != rightRows[k].rowIndex || rowSimilarity(left: leftRows[k], right: rightRows[k], maxCols: maxCols, rules: rules) < 0.25 {
+                    canAlignInPlace = false
+                    break
                 }
+            }
+            if canAlignInPlace {
+                return (0..<m).map { k in
+                    compareRowCells(
+                        leftRow: leftRows[k],
+                        rightRow: rightRows[k],
+                        maxCols: maxCols,
+                        columnHeaders: columnHeaders,
+                        rules: rules
+                    )
+                }
+            }
+        }
+
+        // Similarity-weighted 2D Dynamic Programming Alignment
+        var dp = Array(repeating: Array(repeating: 0.0, count: n + 1), count: m + 1)
+        for i in 0..<m {
+            for j in 0..<n {
+                let sim = rowSimilarity(left: leftRows[i], right: rightRows[j], maxCols: maxCols, rules: rules)
+                let bonus = (leftRows[i].rowIndex == rightRows[j].rowIndex) ? 0.05 : 0.0
+                let matchScore = (sim >= 0.35) ? (dp[i][j] + sim + bonus) : -1e9
+                dp[i + 1][j + 1] = max(dp[i + 1][j], max(dp[i][j + 1], matchScore))
             }
         }
 
@@ -237,7 +289,9 @@ public final class ExcelDiffEngine: Sendable {
         var j = n
 
         while i > 0 || j > 0 {
-            if i > 0 && j > 0 && rowFingerprint(leftRows[i - 1], rules: rules) == rowFingerprint(rightRows[j - 1], rules: rules) {
+            let sim = (i > 0 && j > 0) ? rowSimilarity(left: leftRows[i - 1], right: rightRows[j - 1], maxCols: maxCols, rules: rules) : 0.0
+            let bonus = (i > 0 && j > 0 && leftRows[i - 1].rowIndex == rightRows[j - 1].rowIndex) ? 0.05 : 0.0
+            if i > 0 && j > 0 && sim >= 0.35 && abs(dp[i][j] - (dp[i - 1][j - 1] + sim + bonus)) < 1e-5 {
                 let rowDiff = compareRowCells(
                     leftRow: leftRows[i - 1],
                     rightRow: rightRows[j - 1],
@@ -248,43 +302,101 @@ public final class ExcelDiffEngine: Sendable {
                 aligned.append(rowDiff)
                 i -= 1
                 j -= 1
-            } else if j > 0 && (i == 0 || dp[i][j - 1] >= dp[i - 1][j]) {
+            } else if j > 0 && (i == 0 || dp[i][j] == dp[i][j - 1]) {
                 // Right only (added)
                 let rowDiff = makeSingleSideAlignedRow(leftRow: nil, rightRow: rightRows[j - 1], maxCols: maxCols, columnHeaders: columnHeaders, type: .added)
                 aligned.append(rowDiff)
                 j -= 1
-            } else if i > 0 && (j == 0 || dp[i][j - 1] < dp[i - 1][j]) {
+            } else if i > 0 && (j == 0 || dp[i][j] == dp[i - 1][j]) {
                 // Left only (deleted)
                 let rowDiff = makeSingleSideAlignedRow(leftRow: leftRows[i - 1], rightRow: nil, maxCols: maxCols, columnHeaders: columnHeaders, type: .deleted)
                 aligned.append(rowDiff)
                 i -= 1
+            } else {
+                if i > 0 && j > 0 {
+                    let rowDiff = compareRowCells(
+                        leftRow: leftRows[i - 1],
+                        rightRow: rightRows[j - 1],
+                        maxCols: maxCols,
+                        columnHeaders: columnHeaders,
+                        rules: rules
+                    )
+                    aligned.append(rowDiff)
+                    i -= 1
+                    j -= 1
+                } else if i > 0 {
+                    let rowDiff = makeSingleSideAlignedRow(leftRow: leftRows[i - 1], rightRow: nil, maxCols: maxCols, columnHeaders: columnHeaders, type: .deleted)
+                    aligned.append(rowDiff)
+                    i -= 1
+                } else {
+                    let rowDiff = makeSingleSideAlignedRow(leftRow: nil, rightRow: rightRows[j - 1], maxCols: maxCols, columnHeaders: columnHeaders, type: .added)
+                    aligned.append(rowDiff)
+                    j -= 1
+                }
             }
         }
 
         aligned.reverse()
 
-        // Post-pass: Group consecutive deleted + added rows into modified rows if similarity is high
+        // Post-pass: Group consecutive blocks of deleted and added rows by best mutual similarity or matching row index
         var consolidated: [AlignedExcelRow] = []
         var k = 0
         while k < aligned.count {
-            if k + 1 < aligned.count && aligned[k].rowDiffType == .deleted && aligned[k + 1].rowDiffType == .added {
-                if let leftR = aligned[k].leftCells, let rightR = aligned[k + 1].rightCells {
-                    let leftRowData = ExcelRowData(rowIndex: aligned[k].leftRowIndex ?? 0, cells: leftR)
-                    let rightRowData = ExcelRowData(rowIndex: aligned[k + 1].rightRowIndex ?? 0, cells: rightR)
-                    let modRow = compareRowCells(
-                        leftRow: leftRowData,
-                        rightRow: rightRowData,
-                        maxCols: maxCols,
-                        columnHeaders: columnHeaders,
-                        rules: rules
-                    )
-                    consolidated.append(modRow)
-                    k += 2
-                    continue
+            if aligned[k].rowDiffType == .deleted {
+                var delRows: [AlignedExcelRow] = []
+                while k < aligned.count && aligned[k].rowDiffType == .deleted {
+                    delRows.append(aligned[k])
+                    k += 1
                 }
+                var addRows: [AlignedExcelRow] = []
+                while k < aligned.count && aligned[k].rowDiffType == .added {
+                    addRows.append(aligned[k])
+                    k += 1
+                }
+
+                if !addRows.isEmpty {
+                    var usedAddIndices = Set<Int>()
+                    for delRow in delRows {
+                        let delRowIndex = delRow.leftRowIndex
+                        var matchedAddIdx: Int?
+                        if let targetIdx = delRowIndex, let found = addRows.indices.first(where: { !usedAddIndices.contains($0) && addRows[$0].rightRowIndex == targetIdx }) {
+                            matchedAddIdx = found
+                        } else {
+                            matchedAddIdx = addRows.indices.first(where: { !usedAddIndices.contains($0) })
+                        }
+
+                        if let addIdx = matchedAddIdx {
+                            usedAddIndices.insert(addIdx)
+                            let addRow = addRows[addIdx]
+                            if let leftR = delRow.leftCells, let rightR = addRow.rightCells {
+                                let leftRowData = ExcelRowData(rowIndex: delRow.leftRowIndex ?? 0, cells: leftR)
+                                let rightRowData = ExcelRowData(rowIndex: addRow.rightRowIndex ?? 0, cells: rightR)
+                                let modRow = compareRowCells(
+                                    leftRow: leftRowData,
+                                    rightRow: rightRowData,
+                                    maxCols: maxCols,
+                                    columnHeaders: columnHeaders,
+                                    rules: rules
+                                )
+                                consolidated.append(modRow)
+                            } else {
+                                consolidated.append(delRow)
+                            }
+                        } else {
+                            consolidated.append(delRow)
+                        }
+                    }
+
+                    for (idx, addRow) in addRows.enumerated() where !usedAddIndices.contains(idx) {
+                        consolidated.append(addRow)
+                    }
+                } else {
+                    consolidated.append(contentsOf: delRows)
+                }
+            } else {
+                consolidated.append(aligned[k])
+                k += 1
             }
-            consolidated.append(aligned[k])
-            k += 1
         }
 
         return consolidated

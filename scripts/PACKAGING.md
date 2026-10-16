@@ -48,13 +48,13 @@ rustup target add x86_64-apple-darwin
 # 1. 赋予执行权限（首次）
 chmod +x scripts/*.sh
 
-# 2. 一键构建并生成指定版本的 DMG 包（默认版本为 0.5.0）
-bash scripts/package_dmg.sh 0.5.0
+# 2. 一键构建并生成指定版本的 DMG 包（默认版本为 0.6.0）
+bash scripts/package_dmg.sh 0.6.0
 ```
 
 #### 打包输出位置：
 * **应用程序包**：`dist/staging/MacCompare.app`
-* **DMG 磁盘镜像**：`dist/MacCompare-0.5.0.dmg`
+* **DMG 磁盘镜像**：`dist/MacCompare-0.6.0.dmg`
 
 ---
 
@@ -96,7 +96,7 @@ lipo -info dist/staging/MacCompare.app/Contents/MacOS/mcdiff
 codesign -dv --verbose=4 dist/staging/MacCompare.app
 
 # 3. 本地挂载测试
-hdiutil attach dist/MacCompare-0.5.0.dmg
+hdiutil attach dist/MacCompare-0.6.0.dmg
 ```
 
 > **提示（首次打开提示“无法打开”）：**  
@@ -116,6 +116,28 @@ hdiutil attach dist/MacCompare-0.5.0.dmg
   * **解决**：请先安装 Rust 工具链：`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`，并确保 `~/.cargo/bin` 在 `PATH` 中。
 * **Q: 离线 AI 模型是否需要打入包中？**
   * **说明**：**不需要**。MacCompare 的 AI 模型（Gemma 3）支持按需从 ModelScope 国内高速镜像免登录下载，运行时存放在 `~/Library/Application Support/MacCompare/models/`，避免安装包体积膨胀。
+
+---
+
+### 🪟 Windows 平台打包 (WiX 安装包与便携版 ZIP)
+
+Windows 端提供了针对 Windows 10/11 的自动化打包流水线：
+- **WiX v4/v5 原生 MSI 安装包**：提供专业图形安装向导，自动创建**桌面快捷方式**、**开始菜单快捷方式**，并将应用安装目录自动注册至系统 `PATH` 环境变量中（使得 `wincmp` 命令在任何终端直接可用）。
+- **绿色便携版 ZIP**：自包含 WinUI 3 运行库与 Rust Core，解压即用。
+
+#### 快速打包命令（PowerShell）：
+```powershell
+# 一键生成 ZIP 与 WiX MSI 安装包（默认输出到 dist/ 目录）
+.\win\scripts\package_win.ps1 -Version 0.6.0
+
+# 仅生成便携版 ZIP
+.\win\scripts\package_win.ps1 -Version 0.6.0 -SkipInstaller
+```
+
+#### Windows 打包输出位置：
+* **MSI 安装包**：`dist/WinCompare-0.6.0-windows-x64-Setup.msi`
+* **主程序绿色包**：`dist/WinCompare-0.6.0-windows-x64.zip`
+* **独立 CLI 工具**：`dist/wincmp-0.6.0-windows-x64.zip`
 
 ---
 
@@ -161,13 +183,13 @@ Run `scripts/package_dmg.sh` from the repository root:
 # 1. Grant execute permissions (first time only)
 chmod +x scripts/*.sh
 
-# 2. Build & package specified version (defaults to 0.5.0)
-bash scripts/package_dmg.sh 0.5.0
+# 2. Build & package specified version (defaults to 0.6.0)
+bash scripts/package_dmg.sh 0.6.0
 ```
 
 #### Output Locations:
 * **Application Bundle**: `dist/staging/MacCompare.app`
-* **DMG Disk Image**: `dist/MacCompare-0.5.0.dmg`
+* **DMG Disk Image**: `dist/MacCompare-0.6.0.dmg`
 
 ---
 
@@ -209,7 +231,7 @@ lipo -info dist/staging/MacCompare.app/Contents/MacOS/mcdiff
 codesign -dv --verbose=4 dist/staging/MacCompare.app
 
 # 3. Mount DMG image
-hdiutil attach dist/MacCompare-0.5.0.dmg
+hdiutil attach dist/MacCompare-0.6.0.dmg
 ```
 
 > **Note on Gatekeeper:**  

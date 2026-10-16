@@ -1,0 +1,351 @@
+﻿<Page
+    x:Class="WinCompare.UI.Views.ThreeWayMergePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- 0: Top Action Bar (Matching Mac Header Bar) -->
+            <RowDefinition Height="40" />
+            <!-- 1: 3-Way Top Pane Split (Local | Base | Remote) -->
+            <RowDefinition Height="58*" />
+            <!-- 2: Splitter -->
+            <RowDefinition Height="1" />
+            <!-- 3: Bottom Merged Result Output -->
+            <RowDefinition Height="42*" />
+        </Grid.RowDefinitions>
+
+        <!-- Top Action Bar -->
+        <Border Grid.Row="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Padding="14,0">
+            <Grid>
+                <!-- Left: Branch Icon + Target File Title -->
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Left">
+                    <FontIcon Glyph="&#xE8D7;" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <TextBlock x:Name="TopFilePathText" Text="未选择合并文件" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Right: Conflict Nav, Auto-resolve, Clear, Save -->
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" HorizontalAlignment="Right">
+                    <!-- 上一个冲突 -->
+                    <Button x:Name="PrevConflictBtn" Click="OnPrevConflictClicked" Height="28" Width="28" Padding="0" CornerRadius="4" ToolTipService.ToolTip="上一个冲突">
+                        <FontIcon Glyph="&#xE76B;" FontSize="10" />
+                    </Button>
+
+                    <!-- 下一个冲突 -->
+                    <Button x:Name="NextConflictBtn" Click="OnNextConflictClicked" Height="28" Width="28" Padding="0" CornerRadius="4" ToolTipService.ToolTip="下一个冲突">
+                        <FontIcon Glyph="&#xE76C;" FontSize="10" />
+                    </Button>
+
+                    <!-- 冲突项 (0 / 0) -->
+                    <TextBlock x:Name="ConflictCountText" Text="冲突项 (0 / 0)" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" Margin="4,0,2,0" />
+
+                    <!-- 细分割线 -->
+                    <Rectangle Width="1" Height="16" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="6,0" />
+
+                    <!-- 自动解决无冲突项 -->
+                    <Button x:Name="AutoResolveBtn" Click="OnAutoResolveClicked" Padding="8,4" CornerRadius="4" Height="28" ToolTipService.ToolTip="自动融合非冲突代码变更">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE70F;" FontSize="11" />
+                            <TextBlock x:Name="AutoResolveText" Text="自动解决无冲突项" FontSize="11" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- 一键清空 -->
+                    <Button x:Name="ClearAllBtn" Click="OnClearAllClicked" Padding="8,4" CornerRadius="4" Height="28" ToolTipService.ToolTip="清空全部合并输入与结果">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE74D;" FontSize="11" />
+                            <TextBlock x:Name="ClearAllText" Text="一键清空" FontSize="11" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- 保存并完成合并 -->
+                    <Button x:Name="SaveMergedBtn" Click="OnSaveMergedClicked" Style="{StaticResource AccentButtonStyle}" Padding="10,4" CornerRadius="4" Height="28" ToolTipService.ToolTip="保存合并结果到文件并完成合并">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE74E;" FontSize="11" />
+                            <TextBlock x:Name="SaveMergedText" Text="保存并完成合并" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 3-Way Top Pane Split (Local | Base | Remote) -->
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="1" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="1" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Column 0: Local Header -->
+            <Border Grid.Row="0" Grid.Column="0" Padding="12,6" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0">
+                        <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center" HorizontalAlignment="Left">
+                            <TextBlock x:Name="LocalTitleText" Text="本地分支 (Local)" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <FontIcon Glyph="&#xE8D7;" FontSize="9" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBlock x:Name="LocalSubText" Text="Local (Current)" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                        </StackPanel>
+                        <Button x:Name="LocalBrowseBtn" HorizontalAlignment="Right" Content="选择..." FontSize="11" Padding="8,2" CornerRadius="4" Height="24" Click="OnPickLocalClicked" />
+                    </Grid>
+                    <StackPanel x:Name="LocalActionsPanel" Grid.Row="1" Orientation="Horizontal" Spacing="4" Margin="0,6,0,2" Visibility="Collapsed">
+                        <Button x:Name="TakeLocalBtn" Content="采纳本地" FontSize="10" Padding="6,2" Height="22" CornerRadius="3" Click="OnTakeLocalClicked" />
+                        <Button x:Name="TakeBothBtn" Content="保留双方" FontSize="10" Padding="6,2" Height="22" CornerRadius="3" Click="OnTakeBothClicked" />
+                        <Button x:Name="TakeRemoteBtn" Content="采纳远端" FontSize="10" Padding="6,2" Height="22" CornerRadius="3" Click="OnTakeRemoteClicked" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Divider 1 -->
+            <Rectangle Grid.Row="0" Grid.Column="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+            <!-- Column 2: Base Header -->
+            <Border Grid.Row="0" Grid.Column="2" Padding="12,6" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0">
+                        <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center" HorizontalAlignment="Left">
+                            <TextBlock x:Name="BaseTitleText" Text="共同祖先 (Base)" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <FontIcon Glyph="&#xE8D7;" FontSize="9" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBlock x:Name="BaseSubText" Text="Base (Ancestor)" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                        </StackPanel>
+                        <Button x:Name="BaseBrowseBtn" HorizontalAlignment="Right" Content="选择..." FontSize="11" Padding="8,2" CornerRadius="4" Height="24" Click="OnPickBaseClicked" />
+                    </Grid>
+                    <Border x:Name="BaseActionsPlaceholder" Grid.Row="1" Height="24" Visibility="Collapsed" />
+                </Grid>
+            </Border>
+
+            <!-- Divider 2 -->
+            <Rectangle Grid.Row="0" Grid.Column="3" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+            <!-- Column 4: Remote Header -->
+            <Border Grid.Row="0" Grid.Column="4" Padding="12,6" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0">
+                        <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center" HorizontalAlignment="Left">
+                            <TextBlock x:Name="RemoteTitleText" Text="远端分支 (Remote)" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <FontIcon Glyph="&#xE8D7;" FontSize="9" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBlock x:Name="RemoteSubText" Text="Remote (Incoming)" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                        </StackPanel>
+                        <Button x:Name="RemoteBrowseBtn" HorizontalAlignment="Right" Content="选择..." FontSize="11" Padding="8,2" CornerRadius="4" Height="24" Click="OnPickRemoteClicked" />
+                    </Grid>
+                    <StackPanel x:Name="RemoteActionsPanel" Grid.Row="1" Orientation="Horizontal" Spacing="4" Margin="0,6,0,2" Visibility="Collapsed">
+                        <Button x:Name="TakeLocalRightBtn" Content="采纳本地" FontSize="10" Padding="6,2" Height="22" CornerRadius="3" Click="OnTakeLocalClicked" />
+                        <Button x:Name="TakeBothRightBtn" Content="保留双方" FontSize="10" Padding="6,2" Height="22" CornerRadius="3" Click="OnTakeBothClicked" />
+                        <Button x:Name="TakeRemoteRightBtn" Content="采纳远端" FontSize="10" Padding="6,2" Height="22" CornerRadius="3" Click="OnTakeRemoteClicked" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Row 1: Content Area -->
+            <!-- 1. Local Empty State -->
+            <Border x:Name="LocalEmptyZone" Grid.Row="1" Grid.Column="0" Background="Transparent" AllowDrop="True" DragOver="OnLocalDragOver" Drop="OnLocalDrop" Visibility="Visible">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                    <FontIcon Glyph="&#xE8F4;" FontSize="32" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
+                    <TextBlock x:Name="LocalEmptyTitle" Text="未选择文件" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                    <Button x:Name="LocalEmptyPickBtn" Content="选择..." FontSize="11" Padding="10,2" CornerRadius="4" Height="24" HorizontalAlignment="Center" Click="OnPickLocalClicked" />
+                </StackPanel>
+            </Border>
+
+            <!-- Empty Divider 1 -->
+            <Rectangle x:Name="EmptyDivider1" Grid.Row="1" Grid.Column="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Visibility="Visible" />
+
+            <!-- 2. Base Empty State -->
+            <Border x:Name="BaseEmptyZone" Grid.Row="1" Grid.Column="2" Background="Transparent" AllowDrop="True" DragOver="OnBaseDragOver" Drop="OnBaseDrop" Visibility="Visible">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                    <FontIcon Glyph="&#xE8F4;" FontSize="32" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
+                    <TextBlock x:Name="BaseEmptyTitle" Text="未选择文件" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                    <Button x:Name="BaseEmptyPickBtn" Content="选择..." FontSize="11" Padding="10,2" CornerRadius="4" Height="24" HorizontalAlignment="Center" Click="OnPickBaseClicked" />
+                </StackPanel>
+            </Border>
+
+            <!-- Empty Divider 2 -->
+            <Rectangle x:Name="EmptyDivider2" Grid.Row="1" Grid.Column="3" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Visibility="Visible" />
+
+            <!-- 3. Remote Empty State -->
+            <Border x:Name="RemoteEmptyZone" Grid.Row="1" Grid.Column="4" Background="Transparent" AllowDrop="True" DragOver="OnRemoteDragOver" Drop="OnRemoteDrop" Visibility="Visible">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                    <FontIcon Glyph="&#xE8F4;" FontSize="32" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
+                    <TextBlock x:Name="RemoteEmptyTitle" Text="未选择文件" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                    <Button x:Name="RemoteEmptyPickBtn" Content="选择..." FontSize="11" Padding="10,2" CornerRadius="4" Height="24" HorizontalAlignment="Center" Click="OnPickRemoteClicked" />
+                </StackPanel>
+            </Border>
+
+            <!-- Synchronized 3-Way Diff ListView (Visible when files loaded) -->
+            <Grid x:Name="MergeListContainer" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Visibility="Collapsed"
+                  Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+                  AllowDrop="True" DragOver="OnDiffContainerDragOver" Drop="OnDiffContainerDrop">
+                <ListView x:Name="MergeListView" SelectionMode="Single" Padding="0"
+                          HorizontalContentAlignment="Stretch"
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                          ScrollViewer.HorizontalScrollMode="Disabled"
+                          AllowDrop="True" DragOver="OnDiffContainerDragOver" Drop="OnDiffContainerDrop">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                            <Setter Property="MinHeight" Value="22" />
+                            <Setter Property="Height" Value="22" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="CornerRadius" Value="0" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Height="22">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="1" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="1" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Column 0: Local Cell -->
+                                <Grid Grid.Column="0" Background="{Binding LocalBgBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="48" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid Grid.Column="0" Background="{ThemeResource SubtleFillColorSecondaryBrush}" Padding="0,0,6,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="14" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding LocalSign}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   FontSize="11" FontWeight="Bold" FontFamily="{StaticResource CodeFontFamily}" Foreground="{Binding LocalFgBrush}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding LocalLineNumText}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                   FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </Grid>
+                                    <TextBlock Grid.Column="1" Text="{Binding LocalText}" VerticalAlignment="Center" Padding="8,0,8,0"
+                                               FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                                </Grid>
+
+                                <!-- Divider 1 -->
+                                <Rectangle Grid.Column="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                                <!-- Column 2: Base Cell -->
+                                <Grid Grid.Column="2" Background="{Binding BaseBgBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="48" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid Grid.Column="0" Background="{ThemeResource SubtleFillColorSecondaryBrush}" Padding="0,0,6,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="14" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding BaseSign}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   FontSize="11" FontWeight="Bold" FontFamily="{StaticResource CodeFontFamily}" Foreground="{Binding BaseFgBrush}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding BaseLineNumText}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                   FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </Grid>
+                                    <TextBlock Grid.Column="1" Text="{Binding BaseText}" VerticalAlignment="Center" Padding="8,0,8,0"
+                                               FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                                </Grid>
+
+                                <!-- Divider 2 -->
+                                <Rectangle Grid.Column="3" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                                <!-- Column 4: Remote Cell -->
+                                <Grid Grid.Column="4" Background="{Binding RemoteBgBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="48" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid Grid.Column="0" Background="{ThemeResource SubtleFillColorSecondaryBrush}" Padding="0,0,6,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="14" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding RemoteSign}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   FontSize="11" FontWeight="Bold" FontFamily="{StaticResource CodeFontFamily}" Foreground="{Binding RemoteFgBrush}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding RemoteLineNumText}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                   FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </Grid>
+                                    <TextBlock Grid.Column="1" Text="{Binding RemoteText}" VerticalAlignment="Center" Padding="8,0,8,0"
+                                               FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                                </Grid>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+
+            <!-- Legacy fallback editors -->
+            <TextBox x:Name="LocalEditor" Visibility="Collapsed" AcceptsReturn="True" />
+            <TextBox x:Name="BaseEditor" Visibility="Collapsed" AcceptsReturn="True" />
+            <TextBox x:Name="RemoteEditor" Visibility="Collapsed" AcceptsReturn="True" />
+        </Grid>
+
+        <!-- Horizontal Splitter (Divider 3) -->
+        <Rectangle Grid.Row="2" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+        <!-- Bottom Merged Result Output -->
+        <Grid Grid.Row="3" Background="{ThemeResource LayerFillColorDefaultBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Merged Output Header -->
+            <Border Grid.Row="0" Padding="14,6" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Left">
+                        <TextBlock x:Name="OutputHeader" Text="合并结果预览" FontWeight="SemiBold" FontSize="12" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                        <TextBlock x:Name="OutputSubHeader" Text="未选择合并文件" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Name="MergeStatusDetail" Text="" FontSize="11" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <Button x:Name="SaveMergedBottomBtn" Click="OnSaveMergedClicked" Style="{StaticResource AccentButtonStyle}" Padding="10,4" CornerRadius="4" Height="28">
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE73E;" FontSize="11" />
+                                <TextBlock x:Name="SaveMergedBottomText" Text="保存并完成合并" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <StackPanel x:Name="ConflictStatusBadge" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center" Visibility="Collapsed">
+                            <FontIcon x:Name="ConflictStatusIcon" Glyph="&#xE7BA;" FontSize="11" Foreground="{ThemeResource StatusModTextBrush}" VerticalAlignment="Center" />
+                            <TextBlock x:Name="ConflictStatusText" Text="" FontSize="11" FontWeight="Medium" Foreground="{ThemeResource StatusModTextBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Merged Output Editor -->
+            <TextBox x:Name="MergedOutputEditor" Grid.Row="1" AcceptsReturn="True" TextWrapping="NoWrap"
+                     FontFamily="{StaticResource CodeFontFamily}" FontSize="12"
+                     ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     BorderThickness="0" Background="Transparent" />
+        </Grid>
+    </Grid>
+</Page>

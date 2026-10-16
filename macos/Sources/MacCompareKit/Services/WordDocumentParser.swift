@@ -682,6 +682,32 @@ public final class WordDocumentParser: Sendable {
                 var mediaItems: [WordMediaItem] = []
                 var fullText = ""
 
+                // Extract pStyle
+                var pStyleVal: String? = nil
+                if let styleElem = try? elem.nodes(forXPath: ".//*[local-name()='pStyle']/@*[local-name()='val']").first {
+                    pStyleVal = styleElem.stringValue
+                }
+
+                var detectedHeadingLevel: Int? = nil
+                if let s = pStyleVal {
+                    let sTrimmed = s.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if sTrimmed.count == 1, let d = Int(sTrimmed), d >= 1 && d <= 6 {
+                        detectedHeadingLevel = d
+                    } else if sTrimmed.count == 2, (sTrimmed.hasPrefix("h") || sTrimmed.hasPrefix("H")), let d = Int(String(sTrimmed.suffix(1))), d >= 1 && d <= 6 {
+                        detectedHeadingLevel = d
+                    } else if sTrimmed.localizedCaseInsensitiveContains("heading") || sTrimmed.localizedCaseInsensitiveContains("标题") {
+                        if let d = sTrimmed.compactMap({ Int(String($0)) }).first, d >= 1 && d <= 6 {
+                            detectedHeadingLevel = d
+                        } else {
+                            detectedHeadingLevel = 1
+                        }
+                    } else if sTrimmed.localizedCaseInsensitiveContains("title") {
+                        detectedHeadingLevel = 1
+                    } else if sTrimmed.localizedCaseInsensitiveContains("subtitle") {
+                        detectedHeadingLevel = 2
+                    }
+                }
+
                 for pChild in elem.children ?? [] {
                     guard let rElem = pChild as? XMLElement, (rElem.localName == "r" || rElem.name == "w:r") else { continue }
                     let rText = extractTextFromElement(rElem)
@@ -805,11 +831,23 @@ public final class WordDocumentParser: Sendable {
                     ))
                 }
 
+                if detectedHeadingLevel == nil {
+                    if WordParagraph.isTextHeadingPattern(fullText) {
+                        detectedHeadingLevel = 2
+                    } else if let maxSz = runs.compactMap(\.fontSize).max() {
+                        if maxSz >= 22 { detectedHeadingLevel = 1 }
+                        else if maxSz >= 18 { detectedHeadingLevel = 2 }
+                        else if maxSz >= 15 && runs.contains(where: { $0.isBold }) { detectedHeadingLevel = 3 }
+                    }
+                }
+
                 if !fullText.isEmpty || !mediaItems.isEmpty {
                     orderedParagraphs.append(WordParagraph(
                         index: pIndex,
+                        headingLevel: detectedHeadingLevel,
                         text: fullText,
                         runs: runs,
+                        styleName: pStyleVal,
                         mediaItems: mediaItems
                     ))
                     pIndex += 1

@@ -1,0 +1,511 @@
+﻿<Page
+    x:Class="WinCompare.UI.Views.ExcelDiffPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /> <!-- Top Toolbar (Row 0) -->
+            <RowDefinition Height="Auto" /> <!-- Filter & Search Bar (Row 1) -->
+            <RowDefinition Height="32" />   <!-- Dual File Header (Row 2) -->
+            <RowDefinition Height="*" />    <!-- Main Viewport / Empty State (Row 3) -->
+            <RowDefinition Height="Auto" /> <!-- Selection Detail Inspector (Row 4) -->
+            <RowDefinition Height="32" />   <!-- Bottom Sheet Tabs & Status Bar (Row 5) -->
+        </Grid.RowDefinitions>
+
+        <!-- 1. Top Toolbar -->
+        <Border Grid.Row="0"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="12,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Left Group: Navigation & Ignore Switches -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <!-- 上一个差异 -->
+                    <Button x:Name="PrevDiffBtn" Click="OnPrevDiffClicked" Padding="8,4" CornerRadius="4" Height="30" ToolTipService.ToolTip="上一个差异 (F7)">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE74A;" FontSize="11" />
+                            <TextBlock x:Name="PrevDiffText" Text="上一个差异" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- 下一个差异 -->
+                    <Button x:Name="NextDiffBtn" Click="OnNextDiffClicked" Padding="8,4" CornerRadius="4" Height="30" ToolTipService.ToolTip="下一个差异 (F8)">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE74B;" FontSize="11" />
+                            <TextBlock x:Name="NextDiffText" Text="下一个差异" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Divider -->
+                    <Rectangle Width="1" Height="16" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="6,0" />
+
+                    <!-- 忽略空白符 Switch -->
+                    <Border x:Name="WhitespaceContainer" CornerRadius="4" Padding="6,2" Background="Transparent"
+                            PointerPressed="OnWhitespaceContainerClicked" ToolTipService.ToolTip="比对时忽略空格和制表符差异">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock x:Name="WhitespaceLabel" Text="忽略空白符" FontSize="12" VerticalAlignment="Center" IsHitTestVisible="False" />
+                            <ToggleSwitch x:Name="WhitespaceSwitch" OffContent="" OnContent="" Toggled="OnDiffOptionsChanged" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 忽略大小写 Switch -->
+                    <Border x:Name="CaseContainer" CornerRadius="4" Padding="6,2" Background="Transparent" Margin="2,0,0,0"
+                            PointerPressed="OnCaseContainerClicked" ToolTipService.ToolTip="比对时忽略字母大小写差异">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock x:Name="CaseLabel" Text="忽略大小写" FontSize="12" VerticalAlignment="Center" IsHitTestVisible="False" />
+                            <ToggleSwitch x:Name="CaseSwitch" OffContent="" OnContent="" Toggled="OnDiffOptionsChanged" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Right Group: Rules, Swap, Refresh, Merge Actions, Clear -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <!-- 比对规则 / 工作表选择 -->
+                    <Button x:Name="RuleSettingsBtn" Padding="8,4" CornerRadius="4" Height="30" ToolTipService.ToolTip="比对规则与工作表切换">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE713;" FontSize="11" />
+                            <TextBlock x:Name="RuleBtnText" Text="比对规则" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Button.Flyout>
+                            <Flyout>
+                                <StackPanel Spacing="10" Width="240" Padding="4">
+                                    <TextBlock Text="选择工作表 (Worksheet)" FontWeight="SemiBold" FontSize="12" />
+                                    <ComboBox x:Name="SheetComboBox" PlaceholderText="选择工作表" SelectionChanged="OnSheetChanged" HorizontalAlignment="Stretch" />
+                                    <Button x:Name="ExportReportBtn" Click="OnExportDiffClicked" HorizontalAlignment="Stretch" Margin="0,6,0,0">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xE78C;" FontSize="12" />
+                                            <TextBlock Text="导出差异报告..." FontSize="12" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+
+                    <!-- 左右对调 -->
+                    <Button x:Name="SwapSidesBtn" Click="OnSwapSidesClicked" Padding="8,4" CornerRadius="4" Height="30" ToolTipService.ToolTip="交换左右两侧表格">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE8EE;" FontSize="11" />
+                            <TextBlock x:Name="SwapSidesText" Text="左右对调" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- 刷新 -->
+                    <Button x:Name="RefreshBtn" Click="OnRefreshClicked" Padding="8,4" CornerRadius="4" Height="30" ToolTipService.ToolTip="重新比对表格">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE72C;" FontSize="11" />
+                            <TextBlock x:Name="RefreshText" Text="刷新" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Divider -->
+                    <Rectangle Width="1" Height="16" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="6,0" />
+
+                    <!-- 采纳左侧 -->
+                    <Button x:Name="TakeLeftBtn" Click="OnTakeLeftClicked" Padding="8,4" CornerRadius="4" Height="30" ToolTipService.ToolTip="采纳左侧内容">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE749;" FontSize="11" />
+                            <TextBlock x:Name="TakeLeftText" Text="采纳左侧" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- 采纳右侧 -->
+                    <Button x:Name="TakeRightBtn" Click="OnTakeRightClicked" Padding="8,4" CornerRadius="4" Height="30" ToolTipService.ToolTip="采纳右侧内容">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE748;" FontSize="11" />
+                            <TextBlock x:Name="TakeRightText" Text="采纳右侧" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Divider -->
+                    <Rectangle Width="1" Height="16" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="6,0" />
+
+                    <!-- 一键清空 -->
+                    <Button x:Name="ClearAllBtn" Click="OnClearAllClicked" Padding="8,4" CornerRadius="4" Height="30" ToolTipService.ToolTip="一键清空表格与比对结果">
+                        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE74D;" FontSize="11" />
+                            <TextBlock x:Name="ClearAllText" Text="一键清空" FontSize="12" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 2. Filter & Search Bar -->
+        <Border Grid.Row="1"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="12,5">
+            <Grid>
+                <!-- Segmented filter buttons on left -->
+                <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                    <Button x:Name="FilterAllBtn" Click="OnFilterAllClicked"
+                            Background="{ThemeResource BrandPrimaryBrush}" Foreground="{ThemeResource TextOnAccentBrush}" BorderThickness="0"
+                            CornerRadius="4" Padding="12,3" Height="26" FontSize="11" FontWeight="SemiBold">
+                        <TextBlock x:Name="FilterAllText" Text="全部" VerticalAlignment="Center" />
+                    </Button>
+                    <Button x:Name="FilterDiffBtn" Click="OnFilterDiffOnlyClicked"
+                            Background="Transparent" BorderThickness="0"
+                            CornerRadius="4" Padding="12,3" Height="26" FontSize="11">
+                        <TextBlock x:Name="FilterDiffText" Text="仅差异" VerticalAlignment="Center" />
+                    </Button>
+                    <Button x:Name="FilterSameBtn" Click="OnFilterSameOnlyClicked"
+                            Background="Transparent" BorderThickness="0"
+                            CornerRadius="4" Padding="12,3" Height="26" FontSize="11">
+                        <TextBlock x:Name="FilterSameText" Text="仅相同" VerticalAlignment="Center" />
+                    </Button>
+                </StackPanel>
+
+                <!-- Search box on right -->
+                <AutoSuggestBox x:Name="ExcelSearchBox" HorizontalAlignment="Right"
+                                PlaceholderText="搜索与过滤单元格..." QueryIcon="Find"
+                                Width="240" Height="28" VerticalAlignment="Center"
+                                TextChanged="OnSearchTextChanged" FontSize="11" />
+            </Grid>
+        </Border>
+
+        <!-- 3. Dual File Headers -->
+        <Border Grid.Row="2" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="1" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Left Excel Header -->
+                <Grid Grid.Column="0" Padding="12,0" Background="Transparent" AllowDrop="True" DragOver="OnLeftExcelDragOver" Drop="OnLeftExcelDrop">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Left">
+                        <FontIcon Glyph="&#xE944;" FontSize="12" Foreground="{ThemeResource ExcelIconBrush}" />
+                        <TextBlock x:Name="LeftExcelHeader" Text="源文件 (左侧)" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="320" />
+                    </StackPanel>
+                    <Button x:Name="LeftBrowseBtn" HorizontalAlignment="Right" Content="选择..." FontSize="11" Padding="8,2" Click="OnPickLeftExcelClicked" CornerRadius="4" Height="24" VerticalAlignment="Center" />
+                </Grid>
+
+                <!-- Center Divider -->
+                <Rectangle Grid.Column="1" Fill="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
+
+                <!-- Right Excel Header -->
+                <Grid Grid.Column="2" Padding="12,0" Background="Transparent" AllowDrop="True" DragOver="OnRightExcelDragOver" Drop="OnRightExcelDrop">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Left">
+                        <FontIcon Glyph="&#xE944;" FontSize="12" Foreground="{ThemeResource ExcelIconBrush}" />
+                        <TextBlock x:Name="RightExcelHeader" Text="目标文件 (右侧)" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="320" />
+                    </StackPanel>
+                    <Button x:Name="RightBrowseBtn" HorizontalAlignment="Right" Content="选择..." FontSize="11" Padding="8,2" Click="OnPickRightExcelClicked" CornerRadius="4" Height="24" VerticalAlignment="Center" />
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- 4. Main Viewport Area (Empty State vs Dual Multi-Column Grid) -->
+        <Grid x:Name="DiffGridContainer" Grid.Row="3" AllowDrop="True" DragOver="OnDiffContainerDragOver" Drop="OnDiffContainerDrop" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="1" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Column 0: Left Container (Empty Drop Zone or Table) -->
+            <Grid Grid.Column="0" AllowDrop="True" DragOver="OnLeftExcelDragOver" Drop="OnLeftExcelDrop" Background="Transparent">
+                <!-- Left Empty Drop Zone -->
+                <Border x:Name="LeftDropZone" Background="Transparent" AllowDrop="True" DragOver="OnLeftExcelDragOver" Drop="OnLeftExcelDrop" Visibility="Visible">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                        <FontIcon Glyph="&#xE8F4;" FontSize="52" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="LeftEmptyTitle" Text="未选择文件" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                        <TextBlock x:Name="LeftEmptyDesc" Text="拖拽文件至此处或点击下方按钮选择" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,6" />
+                        <Button x:Name="LeftPickBtn" Content="选择源文件..." Style="{StaticResource AccentButtonStyle}" CornerRadius="6" Padding="18,8" FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Center" Click="OnPickLeftExcelClicked" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Left Table Pane -->
+                <Grid x:Name="LeftTablePane" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="28" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Left Sticky Header -->
+                    <ScrollViewer x:Name="LeftHeaderScrollViewer" Grid.Row="0"
+                                  HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
+                                  HorizontalScrollMode="Disabled" VerticalScrollMode="Disabled"
+                                  Background="{ThemeResource TableHeaderBgBrush}"
+                                  BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                        <StackPanel x:Name="LeftHeaderPanel" Orientation="Horizontal" />
+                    </ScrollViewer>
+
+                    <!-- Left Table ScrollViewer -->
+                    <ScrollViewer x:Name="LeftTableScrollViewer" Grid.Row="1"
+                                  HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollMode="Enabled" VerticalScrollMode="Enabled"
+                                  ViewChanged="OnLeftScrollViewChanged">
+                        <ItemsControl x:Name="LeftRowsControl">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Height="26" Background="{Binding RowBgBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" PointerPressed="OnRowPointerPressed" Tag="{Binding}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <!-- Row Header Cell (#) -->
+                                            <Border Width="44" BorderThickness="0,0,1,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{Binding RowNumberBgBrush}">
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <Ellipse Width="6" Height="6" Fill="{Binding DotBrush}" Margin="0,0,4,0" Visibility="{Binding DotVisibility}" />
+                                                    <TextBlock Text="{Binding DisplayRowNumber}" FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{Binding RowNumberFgBrush}" />
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Data Cells -->
+                                            <ItemsControl ItemsSource="{Binding Cells}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Width="{Binding Width}" Height="26" BorderThickness="0,0,1,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{Binding BgBrush}" Padding="8,4">
+                                                            <TextBlock Text="{Binding Text}" FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{Binding TextBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+
+                <!-- Left Loading Overlay -->
+                <Grid x:Name="LeftLoadingOverlay" Visibility="Collapsed" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                        <ProgressRing IsActive="True" Width="36" Height="36" />
+                        <TextBlock x:Name="LeftLoadingText" Text="正在读取源工作表..." FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+            <!-- Center Divider -->
+            <Rectangle Grid.Column="1" Fill="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
+
+            <!-- Column 2: Right Container (Empty Drop Zone or Table) -->
+            <Grid Grid.Column="2" AllowDrop="True" DragOver="OnRightExcelDragOver" Drop="OnRightExcelDrop" Background="Transparent">
+                <!-- Right Empty Drop Zone -->
+                <Border x:Name="RightDropZone" Background="Transparent" AllowDrop="True" DragOver="OnRightExcelDragOver" Drop="OnRightExcelDrop" Visibility="Visible">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                        <FontIcon Glyph="&#xE8F4;" FontSize="52" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="RightEmptyTitle" Text="未选择文件" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                        <TextBlock x:Name="RightEmptyDesc" Text="拖拽文件至此处或点击下方按钮选择" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,0,0,6" />
+                        <Button x:Name="RightPickBtn" Content="选择目标文件..." Style="{StaticResource AccentButtonStyle}" CornerRadius="6" Padding="18,8" FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Center" Click="OnPickRightExcelClicked" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Right Table Pane -->
+                <Grid x:Name="RightTablePane" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="28" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Right Sticky Header -->
+                    <ScrollViewer x:Name="RightHeaderScrollViewer" Grid.Row="0"
+                                  HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
+                                  HorizontalScrollMode="Disabled" VerticalScrollMode="Disabled"
+                                  Background="{ThemeResource TableHeaderBgBrush}"
+                                  BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                        <StackPanel x:Name="RightHeaderPanel" Orientation="Horizontal" />
+                    </ScrollViewer>
+
+                    <!-- Right Table ScrollViewer -->
+                    <ScrollViewer x:Name="RightTableScrollViewer" Grid.Row="1"
+                                  HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollMode="Enabled" VerticalScrollMode="Enabled"
+                                  ViewChanged="OnRightScrollViewChanged">
+                        <ItemsControl x:Name="RightRowsControl">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Height="26" Background="{Binding RowBgBrush}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" PointerPressed="OnRowPointerPressed" Tag="{Binding}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <!-- Row Header Cell (#) -->
+                                            <Border Width="44" BorderThickness="0,0,1,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{Binding RowNumberBgBrush}">
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <Ellipse Width="6" Height="6" Fill="{Binding DotBrush}" Margin="0,0,4,0" Visibility="{Binding DotVisibility}" />
+                                                    <TextBlock Text="{Binding DisplayRowNumber}" FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{Binding RowNumberFgBrush}" />
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Data Cells -->
+                                            <ItemsControl ItemsSource="{Binding Cells}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Width="{Binding Width}" Height="26" BorderThickness="0,0,1,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{Binding BgBrush}" Padding="8,4">
+                                                            <TextBlock Text="{Binding Text}" FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{Binding TextBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+
+                <!-- Right Loading Overlay -->
+                <Grid x:Name="RightLoadingOverlay" Visibility="Collapsed" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                        <ProgressRing IsActive="True" Width="36" Height="36" />
+                        <TextBlock x:Name="RightLoadingText" Text="正在读取目标工作表..." FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+            <!-- Dual Compare Loading Overlay -->
+            <Grid x:Name="DualCompareLoadingOverlay" Grid.Column="0" Grid.ColumnSpan="3" Visibility="Collapsed" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                    <ProgressRing IsActive="True" Width="36" Height="36" />
+                    <TextBlock x:Name="DualLeftLoadingText" Text="正在对比表格..." FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <!-- 5. Selection Detail Inspector (Matching Mac Image 1) -->
+        <Border x:Name="InspectorContainer" Grid.Row="4"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                Visibility="Collapsed">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Inspector Header Bar -->
+                <Border Grid.Row="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        Padding="14,0">
+                    <Grid VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE721;" FontSize="12" Foreground="{ThemeResource AccentFillColorDefaultBrush}" />
+                            <TextBlock x:Name="InspectorTitle" Text="当前行明细检查器" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" />
+                            <TextBlock x:Name="InspectorSubtitleText" Text="(Left: Row 3 ↔ Right: Row 3)" FontSize="10" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <!-- Diff Type Badge -->
+                        <Border x:Name="InspectorBadgeBorder" Grid.Column="2" CornerRadius="4" Padding="6,2" Background="Transparent">
+                            <TextBlock x:Name="InspectorBadgeText" FontSize="10" FontWeight="Bold" />
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Horizontal Scrollable Column Comparison Cards -->
+                <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                              HorizontalScrollMode="Enabled" VerticalScrollMode="Disabled"
+                              Padding="14,8">
+                    <ItemsControl x:Name="InspectorCardsControl">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="10" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Width="160" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                        BorderThickness="1" BorderBrush="{Binding BorderBrush}"
+                                        CornerRadius="6" Padding="8,6">
+                                    <StackPanel Spacing="5">
+                                        <!-- Card Header: Col Letter + Col Name + Diff Dot -->
+                                        <Grid>
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <TextBlock Text="{Binding ColumnLetter}" FontSize="10" FontWeight="Bold" FontFamily="{StaticResource CodeFontFamily}" Foreground="{Binding ColLetterFgBrush}" />
+                                                <TextBlock Text="{Binding HeaderName}" FontSize="10" FontWeight="SemiBold" Foreground="{Binding HeaderNameFgBrush}" TextTrimming="CharacterEllipsis" MaxWidth="110" />
+                                            </StackPanel>
+                                            <Ellipse HorizontalAlignment="Right" Width="6" Height="6" Fill="{ThemeResource StatusModTextBrush}" Visibility="{Binding DiffDotVisibility}" />
+                                        </Grid>
+
+                                        <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                                        <!-- Left Value (L:) -->
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="18" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="L:" FontSize="10" FontWeight="Bold" FontFamily="{StaticResource CodeFontFamily}" Foreground="{Binding LabelFgBrush}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding LeftDisplayValue}" FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{Binding LeftFgBrush}" TextTrimming="CharacterEllipsis" MaxLines="2" />
+                                        </Grid>
+
+                                        <!-- Right Value (R:) -->
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="18" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="R:" FontSize="10" FontWeight="Bold" FontFamily="{StaticResource CodeFontFamily}" Foreground="{Binding LabelFgBrush}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding RightDisplayValue}" FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{Binding RightFgBrush}" TextTrimming="CharacterEllipsis" MaxLines="2" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- 6. Bottom Sheet Tabs & Status Bar -->
+        <Border Grid.Row="5" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                Padding="8,0,14,0">
+            <Grid Height="32">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Left: Sheet Tab Pills -->
+                <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                              HorizontalScrollMode="Enabled" VerticalScrollMode="Disabled">
+                    <StackPanel x:Name="SheetTabsPanel" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" />
+                </ScrollViewer>
+
+                <!-- Right: Diff Stats & Load Time -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <StackPanel x:Name="ExcelStatsPanel" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE7BA;" FontSize="11" Foreground="{ThemeResource StatusModTextBrush}" VerticalAlignment="Center" />
+                            <TextBlock x:Name="ExcelDiffCountText" Text="0 处差异行" FontSize="11" FontWeight="Medium" Foreground="{ThemeResource StatusModTextBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Text="•" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                        <TextBlock x:Name="ExcelSameCountText" Text="0 行相同" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                        <TextBlock Text="•" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock x:Name="ExcelLoadTimeText" Text="耗时: 0.00s" FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Hidden legacy elements for compatibility -->
+                <TextBlock x:Name="StatusInfoText" Visibility="Collapsed" />
+                <TextBlock x:Name="DiffBadge" Visibility="Collapsed" />
+                <TextBlock x:Name="DualRightLoadingText" Visibility="Collapsed" />
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

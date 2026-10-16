@@ -38,6 +38,8 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case clearAll
     case confirmClearTitle
     case confirmClearMessage
+    case confirmClearHistoryTitle
+    case confirmClearHistoryMessage
 
     // Menu Headers
     case fileMenu
@@ -62,6 +64,7 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case copy
     case paste
     case delete
+    case deleteRecord
     case selectAll
     case showTabBar
     case showAllTabs
@@ -360,6 +363,20 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case aiFeatureHelpTitle
     case aiFeatureHelpSummary
     case aiFeatureHelpDetail
+
+    // File Validation & Mode Switch Dialog
+    case dialogNoticeTitle
+    case suggestSwitchModeTitle
+    case errFolderDroppedInFileMode
+    case errFileDroppedInFolderMode
+    case errWordInvalidFormat
+    case errExcelInvalidFormat
+    case errBinaryFileNotSupported
+    case suggestSwitchToWord
+    case suggestSwitchToExcel
+    case suggestSwitchToFolder
+    case btnSwitchMode
+    case btnGotIt
 }
 
 @MainActor
@@ -614,6 +631,8 @@ public final class LanguageManager {
         .clearAll: "Clear All",
         .confirmClearTitle: "Clear All Content?",
         .confirmClearMessage: "This will unload all loaded files/folders and reset comparison state in this tab. Unsaved changes will be lost.",
+        .confirmClearHistoryTitle: "Clear All Recent History?",
+        .confirmClearHistoryMessage: "This will remove all recent comparison records from the welcome screen. Your files will not be affected.",
         .fileMenu: "File",
         .editMenu: "Edit",
         .viewMenu: "View",
@@ -632,6 +651,7 @@ public final class LanguageManager {
         .copy: "Copy",
         .paste: "Paste",
         .delete: "Delete",
+        .deleteRecord: "Delete this record",
         .selectAll: "Select All",
         .showTabBar: "Show Tab Bar",
         .showAllTabs: "Show All Tabs",
@@ -903,7 +923,21 @@ public final class LanguageManager {
         .aiDownloadFailed: "Download failed",
         .aiFeatureHelpTitle: "Local Offline AI Assistant (Google Gemma 3)",
         .aiFeatureHelpSummary: "On-device Gemma 3 lightweight model, 100% offline and privacy-preserving, instantly summarizing diff intent and generating commit messages.",
-        .aiFeatureHelpDetail: "• Intent Analysis: Click '✨ AI Summary' on the toolbar in text diff mode to analyze code logic, extract key modifications, and generate Conventional Commits messages.\n• High-Speed Download: Easily download models in-place on first use via public ModelScope CDN mirrors without any API keys or logins required.\n• Smart Memory Management: Configure model libraries in 'Settings → AI Engine', with support for auto-releasing VRAM after 5 minutes of inactivity."
+        .aiFeatureHelpDetail: "• Intent Analysis: Click '✨ AI Summary' on the toolbar in text diff mode to analyze code logic, extract key modifications, and generate Conventional Commits messages.\n• High-Speed Download: Easily download models in-place on first use via public ModelScope CDN mirrors without any API keys or logins required.\n• Smart Memory Management: Configure model libraries in 'Settings → AI Engine', with support for auto-releasing VRAM after 5 minutes of inactivity.",
+
+        // File Validation & Mode Switch
+        .dialogNoticeTitle: "Notice",
+        .suggestSwitchModeTitle: "Switch Comparison Mode",
+        .errFolderDroppedInFileMode: "The selected item is a folder, but the current mode only supports comparing single files.\nWould you like to switch to 'Folder Diff' mode?",
+        .errFileDroppedInFolderMode: "Current mode is 'Folder Diff'. Please choose or drop a folder.\nTo compare individual files, please use Text, Word, or Excel Diff mode.",
+        .errWordInvalidFormat: "Word Diff mode only supports .docx, .doc, and .rtf formats.\nUnsupported file format detected.",
+        .errExcelInvalidFormat: "Excel Diff mode only supports .xlsx, .xls, .csv, and .tsv formats.\nUnsupported file format detected.",
+        .errBinaryFileNotSupported: "The selected file is a binary file (e.g. executable, archive, or media) and cannot be compared as text.",
+        .suggestSwitchToWord: "The selected file is a Word document. Text mode cannot parse its layout and formatting.\nWould you like to switch to 'Word Diff' mode?",
+        .suggestSwitchToExcel: "The selected file is a spreadsheet. We recommend using the dedicated multi-sheet engine.\nWould you like to switch to 'Excel Diff' mode?",
+        .suggestSwitchToFolder: "The selected item is a folder. Would you like to switch to 'Folder Diff' mode?",
+        .btnSwitchMode: "Switch Mode & Open",
+        .btnGotIt: "Got It"
     ]
 
     private let zhHansDictionary: [L10nKey: String] = [
@@ -913,6 +947,8 @@ public final class LanguageManager {
         .clearAll: "一键清空",
         .confirmClearTitle: "确认清空全部内容？",
         .confirmClearMessage: "此操作将卸载当前标签页中已加载的所有文件/文件夹并重置对比状态，未保存的修改将会丢失。",
+        .confirmClearHistoryTitle: "确认清除全部历史记录？",
+        .confirmClearHistoryMessage: "此操作将清空欢迎页面中记录的所有最近比对历史，已保存的文件不受影响。",
         .fileMenu: "文件",
         .editMenu: "编辑",
         .viewMenu: "显示",
@@ -931,6 +967,7 @@ public final class LanguageManager {
         .copy: "拷贝",
         .paste: "粘贴",
         .delete: "删除",
+        .deleteRecord: "删除此记录",
         .selectAll: "全选",
         .showTabBar: "显示标签页栏",
         .showAllTabs: "显示所有标签页",
@@ -1202,7 +1239,21 @@ public final class LanguageManager {
         .aiDownloadFailed: "下载失败",
         .aiFeatureHelpTitle: "本地离线 AI 助手 (Google Gemma 3)",
         .aiFeatureHelpSummary: "内置 Gemma 3 端侧轻量模型，100% 本地运行保护隐私，一键提炼变更意图并生成 Commit 提交说明。",
-        .aiFeatureHelpDetail: "• 变更意图解析：在文本比对界面点击工具栏「✨ AI 摘要」，可一键分析差异逻辑，提取核心变动点，并生成标准 Conventional Commits 格式。\n• 免登录高速下载：首次使用点击即可就地下载离线模型（已接入 ModelScope 高速 CDN 镜像，无需 API Key 或账号）。\n• 显存智能调度：在「设置 → AI 引擎」中可配置模型库，支持闲置 5 分钟后自动释放显存，零后台内存打扰。"
+        .aiFeatureHelpDetail: "• 变更意图解析：在文本比对界面点击工具栏「✨ AI 摘要」，可一键分析差异逻辑，提取核心变动点，并生成标准 Conventional Commits 格式。\n• 免登录高速下载：首次使用点击即可就地下载离线模型（已接入 ModelScope 高速 CDN 镜像，无需 API Key 或账号）。\n• 显存智能调度：在「设置 → AI 引擎」中可配置模型库，支持闲置 5 分钟后自动释放显存，零后台内存打扰。",
+
+        // File Validation & Mode Switch
+        .dialogNoticeTitle: "格式提示",
+        .suggestSwitchModeTitle: "推荐切换对比模式",
+        .errFolderDroppedInFileMode: "您选择的是文件夹，当前模式仅支持对比单个文件。\n是否切换至【文件夹对比】模式？",
+        .errFileDroppedInFolderMode: "当前为【文件夹对比】模式，请拖入或选择文件夹。\n若需比对单个文件，请选择文本、Word 或 Excel 对比模式。",
+        .errWordInvalidFormat: "Word 对比模式仅支持 .docx、.doc 及 .rtf 格式。\n检测到不兼容的文件格式。",
+        .errExcelInvalidFormat: "Excel 对比模式仅支持 .xlsx、.xls、.csv 及 .tsv 格式。\n检测到不兼容的文件格式。",
+        .errBinaryFileNotSupported: "所选文件为二进制文件（如程序、压缩包或媒体），文本对比模式无法对其进行有效比对。",
+        .suggestSwitchToWord: "检测到您选择的是 Word 文档，文本模式无法解析其排版与格式。\n是否切换至【Word 对比】模式？",
+        .suggestSwitchToExcel: "检测到您选择的是表格文件，建议使用多工作表对比引擎。\n是否切换至【Excel 对比】模式？",
+        .suggestSwitchToFolder: "检测到所选项目为文件夹，是否切换至【文件夹对比】模式？",
+        .btnSwitchMode: "切换模式并打开",
+        .btnGotIt: "我知道了"
     ]
 
     private let jaDictionary: [L10nKey: String] = [
@@ -1212,6 +1263,8 @@ public final class LanguageManager {
         .clearAll: "すべてクリア",
         .confirmClearTitle: "すべての内容をクリアしますか？",
         .confirmClearMessage: "このタブで読み込まれたすべてのファイル/フォルダをクリアし、比較状態をリセットします。未保存の変更は失われます。",
+        .confirmClearHistoryTitle: "すべての比較履歴を消去しますか？",
+        .confirmClearHistoryMessage: "ようこそ画面の最近の比較履歴がすべて削除されます。保存されたファイルには影響しません。",
         .fileMenu: "ファイル",
         .editMenu: "編集",
         .viewMenu: "表示",
@@ -1230,6 +1283,7 @@ public final class LanguageManager {
         .copy: "コピー",
         .paste: "ペースト",
         .delete: "削除",
+        .deleteRecord: "この記録を削除",
         .selectAll: "すべてを選択",
         .showTabBar: "タブバーを表示",
         .showAllTabs: "すべてのタブを表示",
@@ -1501,6 +1555,20 @@ public final class LanguageManager {
         .aiDownloadFailed: "ダウンロードに失敗しました",
         .aiFeatureHelpTitle: "ローカルオフライン AI アシスタント (Google Gemma 3)",
         .aiFeatureHelpSummary: "オンデバイス Gemma 3 モデルを搭載。100% ローカル処理でプライバシーを保護し、変更意図の要約とコミットメッセージを即座に生成。",
-        .aiFeatureHelpDetail: "• 変更意図の解析：テキスト比較ツールバーの「✨ AI 要約」をクリックすると、コード論理を解析し、主要な変更点を抽出して Conventional Commits 形式で生成します。\n• 高速ダウンロード：初回利用時は ModelScope の高速 CDN からログイン不要で直接ダウンロード可能です。\n• スマートなメモリ管理：「設定 → AI エンジン」でモデルを管理可能。5分間アイドル時に自動で VRAM を解放し、システムリソースを圧迫しません。"
+        .aiFeatureHelpDetail: "• 変更意図の解析：テキスト比較ツールバーの「✨ AI 要約」をクリックすると、コード論理を解析し、主要な変更点を抽出して Conventional Commits 形式で生成します。\n• 高速ダウンロード：初回利用時は ModelScope の高速 CDN からログイン不要で直接ダウンロード可能です。\n• スマートなメモリ管理：「設定 → AI エンジン」でモデルを管理可能。5分間アイドル時に自動で VRAM を解放し、システムリソースを圧迫しません。",
+
+        // File Validation & Mode Switch
+        .dialogNoticeTitle: "お知らせ",
+        .suggestSwitchModeTitle: "比較モードの切り替え",
+        .errFolderDroppedInFileMode: "選択された項目はフォルダーですが、現在のモードは単一ファイルのみ対応しています。\n「フォルダー比較」モードに切り替えますか？",
+        .errFileDroppedInFolderMode: "現在は「フォルダー比較」モードです。フォルダーを選択またはドロップしてください。\n個別のファイルを比較するには、テキスト、Word、または Excel 比較モードを使用してください。",
+        .errWordInvalidFormat: "Word 比較モードは .docx、.doc、.rtf 形式のみ対応しています。\n対応していないファイル形式です。",
+        .errExcelInvalidFormat: "Excel 比較モードは .xlsx、.xls、.csv、.tsv 形式のみ対応しています。\n対応していないファイル形式です。",
+        .errBinaryFileNotSupported: "選択されたファイルはバイナリファイル（実行可能ファイル、アーカイブ、メディアなど）であり、テキストとして比較できません。",
+        .suggestSwitchToWord: "選択されたファイルは Word 文書です。テキストモードではレイアウトを解析できません。\n「Word 比較」モードに切り替えますか？",
+        .suggestSwitchToExcel: "選択されたファイルはスプレッドシートです。専用の表比較エンジンの使用を推奨します。\n「Excel 比較」モードに切り替えますか？",
+        .suggestSwitchToFolder: "選択された項目はフォルダーです。「フォルダー比較」モードに切り替えますか？",
+        .btnSwitchMode: "切り替えて開く",
+        .btnGotIt: "了解"
     ]
 }

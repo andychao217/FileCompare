@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <CodePage>65001</CodePage>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+</Project>

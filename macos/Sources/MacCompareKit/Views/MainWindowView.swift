@@ -50,15 +50,15 @@ public struct MainWindowView: View {
             if let activeTab = tabManager.activeTab {
                 switch activeTab.type {
                 case .textDiff:
-                    TwoWayDiffView(viewModel: tabManager.textDiffViewModel(for: activeTab.id))
+                    TwoWayDiffView(viewModel: tabManager.textDiffViewModel(for: activeTab.id), tabManager: tabManager)
                 case .wordDiff:
-                    WordDiffView(viewModel: tabManager.wordDiffViewModel(for: activeTab.id))
+                    WordDiffView(viewModel: tabManager.wordDiffViewModel(for: activeTab.id), tabManager: tabManager)
                 case .excelDiff:
-                    ExcelDiffView(viewModel: tabManager.excelDiffViewModel(for: activeTab.id))
+                    ExcelDiffView(viewModel: tabManager.excelDiffViewModel(for: activeTab.id), tabManager: tabManager)
                 case .folderDiff:
-                    FolderDiffView(viewModel: tabManager.folderDiffViewModel(for: activeTab.id))
+                    FolderDiffView(viewModel: tabManager.folderDiffViewModel(for: activeTab.id), tabManager: tabManager)
                 case .threeWayMerge:
-                    ThreeWayMergeView(viewModel: tabManager.threeWayMergeViewModel(for: activeTab.id))
+                    ThreeWayMergeView(viewModel: tabManager.threeWayMergeViewModel(for: activeTab.id), tabManager: tabManager)
                 }
             } else {
                 WelcomeHomeView(tabManager: tabManager)

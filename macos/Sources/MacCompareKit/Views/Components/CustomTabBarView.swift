@@ -36,7 +36,7 @@ public struct CustomTabBarView: View {
                             .font(.system(size: 11, weight: .medium))
                             .foregroundColor(isSelected ? .accentColor : .secondary)
 
-                        Text(tab.displayTitle)
+                        Text(tabManager.tabTitle(for: tab))
                             .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
                             .foregroundColor(isSelected ? .primary : .secondary)
                             .lineLimit(1)

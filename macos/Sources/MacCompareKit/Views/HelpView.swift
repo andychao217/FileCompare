@@ -12,7 +12,7 @@ public struct HelpView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.5.0"
+        UpdateCheckerService.shared.currentVersion
     }
 
     public var body: some View {

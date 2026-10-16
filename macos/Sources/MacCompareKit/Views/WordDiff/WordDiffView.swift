@@ -4,12 +4,21 @@ import UniformTypeIdentifiers
 
 public struct WordDiffView: View {
     @Bindable public var viewModel: WordDiffViewModel
+    public var tabManager: TabManager?
     @State private var isLeftDropTargeted: Bool = false
     @State private var isRightDropTargeted: Bool = false
     @State private var showOutlineSidebar: Bool = true
+    @State private var sidebarWidth: CGFloat = 220
+    @State private var dragStartWidth: CGFloat? = nil
+    @State private var isDraggingDivider: Bool = false
+    @State private var isHoveringDivider: Bool = false
+    @State private var validationResult: ValidationResult?
+    private let minSidebarWidth: CGFloat = 220
+    private let maxSidebarWidth: CGFloat = 440
 
-    public init(viewModel: WordDiffViewModel) {
+    public init(viewModel: WordDiffViewModel, tabManager: TabManager? = nil) {
         self.viewModel = viewModel
+        self.tabManager = tabManager
     }
 
     public var body: some View {
@@ -22,12 +31,12 @@ public struct WordDiffView: View {
                 // Main Content Area (Sidebar + Canvas)
                 HStack(spacing: 0) {
                     if showOutlineSidebar && viewModel.viewMode == .structuredContent {
-                        WordOutlineSidebarView(viewModel: viewModel) {
+                        WordOutlineSidebarView(viewModel: viewModel, sidebarWidth: sidebarWidth) {
                             withAnimation(.easeInOut(duration: 0.15)) {
                                 showOutlineSidebar = false
                             }
                         }
-                        Divider()
+                        sidebarDivider
                     }
 
                     // View Switcher based on viewMode
@@ -82,8 +91,56 @@ public struct WordDiffView: View {
                     .background(RoundedRectangle(cornerRadius: 10).fill(Color(nsColor: .windowBackgroundColor)))
                     .shadow(radius: 10)
                 }
+            } else if let result = validationResult {
+                FileValidationDialogView(
+                    result: result,
+                    onDismiss: {
+                        self.validationResult = nil
+                    },
+                    onSwitchMode: { mode, url in
+                        self.validationResult = nil
+                        tabManager?.openSingleTarget(url: url, mode: mode)
+                    }
+                )
             }
         }
+    }
+
+    private var sidebarDivider: some View {
+        ZStack {
+            Rectangle()
+                .fill(Color(nsColor: .separatorColor))
+                .frame(width: 1)
+        }
+        .frame(width: 8)
+        .contentShape(Rectangle())
+        .onHover { isHovered in
+            isHoveringDivider = isHovered
+            if isHovered {
+                NSCursor.resizeLeftRight.push()
+            } else if !isDraggingDivider {
+                NSCursor.pop()
+            }
+        }
+        .gesture(
+            DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                .onChanged { value in
+                    if dragStartWidth == nil {
+                        dragStartWidth = sidebarWidth
+                        isDraggingDivider = true
+                    }
+                    let base = dragStartWidth ?? sidebarWidth
+                    let newWidth = base + value.translation.width
+                    sidebarWidth = min(max(minSidebarWidth, newWidth), maxSidebarWidth)
+                }
+                .onEnded { _ in
+                    dragStartWidth = nil
+                    isDraggingDivider = false
+                    if !isHoveringDivider {
+                        NSCursor.pop()
+                    }
+                }
+        )
     }
 
     // MARK: - Status Bar
@@ -175,15 +232,16 @@ public struct WordDiffView: View {
     }
 
     private func handleDrop(providers: [NSItemProvider], isLeft: Bool) -> Bool {
-        for provider in providers {
-            _ = provider.loadObject(ofClass: URL.self) { url, _ in
-                guard let url = url else { return }
-                let ext = url.pathExtension.lowercased()
-                guard ["docx", "doc", "rtf"].contains(ext) else { return }
-
-                DispatchQueue.main.async {
-                    self.viewModel.loadSingleFile(from: url, isLeft: isLeft)
+        guard let provider = providers.first else { return false }
+        provider.loadFileURL { url in
+            guard let url = url else { return }
+            DispatchQueue.main.async {
+                let check = FileFormatValidator.validate(url: url, expectedMode: .wordDiff)
+                if !check.isValid {
+                    self.validationResult = check
+                    return
                 }
+                self.viewModel.loadSingleFile(from: url, isLeft: isLeft)
             }
         }
         return true

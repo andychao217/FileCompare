@@ -13,6 +13,11 @@ if command -v xcrun &> /dev/null; then
     SWIFT_BIN="xcrun swift"
 fi
 
+# Prioritize rustup in ~/.cargo/bin
+if [ -d "${HOME}/.cargo/bin" ]; then
+    export PATH="${HOME}/.cargo/bin:${PATH}"
+fi
+
 # Build Rust static library if cargo is available
 if command -v cargo &> /dev/null && [ -f "${SCRIPT_DIR}/build_universal_lib.sh" ]; then
     echo "=== Building Rust Universal Core ==="
