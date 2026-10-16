@@ -79,7 +79,7 @@ Write-Host "Found Rust Core DLL at: $rustDll" -ForegroundColor Green
 Write-Host "`n[2/5] Publishing WinCompare.UI (win-$Platform)..." -ForegroundColor Yellow
 $uiProj = Join-Path $winDir "src\WinCompare.UI\WinCompare.UI.csproj"
 dotnet publish $uiProj -c Release -r "win-$Platform" --self-contained true `
-    /p:Platform=$Platform /p:Version=$Version /p:PublishSingleFile=false /p:DebugType=None /p:DebugSymbols=false -o $stageDir
+    /p:Platform=$Platform /p:Version=$Version /p:PublishSingleFile=false /p:DebugType=portable /p:DebugSymbols=true -o $stageDir
 
 if ($LASTEXITCODE -ne 0) {
     Write-Error "WinCompare.UI publish failed!"
@@ -96,7 +96,7 @@ Write-Host "`n[3/5] Publishing wincmp CLI tool..." -ForegroundColor Yellow
 $cliProj = Join-Path $winDir "src\WinCompare.Cli\WinCompare.Cli.csproj"
 $cliTempDir = Join-Path $distDir "temp_wincmp"
 dotnet publish $cliProj -c Release -r "win-$Platform" --self-contained true `
-    /p:Platform=$Platform /p:Version=$Version /p:DebugType=None /p:DebugSymbols=false -o $cliTempDir
+    /p:Platform=$Platform /p:Version=$Version /p:DebugType=portable /p:DebugSymbols=true -o $cliTempDir
 
 if ($LASTEXITCODE -ne 0) {
     Write-Error "WinCompare.Cli publish failed!"

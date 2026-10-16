@@ -402,14 +402,33 @@ public partial class App : Application
     private static ConsoleCtrlDelegate? _consoleCtrlHandler;
     private static UnhandledExceptionFilterDelegate? _nativeFilterDelegate;
 
+    private static readonly object _logLock = new();
+
     public static void SafeAppendLog(string filename, string content)
     {
         try
         {
-            string logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WinCompare", "logs");
-            Directory.CreateDirectory(logDir);
-            string logPath = Path.Combine(logDir, filename);
-            File.AppendAllText(logPath, content);
+            lock (_logLock)
+            {
+                string logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WinCompare", "logs");
+                Directory.CreateDirectory(logDir);
+                string logPath = Path.Combine(logDir, filename);
+                for (int attempt = 0; attempt < 5; attempt++)
+                {
+                    try
+                    {
+                        using var fs = new FileStream(logPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 4096, FileOptions.WriteThrough);
+                        using var writer = new StreamWriter(fs, Encoding.UTF8);
+                        writer.Write(content);
+                        writer.Flush();
+                        break;
+                    }
+                    catch (IOException)
+                    {
+                        System.Threading.Thread.Sleep(10);
+                    }
+                }
+            }
         }
         catch { }
     }

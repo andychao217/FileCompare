@@ -743,17 +743,6 @@ public sealed partial class MainWindow : Window
             return existing;
         }
 
-        if (_currentWelcomeTab != null)
-        {
-            return _currentWelcomeTab;
-        }
-
-        if (WelcomeTabItem != null)
-        {
-            _currentWelcomeTab = WelcomeTabItem;
-            return WelcomeTabItem;
-        }
-
         _currentWelcomeTab = CreateWelcomeTabItem();
         return _currentWelcomeTab;
     }
@@ -982,23 +971,36 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private bool _isClosingTab = false;
+
     public void CloseTab(TabViewItem tab)
     {
         if (tab == null) return;
-        if (!MainTabView.TabItems.Contains(tab)) return;
+        if (_isClosingTab)
+        {
+            App.Log("[TabManager] 警告: 检测到 CloseTab 重入调用，已被安全拦截。");
+            return;
+        }
 
-        // 立即中止任何正在进行的标签拖拽追踪
-        TabDragManager.Reset();
-
-        var otherTabs = MainTabView.TabItems.OfType<TabViewItem>()
-            .Where(t => !ReferenceEquals(t, tab))
-            .ToList();
-
-        // 窗口中唯一标签且是欢迎标签时，不允许关闭
-        if (otherTabs.Count == 0 && IsWelcomeTab(tab)) return;
-
+        _isClosingTab = true;
         try
         {
+            // 立即中止任何正在进行的标签拖拽追踪
+            TabDragManager.Reset();
+
+            if (!MainTabView.TabItems.Contains(tab))
+            {
+                App.Log($"[TabManager] 标签已不在 TabItems 中: '{tab.Header}'");
+                return;
+            }
+
+            var otherTabs = MainTabView.TabItems.OfType<TabViewItem>()
+                .Where(t => !ReferenceEquals(t, tab))
+                .ToList();
+
+            // 窗口中唯一标签且是欢迎标签时，不允许关闭
+            if (otherTabs.Count == 0 && IsWelcomeTab(tab)) return;
+
             App.Log($"[TabManager] 收到关闭标签请求: '{tab.Header}' (Tag类型: {tab.Tag?.GetType().Name})");
 
             // 保存要清理的页面对象引用，待 TabView 集合与焦点调整完成后再安全清理
@@ -1028,6 +1030,7 @@ public sealed partial class MainWindow : Window
             // 2. 关闭对比 Tab
             var otherComparisonTabs = otherTabs.Where(t => !IsWelcomeTab(t)).ToList();
             bool isLastComparisonTab = otherComparisonTabs.Count == 0;
+            App.Log($"[TabManager] otherComparisonTabs.Count={otherComparisonTabs.Count}, isLastComparisonTab={isLastComparisonTab}");
 
             if (isLastComparisonTab)
             {
@@ -1084,6 +1087,10 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             App.LogFatalError("MainWindow.CloseTab", ex);
+        }
+        finally
+        {
+            _isClosingTab = false;
         }
     }
 
@@ -1185,10 +1192,15 @@ public sealed partial class MainWindow : Window
         return item;
     }
 
+    private bool _isShowingWelcomeTab = false;
+
     public void ShowWelcomeTab()
     {
+        if (_isShowingWelcomeTab) return;
+        _isShowingWelcomeTab = true;
         try
         {
+            App.Log("[TabManager] ShowWelcomeTab starting...");
             // 1. 获取或清理多余欢迎 Tab，确保当前至多只有一个欢迎 Tab
             var allWelcomeTabs = MainTabView.TabItems.OfType<TabViewItem>().Where(IsWelcomeTab).ToList();
             TabViewItem welcomeTab;
@@ -1205,7 +1217,10 @@ public sealed partial class MainWindow : Window
             else
             {
                 welcomeTab = GetOrCreateWelcomeTab();
-                MainTabView.TabItems.Add(welcomeTab);
+                if (!MainTabView.TabItems.Contains(welcomeTab))
+                {
+                    MainTabView.TabItems.Add(welcomeTab);
+                }
             }
 
             AttachTabDragHandlers(welcomeTab);
@@ -1219,10 +1234,15 @@ public sealed partial class MainWindow : Window
             ShowContent(_welcomePage);
             _welcomePage?.UpdateRecentHistoryVisibility();
             SetWindowTitle("WinCompare");
+            App.Log("[TabManager] ShowWelcomeTab completed successfully.");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"ShowWelcomeTab exception: {ex}");
+            App.LogFatalError("MainWindow.ShowWelcomeTab", ex);
+        }
+        finally
+        {
+            _isShowingWelcomeTab = false;
         }
     }
 
@@ -1266,20 +1286,25 @@ public sealed partial class MainWindow : Window
 
     public void AddTab(TabViewItem tab)
     {
+        App.Log($"[MainWindow] AddTab starting for '{tab?.Header}'");
         tab.MaxWidth = 220;
         AttachTabDragHandlers(tab);
         
         // 先添加新对比 Tab，确保集合项数永不降至 0
         MainTabView.TabItems.Add(tab);
+        App.Log("[MainWindow] AddTab: tab added to TabItems");
         
         // 然后安全移除欢迎 Tab
         RemoveWelcomeTab();
+        App.Log("[MainWindow] AddTab: RemoveWelcomeTab completed");
 
         MainTabView.SelectedItem = tab;
 
         if (tab.Tag is UIElement element)
         {
+            App.Log("[MainWindow] AddTab: Calling ShowContent");
             ShowContent(element);
+            App.Log("[MainWindow] AddTab: ShowContent completed");
         }
         if (tab.Header is string titleText)
         {
@@ -1288,6 +1313,7 @@ public sealed partial class MainWindow : Window
 
         // 新建 Tab 平滑展开 (180ms)
         AnimateTabExpand(tab);
+        App.Log("[MainWindow] AddTab completed successfully.");
     }
 
     public void UpdateTabHeaderForPage(UIElement page, string? newHeader = null)
@@ -1365,8 +1391,16 @@ public sealed partial class MainWindow : Window
         return vm;
     }
 
+    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<TabViewItem, object> _dragHandledTabs = new();
+
     public void AttachTabDragHandlers(TabViewItem tabItem)
     {
+        if (tabItem == null) return;
+        lock (_dragHandledTabs)
+        {
+            if (_dragHandledTabs.TryGetValue(tabItem, out _)) return;
+            _dragHandledTabs.Add(tabItem, true);
+        }
         // 关键点：TabViewItem 内部会消费 PointerPressed 导致普通 += 无法接收，必须 handledEventsToo = true
         tabItem.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(OnTabItemPointerPressed), true);
     }
@@ -2003,6 +2037,7 @@ public sealed partial class MainWindow : Window
         {
             App.Log($"[MainWindow] OpenWordDiffTab starting (left={leftPath}, right={rightPath})");
             var page = new WordDiffPage();
+            App.Log("[MainWindow] OpenWordDiffTab: WordDiffPage instance created");
             if (!string.IsNullOrEmpty(leftPath) || !string.IsNullOrEmpty(rightPath))
             {
                 page.LoadFiles(leftPath, rightPath);
@@ -2017,6 +2052,7 @@ public sealed partial class MainWindow : Window
                 IconSource = new FontIconSource { Glyph = "\uE8A5" },
                 Tag = page
             };
+            App.Log("[MainWindow] OpenWordDiffTab calling AddTab");
             AddTab(tab);
             App.Log("[MainWindow] OpenWordDiffTab completed successfully.");
         }

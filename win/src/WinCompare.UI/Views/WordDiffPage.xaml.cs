@@ -54,13 +54,17 @@ public sealed partial class WordDiffPage : Page, IDisposable
     {
         try
         {
+            App.Log("[WordDiffPage] Constructor starting before InitializeComponent");
             this.InitializeComponent();
+            App.Log("[WordDiffPage] InitializeComponent completed successfully");
             this.Loaded += (s, e) => App.Log("[WordDiffPage] Page.Loaded event fired.");
             if (ParagraphsList != null)
             {
                 ParagraphsList.Loaded += (s, e) => App.Log("[WordDiffPage] ParagraphsList.Loaded event fired.");
             }
+            App.Log("[WordDiffPage] Calling UpdateLocalization");
             UpdateLocalization();
+            App.Log("[WordDiffPage] UpdateLocalization completed");
             LanguageManager.Instance.LanguageChanged += UpdateLocalization;
 
             this.ActualThemeChanged += (s, e) =>
@@ -88,7 +92,9 @@ public sealed partial class WordDiffPage : Page, IDisposable
             };
 
             _isInitialized = true;
+            App.Log("[WordDiffPage] Calling UpdateWorkspaceVisibility");
             UpdateWorkspaceVisibility();
+            App.Log("[WordDiffPage] Constructor finished successfully");
         }
         catch (Exception ex)
         {
