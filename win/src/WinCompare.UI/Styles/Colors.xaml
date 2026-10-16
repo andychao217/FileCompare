@@ -59,6 +59,9 @@
             <SolidColorBrush x:Key="WarningBorderBrush" Color="#40F59E0B" />
 
             <!-- Brand & Semantic Accents (Dark Theme) -->
+            <SolidColorBrush x:Key="BrandPrimaryBrush" Color="#3B82F6" />
+            <SolidColorBrush x:Key="BrandPrimaryHoverBrush" Color="#60A5FA" />
+            <SolidColorBrush x:Key="BrandPrimaryPressedBrush" Color="#2563EB" />
             <SolidColorBrush x:Key="BrandInfoBrush" Color="#60A5FA" />
             <SolidColorBrush x:Key="BrandInfoSubtleBgBrush" Color="#253B82F6" />
 
@@ -197,6 +200,9 @@
             <SolidColorBrush x:Key="WarningBorderBrush" Color="#40F59E0B" />
 
             <!-- Brand & Semantic Accents (Light Theme) -->
+            <SolidColorBrush x:Key="BrandPrimaryBrush" Color="#2563EB" />
+            <SolidColorBrush x:Key="BrandPrimaryHoverBrush" Color="#1D4ED8" />
+            <SolidColorBrush x:Key="BrandPrimaryPressedBrush" Color="#1E40AF" />
             <SolidColorBrush x:Key="BrandInfoBrush" Color="#2563EB" />
             <SolidColorBrush x:Key="BrandInfoSubtleBgBrush" Color="#152563EB" />
 

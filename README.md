@@ -2,11 +2,12 @@
 
 <p align="center">
   <b>A modern, high-performance native file & directory comparison and merge suite for macOS & Windows 11.</b><br>
-  <b>专为 macOS 与 Windows 11 双生态深度打造的高性能、现代原生文件与目录对比合并工具。</b>
+  <b>专为 macOS 与 Windows 11 双生态深度打造的高性能、现代原生文件与目录对比合并工具。</b><br>
+  <b>macOS および Windows 11 向けに設計された高性能なネイティブ差分比較＆マージツール。</b>
 </p>
 
 <p align="center">
-  <a href="#english">English</a> • <a href="#简体中文">简体中文</a>
+  <a href="#english">English</a> • <a href="#简体中文">简体中文</a> • <a href="#日本語">日本語</a>
 </p>
 
 <p align="center">
@@ -285,3 +286,122 @@ FileCompare/
 ### 📄 开源许可证
 
 本项目基于 [MIT License](LICENSE) 许可证开源。
+
+---
+
+<a name="日本語"></a>
+## 日本語
+
+> **FileCompare** は、**macOS** と **Windows 11** の両エコシステム向けに純正ネイティブ設計された、現代的で高性能なファイル＆ディレクトリ差分比較・マージツールスイートです。macOS ネイティブ版 **MacCompare**（SwiftUI / AppKit）と Windows 11 ネイティブ版 **WinCompare**（WinUI 3 / Windows App SDK）で構成されています。両クライアントは **Rust 2024** で書かれた共通の高スループット差分計算コアを搭載し、ミリ秒級の比較速度とアルゴリズムの 100% 完全な整合性を実現しています。
+
+### 🌟 両端ネイティブ技術スタック全景
+
+| プラットフォーム | ネイティブ UI | アーキテクチャ | パッケージ＆配布形態 | CLI ツール |
+| :--- | :--- | :--- | :--- | :--- |
+| 🍏 **MacCompare** | SwiftUI + AppKit ネイティブ最適化 | Universal Binary 2（Apple Silicon + Intel） | DMG イメージ、ZIP ポータブル版、Homebrew Tap | `mcdiff` |
+| 🪟 **WinCompare** | WinUI 3 + Fluent Design マイカ外観 | Windows 11 / 10（`x64` + `ARM64`） | WiX ネイティブ MSI インストーラー、ZIP 便携版 | `wincmp` |
+| ⚡ **共通コア** | Rust 2024 高スループット Workspace | ネイティブ静的ライブラリ / DLL | ゼロコピー C-ABI FFI 呼び出し | C-ABI / P-Invoke |
+
+---
+
+### 🌟 主な機能一覧
+
+- **🤖 オンデバイス・クラウド双模 AI アシスタント**：
+  - **100% オンデバイス推論**：Google Gemma 3（1B 高速版 & 4B 高精度版）を統合し、完全オフラインでコード外部流出ゼロの安全なプライベート推論を実行可能。
+  - **クラウド＆ローカル Ollama 連携**：DeepSeek、OpenAI、ローカル/LAN Ollama（`qwen2.5-coder`、`llama3.2` など）のアダプターを標準搭載し、ワンクリックで接続テストと遅延測定が可能。
+  - **変更意図の自動要約**：ペア差分を解析し、「一行の修正目的」と変数名・変更内容を整理した「要点リスト」を即座に生成。
+  - **規約準拠の Commit メッセージ自動生成**：Conventional Commits 形式（`feat(core): ...`, `fix(ui): ...`）のコミットメッセージを自動生成し、ワンクリックでクリップボードにコピー。
+- **⚡ Rust 高速コア＆デュアルエンジンアーキテクチャ**：
+  - **Myers & Token LCS アルゴリズム (`diff-core`)**：行単位差分、インライン文字ハイライト、Git 3方向マージ競合解決をミリ秒級で高速処理。
+  - **大規模スプレッドシートエンジン (`excel-diff-core`)**：`calamine` と `memmap2` によるゼロコピーメモリマッピング、`ahash` 64ビット行ハッシュによる差分なし行の瞬間スキップ、視口ストリーミングページング（メモリ消費 30〜60MB 程度）。
+  - **マルチスレッド並列ディレクトリスキャン (`fs-scanner`)**：`rayon` 並列イテレータとハードウェア加速 `crc32fast` による超高速フォルダ比較・同期。
+- **📊 Excel・スプレッドシート構造化比較 (.xlsx / .xlsb / .xls / .csv / .tsv)**：
+  - 複数シートのタブ切り替え、ピクセル同期スクロール、主キー列 Hash Join 照合、セル内文字単位差分ハイライト、数値浮動小数点許容誤差フィルタ (`|v1 - v2| <= tolerance`)。
+- **📄 Word 文書構造化全要素比較 (.docx / .doc)**：
+  - 段落リッチテキスト書式（文字サイズ、太字、斜体、下線、文字色）、埋め込み表グリッドのセル単位差分追跡、メディア添付ファイルの SHA-256 指紋比較、見出し（H1〜H6）アウトラインナビゲーション。
+- **📁 ミリ秒級フォルダ比較＆同期**：
+  - タイムスタンプ/サイズ高速チェックと詳細 CRC32 ハッシュ比較、Dry-Run プレビュー確認による安全な双方向同期。
+- **🔀 Git 3方向競合マージ (3-Way Merge)**：
+  - Local vs Base vs Remote の 3 カラム表示、非競合箇所の自動統合、ワンクリック競合解決。
+- **🏠 ウェルカムホーム＆履歴管理**：
+  - 2x2 黄金比ランチャー、最近の比較履歴の一括復元、左右独立ドラッグ＆ドロップゾーン、タブの高速巡回切り替え。
+- **⌨️ ターミナル開発者エコシステム＆Git 統合**：
+  - `mcdiff` (macOS) および `wincmp` (Windows) を内蔵し、`git difftool` / `git mergetool` として即座に利用可能。
+- **📦 純正パッケージング＆自動更新**：
+  - **macOS**：DMG イメージ、ZIP、Homebrew Tap (`brew install andychao217/tap/maccompare`)。
+  - **Windows**：WiX v4/v5 MSI インストーラー（デスクトップ・スタートメニューのショートカット作成、システム `PATH` 登録）およびポータブル ZIP。
+  - **アプリ内自動更新**：多言語リリースノート自動判別と各プラットフォーム向けの即時ダウンロード更新。
+
+---
+
+### 📸 ソフトウェア画面プレビュー (UI Preview)
+
+#### 1. Windows 11 ネイティブ版 (WinUI 3 & Fluent デザイン)
+
+| ホーム | テキスト比較＆AI 要約 | Excel スプレッドシート比較 |
+| :---: | :---: | :---: |
+| ![Win11 ホーム](docs/assets/win/welcome_home_dark_ui.png) | ![Win11 テキスト比較](docs/assets/win/text_diff_ai_dark_ui.png) | ![Win11 表比較](docs/assets/win/excel_diff_dark_ui.png) |
+
+| Word 文書比較 | Git 3方向マージ | フォルダ高速比較＆同期 |
+| :---: | :---: | :---: |
+| ![Win11 Word 比较](docs/assets/win/word_diff_dark_ui.png) | ![Win11 3方向マージ](docs/assets/win/three_way_merge_dark_ui.png) | ![Win11 フォルダ比較](docs/assets/win/folder_diff_dark_ui.png) |
+
+#### 2. macOS ネイティブ版 (SwiftUI & AppKit)
+
+| ホーム | テキスト比較＆AI 要約 | Excel スプレッドシート比較 |
+| :---: | :---: | :---: |
+| ![Mac ホーム](docs/assets/macos/welcome_home_dark_ui.png) | ![Mac テキスト比較](docs/assets/macos/text_diff_ai_dark_ui.png) | ![Mac 表比較](docs/assets/macos/excel_diff_dark_ui.png) |
+
+| Word 文書比較 | Git 3方向マージ | フォルダ高速比較＆同期 |
+| :---: | :---: | :---: |
+| ![Mac Word 比較](docs/assets/macos/word_diff_dark_ui.png) | ![Mac 3方向マージ](docs/assets/macos/three_way_merge_ui.jpg) | ![Mac フォルダ比較](docs/assets/macos/folder_diff_dark_ui.png) |
+
+---
+
+### 🚀 クイックスタート
+
+#### macOS のインストール
+- **Homebrew 経由（推奨）**:
+  ```bash
+  brew install andychao217/tap/maccompare
+  ```
+- **DMG ダウンロード**: [GitHub Releases](https://github.com/andychao217/FileCompare/releases/latest) から `MacCompare-<version>.dmg` をダウンロード。
+
+#### Windows のインストール
+- **MSI インストーラー（推奨）**: [GitHub Releases](https://github.com/andychao217/FileCompare/releases/latest) から `WinCompare-<version>-windows-x64-Setup.msi` をダウンロードしてウィザード実行。デスクトップ・スタートメニューにショートカットが生成され、ターミナルから `wincmp` が使用可能になります。
+- **ポータブル版 ZIP**: `WinCompare-<version>-windows-x64.zip` を展開してそのまま実行。
+
+#### Git 差分・マージツールの設定
+
+- **macOS 設定**:
+  ```bash
+  git config --global diff.tool maccompare
+  git config --global difftool.maccompare.cmd 'mcdiff "$LOCAL" "$REMOTE"'
+  git config --global merge.tool maccompare
+  git config --global mergetool.maccompare.cmd 'mcdiff "$LOCAL" "$REMOTE" -b "$BASE" -m "$MERGED"'
+  ```
+
+- **Windows 設定**:
+  ```cmd
+  git config --global diff.tool wincmp
+  git config --global difftool.wincmp.cmd "wincmp diff \"$LOCAL\" \"$REMOTE\""
+  git config --global merge.tool wincmp
+  git config --global mergetool.wincmp.cmd "wincmp merge \"$LOCAL\" \"$BASE\" \"$REMOTE\" \"$MERGED\""
+  ```
+
+#### ローカルでの一括パッケージング
+
+- **macOS (Universal DMG 生成)**:
+  ```bash
+  bash scripts/package_dmg.sh 0.6.0
+  ```
+- **Windows (WiX MSI & ZIP 生成)**:
+  ```powershell
+  .\win\scripts\package_win.ps1 -Version 0.6.0
+  ```
+
+---
+
+### 📄 ライセンス
+
+本プロジェクトは [MIT License](LICENSE) のもとでオープンソースとして公開されています。

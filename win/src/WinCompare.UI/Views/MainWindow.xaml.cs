@@ -648,6 +648,7 @@ public sealed partial class MainWindow : Window
     {
         try
         {
+            TabDragManager.Reset();
             var tabToClose = args.Tab ?? args.Item as TabViewItem;
             if (tabToClose == null) return;
 
@@ -986,6 +987,9 @@ public sealed partial class MainWindow : Window
         if (tab == null) return;
         if (!MainTabView.TabItems.Contains(tab)) return;
 
+        // 立即中止任何正在进行的标签拖拽追踪
+        TabDragManager.Reset();
+
         var otherTabs = MainTabView.TabItems.OfType<TabViewItem>()
             .Where(t => !ReferenceEquals(t, tab))
             .ToList();
@@ -996,6 +1000,9 @@ public sealed partial class MainWindow : Window
         try
         {
             App.Log($"[TabManager] 收到关闭标签请求: '{tab.Header}' (Tag类型: {tab.Tag?.GetType().Name})");
+
+            // 保存要清理的页面对象引用，待 TabView 集合与焦点调整完成后再安全清理
+            var pageElement = tab.Tag as UIElement;
 
             // 1. 如果关闭的是欢迎 Tab（因为存在其他对比 Tab，所以允许关闭并切回对比）
             if (IsWelcomeTab(tab))
@@ -1022,42 +1029,15 @@ public sealed partial class MainWindow : Window
             var otherComparisonTabs = otherTabs.Where(t => !IsWelcomeTab(t)).ToList();
             bool isLastComparisonTab = otherComparisonTabs.Count == 0;
 
-            // 先卸载并安全清理关联的视图元素，防止在视觉树上被析构
-            if (tab.Tag is UIElement element)
-            {
-                tab.Tag = null;
-                element.Visibility = Visibility.Collapsed;
-                element.Opacity = 0.0;
-                element.IsHitTestVisible = false;
-
-                if (TabContentGrid.Children.Contains(element))
-                {
-                    TabContentGrid.Children.Remove(element);
-                }
-
-                if (element is IDisposable disposable)
-                {
-                    try { disposable.Dispose(); } catch { }
-                }
-            }
-
             if (isLastComparisonTab)
             {
                 App.Log("[TabManager] 当前为最后一个对比标签，准备回退至欢迎页...");
-                try
-                {
-                    if (this.Content is FrameworkElement root)
-                    {
-                        root.Focus(FocusState.Programmatic);
-                    }
-                }
-                catch { }
 
-                // 从 TabItems 中移除被关闭的标签
-                MainTabView.TabItems.Remove(tab);
-
-                // 显示欢迎标签页
+                // 核心关键：先显示并选中欢迎页，确保 TabItems 集合中始终至少有 1 个可用标签，绝对不降至 0！
                 ShowWelcomeTab();
+
+                // 然后从 TabItems 中安全移除已关闭的标签
+                MainTabView.TabItems.Remove(tab);
 
                 App.Log("[TabManager] 最后一个对比标签已关闭，已平稳回到欢迎页。");
             }
@@ -1065,20 +1045,40 @@ public sealed partial class MainWindow : Window
             {
                 App.Log($"[TabManager] 多标签状态关闭标签，当前总标签数: {MainTabView.TabItems.Count}");
                 bool isSelected = ReferenceEquals(MainTabView.SelectedItem, tab);
-                int closingIndex = MainTabView.TabItems.IndexOf(tab);
 
+                // 若关闭的是当前选中的 Tab，先平稳切到相邻 Tab
                 if (isSelected)
                 {
+                    int closingIndex = MainTabView.TabItems.IndexOf(tab);
                     int targetIndex = closingIndex > 0 ? closingIndex - 1 : closingIndex + 1;
                     if (targetIndex >= 0 && targetIndex < MainTabView.TabItems.Count && !ReferenceEquals(MainTabView.TabItems[targetIndex], tab))
                     {
-                        MainTabView.SelectedIndex = targetIndex;
+                        MainTabView.SelectedItem = MainTabView.TabItems[targetIndex];
                     }
                 }
 
                 MainTabView.TabItems.Remove(tab);
                 EnsureValidTabSelection();
                 App.Log($"[TabManager] 标签已关闭，剩余标签数: {MainTabView.TabItems.Count}");
+            }
+
+            // 在从 TabItems 成功移除并平稳切走焦点与选中态后，再安全卸载视图元素与释放资源
+            if (pageElement != null)
+            {
+                tab.Tag = null;
+                pageElement.Visibility = Visibility.Collapsed;
+                pageElement.Opacity = 0.0;
+                pageElement.IsHitTestVisible = false;
+
+                if (TabContentGrid.Children.Contains(pageElement))
+                {
+                    TabContentGrid.Children.Remove(pageElement);
+                }
+
+                if (pageElement is IDisposable disposable)
+                {
+                    try { disposable.Dispose(); } catch { }
+                }
             }
         }
         catch (Exception ex)
@@ -1375,13 +1375,18 @@ public sealed partial class MainWindow : Window
     {
         if (sender is not TabViewItem tabItem) return;
 
-        // 如果点击的是关闭按钮，让底层处理关闭，不启动拖拽追踪
+        // 如果点击的是关闭按钮或其内部元素，让原生底层处理关闭，严禁启动拖拽追踪
         if (e.OriginalSource is DependencyObject dep)
         {
             DependencyObject? cur = dep;
             while (cur != null && cur != tabItem)
             {
-                if (cur is Button btn && (btn.Name == "CloseButton" || btn.Content is SymbolIcon))
+                if (cur is Button)
+                {
+                    return;
+                }
+                if (cur is FrameworkElement fe && !string.IsNullOrEmpty(fe.Name) &&
+                    fe.Name.Contains("Close", StringComparison.OrdinalIgnoreCase))
                 {
                     return;
                 }

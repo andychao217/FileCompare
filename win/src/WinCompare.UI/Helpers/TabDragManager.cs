@@ -99,7 +99,10 @@ public static class TabDragManager
         {
             MainWindow.HideAllGhosts();
             sourceWin.SetTabPlaceholderState(tabItem, false);
-            sourceWin.SelectTab(tabItem);
+            if (sourceWin.MainTabView.TabItems.Contains(tabItem))
+            {
+                sourceWin.SelectTab(tabItem);
+            }
             Reset();
             return;
         }

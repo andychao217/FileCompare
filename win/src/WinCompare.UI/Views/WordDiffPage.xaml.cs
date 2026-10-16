@@ -234,7 +234,7 @@ public sealed partial class WordDiffPage : Page, IDisposable
             if (RightSingleListView != null) RightSingleListView.Visibility = Visibility.Collapsed;
 
             if (OutlineEmptyState != null) OutlineEmptyState.Visibility = Visibility.Visible;
-            if (OutlineTree != null) OutlineTree.Visibility = Visibility.Collapsed;
+            if (OutlineList != null) OutlineList.Visibility = Visibility.Collapsed;
             if (OutlineCountBadge != null) OutlineCountBadge.Text = "0";
 
             if (StatusBarText != null) StatusBarText.Text = LanguageManager.Instance.Text("notCompared");
@@ -512,8 +512,7 @@ public sealed partial class WordDiffPage : Page, IDisposable
 
     private void BuildOutlineTree()
     {
-        if (OutlineTree == null) return;
-        OutlineTree.RootNodes.Clear();
+        if (OutlineList == null) return;
 
         var headings = _leftDoc?.Paragraphs.Where(p => p.IsHeading).ToList() ?? new();
         if (headings.Count == 0 && _rightDoc != null)
@@ -524,20 +523,21 @@ public sealed partial class WordDiffPage : Page, IDisposable
         if (headings.Count == 0)
         {
             if (OutlineEmptyState != null) OutlineEmptyState.Visibility = Visibility.Visible;
-            if (OutlineTree != null) OutlineTree.Visibility = Visibility.Collapsed;
+            if (OutlineList != null)
+            {
+                OutlineList.Visibility = Visibility.Collapsed;
+                OutlineList.ItemsSource = null;
+            }
             if (OutlineCountBadge != null) OutlineCountBadge.Text = "0";
             return;
         }
 
         if (OutlineEmptyState != null) OutlineEmptyState.Visibility = Visibility.Collapsed;
-        if (OutlineTree != null) OutlineTree.Visibility = Visibility.Visible;
+        if (OutlineList != null) OutlineList.Visibility = Visibility.Visible;
         if (OutlineCountBadge != null) OutlineCountBadge.Text = headings.Count.ToString();
 
-        foreach (var h in headings)
-        {
-            var node = new TreeViewNode { Content = new OutlineHeadingItem { Title = h.Text, Index = h.Index } };
-            OutlineTree?.RootNodes.Add(node);
-        }
+        var items = headings.Select(h => new OutlineHeadingItem { Title = h.Text, Index = h.Index }).ToList();
+        OutlineList.ItemsSource = items;
     }
 
     private void BuildParagraphDiff()
@@ -894,9 +894,9 @@ public sealed partial class WordDiffPage : Page, IDisposable
         ApplyParagraphFilter();
     }
 
-    private void OnOutlineItemInvoked(TreeView sender, TreeViewItemInvokedEventArgs args)
+    private void OnOutlineItemClicked(object sender, ItemClickEventArgs args)
     {
-        if (args.InvokedItem is TreeViewNode node && node.Content is OutlineHeadingItem item)
+        if (args.ClickedItem is OutlineHeadingItem item)
         {
             bool hasBoth = !string.IsNullOrEmpty(_leftPath) && !string.IsNullOrEmpty(_rightPath);
             if (hasBoth)
@@ -967,7 +967,7 @@ public sealed partial class WordDiffPage : Page, IDisposable
         if (ParagraphsList != null) ParagraphsList.ItemsSource = null;
         if (LeftSingleListView != null) LeftSingleListView.ItemsSource = null;
         if (RightSingleListView != null) RightSingleListView.ItemsSource = null;
-        if (OutlineTree != null) OutlineTree.RootNodes.Clear();
+        if (OutlineList != null) OutlineList.ItemsSource = null;
 
         if (LeftDocTitle != null) LeftDocTitle.Text = LanguageManager.Instance.Text("pickSourceFile");
         if (LeftDocSubtitle != null) LeftDocSubtitle.Text = LanguageManager.Instance.Text("noFileSelected");
@@ -2105,9 +2105,9 @@ public sealed partial class WordDiffPage : Page, IDisposable
             {
                 RightSingleListView.ItemsSource = null;
             }
-            if (OutlineTree != null)
+            if (OutlineList != null)
             {
-                OutlineTree.RootNodes.Clear();
+                OutlineList.ItemsSource = null;
             }
 
             // 2. Clean background data collections without touching UI state

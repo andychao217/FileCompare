@@ -409,6 +409,15 @@ public partial class App : Application
 
             try
             {
+                string logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WinCompare", "logs");
+                Directory.CreateDirectory(logDir);
+                string logPath = Path.Combine(logDir, "app.log");
+                File.AppendAllText(logPath, line + Environment.NewLine);
+            }
+            catch { }
+
+            try
+            {
                 File.AppendAllText("crash_debug.log", line + Environment.NewLine);
             }
             catch { }
