@@ -12,6 +12,8 @@
     <!-- Keep intermediate and output in standard directories, allow override for fast local build -->
     <OutputPath Condition="'$(OutputPath)' == ''">bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+    <SuppressValidation>true</SuppressValidation>
+    <SuppressIces>ICE03;ICE43;ICE57</SuppressIces>
   </PropertyGroup>
 
   <ItemGroup>

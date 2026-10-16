@@ -35,43 +35,18 @@
 
     <!-- Components -->
     <DirectoryRef Id="INSTALLFOLDER">
-      <!-- Main GUI Executable with Desktop & Start Menu Shortcuts -->
+      <!-- Main GUI Executable -->
       <Component Id="MainExecutable" Guid="*">
         <File Id="WinCompareUIExe"
               Source="$(var.PublishDir)\WinCompare.UI.exe"
-              KeyPath="yes">
-          <!-- Start Menu Shortcut -->
-          <Shortcut Id="StartMenuShortcut"
-                    Directory="ApplicationProgramsFolder"
-                    Name="WinCompare"
-                    Description="WinUI 3 Native File Comparison and Merge Tool"
-                    WorkingDirectory="INSTALLFOLDER"
-                    Icon="AppIcon.ico"
-                    Advertise="no" />
-          <!-- Desktop Shortcut -->
-          <Shortcut Id="DesktopShortcut"
-                    Directory="DesktopFolder"
-                    Name="WinCompare"
-                    Description="WinUI 3 Native File Comparison and Merge Tool"
-                    WorkingDirectory="INSTALLFOLDER"
-                    Icon="AppIcon.ico"
-                    Advertise="no" />
-        </File>
+              KeyPath="yes" />
       </Component>
 
-      <!-- Optional CLI Tool (wincmp) Shortcut & PATH Environment Variable -->
+      <!-- Optional CLI Tool (wincmp) & PATH Environment Variable -->
       <Component Id="CliExecutable" Guid="*">
         <File Id="WinCmpExe"
               Source="$(var.PublishDir)\wincmp.exe"
-              KeyPath="yes">
-          <Shortcut Id="CliStartMenuShortcut"
-                    Directory="ApplicationProgramsFolder"
-                    Name="WinCompare CLI (wincmp)"
-                    Description="Terminal Git Diff and Merge Tool"
-                    WorkingDirectory="INSTALLFOLDER"
-                    Icon="AppIcon.ico"
-                    Advertise="no" />
-        </File>
+              KeyPath="yes" />
         <!-- Append INSTALLFOLDER to system PATH so 'wincmp' is available anywhere in terminal -->
         <Environment Id="PATH"
                      Name="PATH"
@@ -81,7 +56,6 @@
                      Action="set"
                      System="yes" />
       </Component>
-
     </DirectoryRef>
 
     <!-- Published Files Harvesting into a ComponentGroup -->
@@ -93,9 +67,31 @@
       </Files>
     </ComponentGroup>
 
-    <!-- Start Menu Directory Cleanup on Uninstall -->
+    <!-- Start Menu & Desktop Shortcuts with HKCU KeyPath (Resolves ICE43 & ICE57) -->
     <DirectoryRef Id="ApplicationProgramsFolder">
-      <Component Id="ApplicationShortcutCleanup" Guid="*">
+      <Component Id="ApplicationShortcuts" Guid="*">
+        <!-- Start Menu Shortcut -->
+        <Shortcut Id="StartMenuShortcut"
+                  Name="WinCompare"
+                  Description="WinUI 3 Native File Comparison and Merge Tool"
+                  Target="[INSTALLFOLDER]WinCompare.UI.exe"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="AppIcon.ico" />
+        <!-- Desktop Shortcut -->
+        <Shortcut Id="DesktopShortcut"
+                  Directory="DesktopFolder"
+                  Name="WinCompare"
+                  Description="WinUI 3 Native File Comparison and Merge Tool"
+                  Target="[INSTALLFOLDER]WinCompare.UI.exe"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="AppIcon.ico" />
+        <!-- CLI Start Menu Shortcut -->
+        <Shortcut Id="CliStartMenuShortcut"
+                  Name="WinCompare CLI (wincmp)"
+                  Description="Terminal Git Diff and Merge Tool"
+                  Target="[INSTALLFOLDER]wincmp.exe"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="AppIcon.ico" />
         <RemoveFolder Id="CleanUpProgramMenuFolder" On="uninstall" />
         <RegistryValue Root="HKCU" Key="Software\WinCompare" Name="installed" Type="integer" Value="1" KeyPath="yes" />
       </Component>
@@ -105,7 +101,7 @@
     <Feature Id="MainFeature" Title="WinCompare Application" Level="1">
       <ComponentRef Id="MainExecutable" />
       <ComponentRef Id="CliExecutable" />
-      <ComponentRef Id="ApplicationShortcutCleanup" />
+      <ComponentRef Id="ApplicationShortcuts" />
       <ComponentGroupRef Id="AppHarvestedFiles" />
     </Feature>
 

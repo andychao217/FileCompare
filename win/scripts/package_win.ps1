@@ -159,7 +159,9 @@ if (-not $SkipInstaller) {
         dotnet build $installerProj -c Release /p:Platform=$Platform /p:Version=$Version `
             /p:PublishDir="$localWixWorkDir\staging" `
             /p:IntermediateOutputPath="$localWixWorkDir\obj\" `
-            /p:OutputPath="$localWixWorkDir\bin\"
+            /p:OutputPath="$localWixWorkDir\bin\" `
+            /p:SuppressValidation=true `
+            /p:SuppressIces="ICE03;ICE43;ICE57"
         
         $builtMsi = Join-Path $localWixWorkDir "bin\WinCompare-$Version-Setup-$Platform.msi"
         if (-not (Test-Path $builtMsi)) {

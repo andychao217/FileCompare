@@ -1,4 +1,4 @@
-# WinCompare (Windows 11 Native Edition)
+﻿# WinCompare (Windows 11 Native Edition)
 
 <p align="center">
   <b>基于 Rust 高性能比对内核与微软官方 WinUI 3 (Windows App SDK) 打造的 Windows 11 原生文件比对与三向合并工具。</b><br>
