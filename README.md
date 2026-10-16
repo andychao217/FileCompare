@@ -70,7 +70,11 @@
 
 | Welcome Hub | Fine-Grained Text Diff & AI Summary | Excel Spreadsheet Diff |
 | :---: | :---: | :---: |
-| ![Win11 Welcome](docs/assets/win/win11_welcome_home_ui.jpg) | ![Win11 Text Diff](docs/assets/win/win11_text_diff_ui.jpg) | ![Win11 Excel Diff](docs/assets/win/win11_excel_diff_ui.jpg) |
+| ![Win11 Welcome](docs/assets/win/welcome_home_dark_ui.png) | ![Win11 Text Diff](docs/assets/win/text_diff_ai_dark_ui.png) | ![Win11 Excel Diff](docs/assets/win/excel_diff_dark_ui.png) |
+
+| Word Document Diff | Git 3-Way Conflict Merge | Folder Fast Diff & Sync |
+| :---: | :---: | :---: |
+| ![Win11 Word Diff](docs/assets/win/word_diff_dark_ui.png) | ![Win11 3-Way Merge](docs/assets/win/three_way_merge_dark_ui.png) | ![Win11 Folder Diff](docs/assets/win/folder_diff_dark_ui.png) |
 
 #### 2. macOS Native Edition (SwiftUI & AppKit)
 
@@ -80,7 +84,7 @@
 
 | Word Document Diff | Git 3-Way Conflict Merge | Folder Fast Diff & Sync |
 | :---: | :---: | :---: |
-| ![Mac Word Diff](docs/assets/macos/word_diff_dark_ui.png) | ![3-Way Merge](docs/assets/macos/three_way_merge_ui.jpg) | ![Folder Diff](docs/assets/macos/folder_diff_dark_ui.png) |
+| ![Mac Word Diff](docs/assets/macos/word_diff_dark_ui.png) | ![Mac 3-Way Merge](docs/assets/macos/three_way_merge_ui.jpg) | ![Mac Folder Diff](docs/assets/macos/folder_diff_dark_ui.png) |
 
 ---
 
@@ -207,6 +211,30 @@ FileCompare/
   - **macOS**：DMG 镜像、免安装 Zip 与 Homebrew 专属源 (`brew install andychao217/tap/maccompare`)；
   - **Windows**：WiX v4/v5 MSI 原生安装向导（自动生成桌面/开始菜单快捷方式并注册系统 `PATH`）与绿色便携版 Zip；
   - **在线更新**：智能多语言 Release Notes 感知与各平台独立发布包的一键精准下载。
+
+---
+
+### 📸 软件实机界面预览 (UI Preview)
+
+#### 1. Windows 11 原生版 (WinUI 3 & Fluent 设计)
+
+| 启动主页 | 文本比对与 AI 总结 | Excel 表格结构化对比 |
+| :---: | :---: | :---: |
+| ![Win11 启动主页](docs/assets/win/welcome_home_dark_ui.png) | ![Win11 文本比对](docs/assets/win/text_diff_ai_dark_ui.png) | ![Win11 表格对比](docs/assets/win/excel_diff_dark_ui.png) |
+
+| Word 文档对比 | Git 三向冲突合并 | 文件夹秒级比对与同步 |
+| :---: | :---: | :---: |
+| ![Win11 Word 对比](docs/assets/win/word_diff_dark_ui.png) | ![Win11 三向合并](docs/assets/win/three_way_merge_dark_ui.png) | ![Win11 文件夹对比](docs/assets/win/folder_diff_dark_ui.png) |
+
+#### 2. macOS 原生版 (SwiftUI & AppKit 原生质感)
+
+| 启动主页 | 文本比对与 AI 总结 | Excel 表格结构化对比 |
+| :---: | :---: | :---: |
+| ![Mac 启动主页](docs/assets/macos/welcome_home_dark_ui.png) | ![Mac 文本比对](docs/assets/macos/text_diff_ai_dark_ui.png) | ![Mac 表格对比](docs/assets/macos/excel_diff_dark_ui.png) |
+
+| Word 文档对比 | Git 三向冲突合并 | 文件夹秒级比对与同步 |
+| :---: | :---: | :---: |
+| ![Mac Word 对比](docs/assets/macos/word_diff_dark_ui.png) | ![Mac 三向合并](docs/assets/macos/three_way_merge_ui.jpg) | ![Mac 文件夹对比](docs/assets/macos/folder_diff_dark_ui.png) |
 
 ---
 

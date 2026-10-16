@@ -160,8 +160,11 @@ if (-not $SkipInstaller) {
             /p:PublishDir="$localWixWorkDir\staging" `
             /p:IntermediateOutputPath="$localWixWorkDir\obj\" `
             /p:OutputPath="$localWixWorkDir\bin\" `
-            /p:SuppressValidation=true `
-            /p:SuppressIces="ICE03;ICE43;ICE57"
+            /p:SuppressValidation=true
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "WiX dotnet build failed with exit code $LASTEXITCODE"
+            exit $LASTEXITCODE
+        }
         
         $builtMsi = Join-Path $localWixWorkDir "bin\WinCompare-$Version-Setup-$Platform.msi"
         if (-not (Test-Path $builtMsi)) {
