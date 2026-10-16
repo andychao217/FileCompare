@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # WinCompare Universal Windows Packaging Script (PowerShell)
 # Produces:
 #   1. Standalone Portable Zip (WinUI 3 GUI + CLI + Rust Core)
@@ -57,9 +57,21 @@ try {
 
 $rustDll = Join-Path $coreDir "target\release\maccompare_ffi.dll"
 if (-not (Test-Path $rustDll)) {
-    Write-Error "Could not find compiled DLL at $rustDll"
-    exit 1
+    $altDll = Join-Path $coreDir "target\x86_64-pc-windows-msvc\release\maccompare_ffi.dll"
+    if (Test-Path $altDll) {
+        $rustDll = $altDll
+    } else {
+        $found = Get-ChildItem -Path (Join-Path $coreDir "target") -Filter "maccompare_ffi.dll" -Recurse -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -match "release" } | Select-Object -First 1
+        if ($found) {
+            $rustDll = $found.FullName
+        } else {
+            Write-Error "Could not find compiled DLL at $rustDll"
+            exit 1
+        }
+    }
 }
+Write-Host "Found Rust Core DLL at: $rustDll" -ForegroundColor Green
 
 # ------------------------------------------------------------------------------
 # 2. Publish WinUI 3 Desktop App (Self-Contained Unpackaged)

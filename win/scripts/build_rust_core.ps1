@@ -25,8 +25,19 @@ try {
 
     $dllSrc = Join-Path $coreDir "target\release\maccompare_ffi.dll"
     if (-not (Test-Path $dllSrc)) {
-        Write-Error "Could not find compiled DLL at $dllSrc"
-        exit 1
+        $alt = Join-Path $coreDir "target\x86_64-pc-windows-msvc\release\maccompare_ffi.dll"
+        if (Test-Path $alt) {
+            $dllSrc = $alt
+        } else {
+            $found = Get-ChildItem -Path (Join-Path $coreDir "target") -Filter "maccompare_ffi.dll" -Recurse -File -ErrorAction SilentlyContinue |
+                Where-Object { $_.FullName -match "release" } | Select-Object -First 1
+            if ($found) {
+                $dllSrc = $found.FullName
+            } else {
+                Write-Error "Could not find compiled DLL at $dllSrc"
+                exit 1
+            }
+        }
     }
 
     Write-Host "`nCopying maccompare_ffi.dll to WinCompare project output paths..." -ForegroundColor Yellow
