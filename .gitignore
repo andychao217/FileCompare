@@ -24,7 +24,6 @@ DerivedData/
 # Rust & Cargo
 target/
 **/*.rs.bk
-Cargo.lock
 
 # UniFFI Generated
 macos/MacCompare/Generated/lib/
