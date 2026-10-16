@@ -93,6 +93,7 @@ public sealed partial class WordDiffPage : Page, IDisposable
         catch (Exception ex)
         {
             App.LogFatalError("WordDiffPage.Constructor", ex);
+            throw;
         }
     }
 

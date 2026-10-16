@@ -92,30 +92,50 @@ public sealed class UpdateCheckerService
                 LatestReleaseNotes = body;
                 LatestReleaseUrl = string.IsNullOrWhiteSpace(htmlUrl) ? $"https://github.com/{Repository}/releases" : htmlUrl;
 
-                // Parse assets
+                // Parse assets specifically for Windows packages (WinCompare-*-windows-*.zip or MSI)
                 if (root.TryGetProperty("assets", out var assetsElem) && assetsElem.ValueKind == JsonValueKind.Array)
                 {
+                    var assetList = new List<GitHubAssetInfo>();
                     foreach (var asset in assetsElem.EnumerateArray())
                     {
                         string name = asset.TryGetProperty("name", out var n) ? (n.GetString() ?? "") : "";
                         string dUrl = asset.TryGetProperty("browser_download_url", out var u) ? (u.GetString() ?? "") : "";
                         long sz = asset.TryGetProperty("size", out var s) ? s.GetInt64() : 0;
-
-                        if (name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) ||
-                            name.EndsWith(".msix", StringComparison.OrdinalIgnoreCase) ||
-                            name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                        if (!string.IsNullOrEmpty(dUrl) && !string.IsNullOrEmpty(name))
                         {
-                            DownloadAssetName = name;
-                            DownloadAssetUrl = dUrl;
-                            DownloadAssetSize = sz;
-                            break;
+                            assetList.Add(new GitHubAssetInfo { Name = name, BrowserDownloadUrl = dUrl, Size = sz });
                         }
+                    }
+
+                    // 1. Prioritize WinCompare Windows zip (portable package, e.g. WinCompare-0.6.0-windows-x64.zip)
+                    var matchedAsset = assetList.FirstOrDefault(a => 
+                        a.Name.Contains("WinCompare", StringComparison.OrdinalIgnoreCase) && 
+                        (a.Name.Contains("win", StringComparison.OrdinalIgnoreCase) || a.Name.Contains("windows", StringComparison.OrdinalIgnoreCase)) && 
+                        a.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                        // 2. Or WinCompare MSI installer setup
+                        ?? assetList.FirstOrDefault(a => 
+                        a.Name.Contains("WinCompare", StringComparison.OrdinalIgnoreCase) && 
+                        (a.Name.EndsWith(".msi", StringComparison.OrdinalIgnoreCase) || a.Name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)))
+                        // 3. Or any WinCompare zip
+                        ?? assetList.FirstOrDefault(a => 
+                        a.Name.Contains("WinCompare", StringComparison.OrdinalIgnoreCase) && 
+                        a.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase));
+
+                    if (matchedAsset != null)
+                    {
+                        DownloadAssetName = matchedAsset.Name;
+                        DownloadAssetUrl = matchedAsset.BrowserDownloadUrl;
+                        DownloadAssetSize = matchedAsset.Size;
                     }
                 }
 
+                // Fallback to direct GitHub release asset URL
                 if (string.IsNullOrEmpty(DownloadAssetUrl))
                 {
-                    DownloadAssetUrl = LatestReleaseUrl;
+                    string fallbackName = $"WinCompare-{latestVer}-windows-x64.zip";
+                    DownloadAssetName = fallbackName;
+                    DownloadAssetUrl = $"https://github.com/{Repository}/releases/download/v{latestVer}/{fallbackName}";
+                    DownloadAssetSize = 25 * 1024 * 1024; // ~25MB estimated
                 }
 
                 LastCheckedDate = DateTime.Now;

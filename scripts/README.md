@@ -16,3 +16,5 @@ This directory contains the build, test, and packaging scripts for MacCompare.
 | **`build_universal_lib.sh`** | 交叉编译 Rust 静态库核心 (`libmaccompare_ffi.a`) | Cross-compile Rust core library for `arm64` + `x86_64` via `lipo` |
 | **`run_app.sh`** | 本地编译并运行全套测试验证 | Compile locally and run the complete test suite |
 | **`generate_bindings.sh`** | 自动生成 Rust FFI C-ABI 桥接头文件 | Generate Rust C-ABI bridge header files |
+| **`../win/scripts/package_win.ps1`** | Windows 一键打包 (ZIP 免安装包 + WiX MSI 安装向导) | Windows packaging (Portable ZIP + WiX MSI with desktop shortcuts) |
+

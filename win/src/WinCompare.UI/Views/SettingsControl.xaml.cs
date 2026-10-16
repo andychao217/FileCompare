@@ -23,6 +23,12 @@ public sealed partial class SettingsControl : UserControl
         {
             this.InitializeComponent();
 
+            // 隐藏 AI 智能引擎 Tab (从 TabItems 集合中移除)
+            if (AiTabItem != null && SettingsTabs != null && SettingsTabs.TabItems.Contains(AiTabItem))
+            {
+                SettingsTabs.TabItems.Remove(AiTabItem);
+            }
+
             if (DragHeader != null)
             {
                 DragHeader.PointerPressed += OnHeaderPointerPressed;

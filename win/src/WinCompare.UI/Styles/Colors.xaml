@@ -118,6 +118,7 @@
             <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="#18FFFFFF" />
             <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="#08FFFFFF" />
             <SolidColorBrush x:Key="SubtleFillColorSecondaryBrush" Color="#0DFFFFFF" />
+            <SolidColorBrush x:Key="SubtleFillColorTransparentBrush" Color="Transparent" />
 
             <!-- Fluent Accent Buttons & Overrides (Unified Professional Brand Blue) -->
             <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#3B82F6" />
@@ -235,6 +236,7 @@
             <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="#E2E8F0" />
             <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="#80F8FAFC" />
             <SolidColorBrush x:Key="SubtleFillColorSecondaryBrush" Color="#F1F5F9" />
+            <SolidColorBrush x:Key="SubtleFillColorTransparentBrush" Color="Transparent" />
 
             <!-- Fluent Accent Buttons & Overrides (Light Theme) -->
             <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#2563EB" />
@@ -287,5 +289,6 @@
     <SolidColorBrush x:Key="BrandPrimaryPressedBrush" Color="#1E40AF" />
     <SolidColorBrush x:Key="DangerButtonBackground" Color="#DC2626" />
     <SolidColorBrush x:Key="DangerButtonBorder" Color="#B91C1C" />
+    <SolidColorBrush x:Key="SubtleFillColorTransparentBrush" Color="Transparent" />
 
 </ResourceDictionary>

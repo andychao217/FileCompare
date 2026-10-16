@@ -10,6 +10,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinCompare.Cli", "src\WinCo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinCompare.Tests", "tests\WinCompare.Tests\WinCompare.Tests.csproj", "{D4444444-4444-4444-4444-444444444444}"
 EndProject
+Project("{930C7802-8A8C-48F9-8165-E44974B30A0D}") = "WinCompare.Installer", "src\WinCompare.Installer\WinCompare.Installer.wixproj", "{E5555555-5555-5555-5555-555555555555}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -34,6 +36,10 @@ Global
 		{D4444444-4444-4444-4444-444444444444}.Debug|x64.Build.0 = Debug|x64
 		{D4444444-4444-4444-4444-444444444444}.Release|x64.ActiveCfg = Release|x64
 		{D4444444-4444-4444-4444-444444444444}.Release|x64.Build.0 = Release|x64
+		{E5555555-5555-5555-5555-555555555555}.Debug|x64.ActiveCfg = Debug|x64
+		{E5555555-5555-5555-5555-555555555555}.Debug|x64.Build.0 = Debug|x64
+		{E5555555-5555-5555-5555-555555555555}.Release|x64.ActiveCfg = Release|x64
+		{E5555555-5555-5555-5555-555555555555}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -43,6 +43,12 @@ public sealed partial class TextDiffPage : Page, IDisposable
     {
         this.InitializeComponent();
         
+        // 隐藏 AI 摘要按钮
+        if (AISummaryButton != null)
+        {
+            AISummaryButton.Visibility = Visibility.Collapsed;
+        }
+
         UpdateLocalization();
         LanguageManager.Instance.LanguageChanged += UpdateLocalization;
 

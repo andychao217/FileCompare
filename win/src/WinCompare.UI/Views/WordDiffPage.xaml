@@ -531,7 +531,7 @@
                                         </Border>
 
                                         <!-- Center Gutter (matching macOS) -->
-                                        <Border Grid.Column="1" Background="{ThemeResource SubtleFillColorTransparentBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1,0,1,0">
+                                        <Border Grid.Column="1" Background="Transparent" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1,0,1,0">
                                             <FontIcon Glyph="{Binding CenterIconGlyph}"
                                                       FontSize="11"
                                                       Foreground="{Binding CenterIconBrush}"

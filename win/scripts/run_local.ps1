@@ -58,8 +58,13 @@ if (-not $NoBuild) {
     Write-Host "`n[1/3] 跳过构建步骤 (-NoBuild)" -ForegroundColor Gray
 }
 
-# 2. 定位编译产物目录
-$sourceBinDir = Join-Path $scriptDir "..\src\WinCompare.UI\bin\$Platform\$Configuration\net10.0-windows10.0.19041.0"
+# 2. 定位编译产物目录 (优先定位含有 win-$Platform RID 的真实输出目录)
+$baseBinDir = Join-Path $scriptDir "..\src\WinCompare.UI\bin\$Platform\$Configuration\net10.0-windows10.0.19041.0"
+$sourceBinDir = $baseBinDir
+$ridBinDir = Join-Path $baseBinDir "win-$Platform"
+if (Test-Path $ridBinDir) {
+    $sourceBinDir = $ridBinDir
+}
 if (-not (Test-Path $sourceBinDir)) {
     Write-Error "找不到构建输出目录: $sourceBinDir"
     exit 1

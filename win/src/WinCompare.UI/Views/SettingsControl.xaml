@@ -192,8 +192,8 @@
                     </ScrollViewer>
                 </TabViewItem>
 
-                <!-- 3. AI 智能引擎 (AI Engine) -->
-                <TabViewItem x:Name="AiTabItem" Header="AI 智能引擎" IsClosable="False">
+                <!-- 3. AI 智能引擎 (AI Engine - 暂时隐藏) -->
+                <TabViewItem x:Name="AiTabItem" Header="AI 智能引擎" IsClosable="False" Visibility="Collapsed">
                     <TabViewItem.IconSource>
                         <FontIconSource Glyph="&#xE945;" />
                     </TabViewItem.IconSource>

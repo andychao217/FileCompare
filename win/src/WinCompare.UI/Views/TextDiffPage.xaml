@@ -84,8 +84,8 @@
                     <!-- Divider -->
                     <Rectangle Width="1" Height="16" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="6,0" />
 
-                    <!-- AI 摘要 -->
-                    <Button x:Name="AISummaryButton" Click="OnAISummaryClicked"
+                    <!-- AI 摘要 (暂时隐藏) -->
+                    <Button x:Name="AISummaryButton" Click="OnAISummaryClicked" Visibility="Collapsed"
                             Background="{ThemeResource AIPurpleDarkBrush}" Foreground="{ThemeResource TextOnAccentBrush}" CornerRadius="6" Padding="10,4" Height="30" ToolTipService.ToolTip="智能分析改动意图">
                         <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
                             <FontIcon Glyph="&#xE945;" FontSize="12" />

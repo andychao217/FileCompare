@@ -646,15 +646,29 @@ public sealed partial class MainWindow : Window
 
     private void OnTabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)
     {
-        var tabToClose = args.Tab;
-        if (tabToClose == null) return;
-
-        // \u6838\u5FC3\u4FDD\u62A4\uFF1A\u4E25\u7981\u5728 unmanaged TabCloseRequested \u540C\u6B65\u4E8B\u4EF6\u6808\u4E2D\u76F4\u63A5\u4FEE\u6539 TabItems \u96C6\u5408
-        // \u5FC5\u987B\u5F02\u6B65\u6392\u961F\uFF0C\u7B49\u5F85\u539F\u751F CloseButton \u4EA4\u4E92\u5FAA\u73AF\u5B8C\u5168\u9000\u51FA\u540E\u5728\u4E0B\u4E00\u6D88\u606F\u5468\u671F\u6267\u884C
-        this.DispatcherQueue.TryEnqueue(() =>
+        try
         {
-            CloseTab(tabToClose);
-        });
+            var tabToClose = args.Tab ?? args.Item as TabViewItem;
+            if (tabToClose == null) return;
+
+            // 核心保护：严禁在 unmanaged TabCloseRequested 同步事件栈中直接修改 TabItems 集合
+            // 必须异步排队，等待原生 CloseButton 交互循环完全退出后在下一消息周期执行
+            this.DispatcherQueue.TryEnqueue(() =>
+            {
+                try
+                {
+                    CloseTab(tabToClose);
+                }
+                catch (Exception ex)
+                {
+                    App.LogFatalError("MainWindow.OnTabCloseRequested.Inner", ex);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            App.LogFatalError("MainWindow.OnTabCloseRequested", ex);
+        }
     }
 
     public void ShowInsertionIndicator(double x)
@@ -976,17 +990,17 @@ public sealed partial class MainWindow : Window
             .Where(t => !ReferenceEquals(t, tab))
             .ToList();
 
-        // \u7A97\u53E3\u4E2D\u552F\u4E00\u6807\u7B7E\u4E14\u662F\u6B22\u8FCE\u6807\u7B7E\u65F6\uFF0C\u4E0D\u5141\u8BB8\u5173\u95ED
+        // 窗口中唯一标签且是欢迎标签时，不允许关闭
         if (otherTabs.Count == 0 && IsWelcomeTab(tab)) return;
 
         try
         {
-            App.Log($"[TabManager] \u6536\u5230\u5173\u95ED\u6807\u7B7E\u8BF7\u6C42: '{tab.Header}' (Tag\u7C7B\u578B: {tab.Tag?.GetType().Name})");
+            App.Log($"[TabManager] 收到关闭标签请求: '{tab.Header}' (Tag类型: {tab.Tag?.GetType().Name})");
 
-            // \u5982\u679C\u5173\u95ED\u7684\u662F\u6B22\u8FCE Tab\uFF08\u56E0\u4E3A\u5B58\u5728\u5176\u4ED6\u6BD4\u5BF9 Tab\uFF0C\u6240\u4EE5\u5141\u8BB8\u5173\u95ED\u5E76\u5207\u56DE\u5BF9\u6BD4\uFF09
+            // 1. 如果关闭的是欢迎 Tab（因为存在其他对比 Tab，所以允许关闭并切回对比）
             if (IsWelcomeTab(tab))
             {
-                App.Log("[TabManager] \u6B63\u5728\u5173\u95ED\u6B22\u8FCE\u6807\u7B7E\u9875\uFF0C\u5207\u56DE\u5176\u4F59\u5BF9\u6BD4\u6807\u7B7E...");
+                App.Log("[TabManager] 正在关闭欢迎标签页，切回其余对比标签...");
                 bool isSelected = ReferenceEquals(MainTabView.SelectedItem, tab);
                 int closingIndex = MainTabView.TabItems.IndexOf(tab);
 
@@ -999,20 +1013,37 @@ public sealed partial class MainWindow : Window
                     }
                 }
 
-                AnimateTabCollapse(tab, () =>
-                {
-                    MainTabView.TabItems.Remove(tab);
-                    EnsureValidTabSelection();
-                });
+                MainTabView.TabItems.Remove(tab);
+                EnsureValidTabSelection();
                 return;
             }
 
+            // 2. 关闭对比 Tab
             var otherComparisonTabs = otherTabs.Where(t => !IsWelcomeTab(t)).ToList();
             bool isLastComparisonTab = otherComparisonTabs.Count == 0;
 
+            // 先卸载并安全清理关联的视图元素，防止在视觉树上被析构
+            if (tab.Tag is UIElement element)
+            {
+                tab.Tag = null;
+                element.Visibility = Visibility.Collapsed;
+                element.Opacity = 0.0;
+                element.IsHitTestVisible = false;
+
+                if (TabContentGrid.Children.Contains(element))
+                {
+                    TabContentGrid.Children.Remove(element);
+                }
+
+                if (element is IDisposable disposable)
+                {
+                    try { disposable.Dispose(); } catch { }
+                }
+            }
+
             if (isLastComparisonTab)
             {
-                App.Log("[TabManager] 当前为最后一个对比标签，准备平滑回退至欢迎页...");
+                App.Log("[TabManager] 当前为最后一个对比标签，准备回退至欢迎页...");
                 try
                 {
                     if (this.Content is FrameworkElement root)
@@ -1022,45 +1053,13 @@ public sealed partial class MainWindow : Window
                 }
                 catch { }
 
-                EnsureWelcomePage();
-                ShowContent(_welcomePage);
-                _welcomePage?.UpdateRecentHistoryVisibility();
-                SetWindowTitle("WinCompare");
+                // 从 TabItems 中移除被关闭的标签
+                MainTabView.TabItems.Remove(tab);
 
-                _currentWelcomeTab = CreateWelcomeTabItem();
-                MainTabView.TabItems.Add(_currentWelcomeTab);
-                MainTabView.SelectedItem = _currentWelcomeTab;
+                // 显示欢迎标签页
+                ShowWelcomeTab();
 
-                AnimateTabCollapse(tab, () =>
-                {
-                    MainTabView.TabItems.Remove(tab);
-
-                    if (tab.Tag is UIElement element)
-                    {
-                        tab.Tag = null;
-                        element.Visibility = Visibility.Collapsed;
-                        element.Opacity = 0.0;
-                        element.IsHitTestVisible = false;
-
-                        if (element is IDisposable disposable)
-                        {
-                            try { disposable.Dispose(); } catch { }
-                        }
-
-                        this.DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
-                        {
-                            try
-                            {
-                                if (TabContentGrid.Children.Contains(element))
-                                {
-                                    TabContentGrid.Children.Remove(element);
-                                }
-                            }
-                            catch { }
-                        });
-                    }
-                    App.Log("[TabManager] 最后一个对比标签已收缩离场，已平稳回到欢迎页。");
-                });
+                App.Log("[TabManager] 最后一个对比标签已关闭，已平稳回到欢迎页。");
             }
             else
             {
@@ -1077,38 +1076,9 @@ public sealed partial class MainWindow : Window
                     }
                 }
 
-                AnimateTabCollapse(tab, () =>
-                {
-                    MainTabView.TabItems.Remove(tab);
-
-                    if (tab.Tag is UIElement element)
-                    {
-                        tab.Tag = null;
-                        element.Visibility = Visibility.Collapsed;
-                        element.Opacity = 0.0;
-                        element.IsHitTestVisible = false;
-
-                        if (element is IDisposable disposable)
-                        {
-                            try { disposable.Dispose(); } catch { }
-                        }
-
-                        this.DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
-                        {
-                            try
-                            {
-                                if (TabContentGrid.Children.Contains(element))
-                                {
-                                    TabContentGrid.Children.Remove(element);
-                                }
-                            }
-                            catch { }
-                        });
-                    }
-
-                    EnsureValidTabSelection();
-                    App.Log($"[TabManager] 标签已收缩离场，剩余标签数: {MainTabView.TabItems.Count}");
-                });
+                MainTabView.TabItems.Remove(tab);
+                EnsureValidTabSelection();
+                App.Log($"[TabManager] 标签已关闭，剩余标签数: {MainTabView.TabItems.Count}");
             }
         }
         catch (Exception ex)
@@ -1576,15 +1546,6 @@ public sealed partial class MainWindow : Window
         try
         {
             tab.Opacity = 0.0;
-            tab.Width = 0.0;
-
-            var widthAnim = new DoubleAnimation
-            {
-                From = 0.0,
-                To = 180.0,
-                Duration = new Duration(TimeSpan.FromMilliseconds(180)),
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-            };
             var opacityAnim = new DoubleAnimation
             {
                 From = 0.0,
@@ -1594,64 +1555,20 @@ public sealed partial class MainWindow : Window
             };
 
             var sb = new Storyboard();
-            Storyboard.SetTarget(widthAnim, tab);
-            Storyboard.SetTargetProperty(widthAnim, "Width");
             Storyboard.SetTarget(opacityAnim, tab);
             Storyboard.SetTargetProperty(opacityAnim, "Opacity");
-            sb.Children.Add(widthAnim);
             sb.Children.Add(opacityAnim);
-
-            sb.Completed += (s, e) =>
-            {
-                tab.ClearValue(FrameworkElement.WidthProperty);
-            };
             sb.Begin();
         }
         catch
         {
             tab.Opacity = 1.0;
-            tab.ClearValue(FrameworkElement.WidthProperty);
         }
     }
 
     public static void AnimateTabCollapse(TabViewItem tab, Action onCompleted)
     {
-        try
-        {
-            double startWidth = tab.ActualWidth > 0 ? tab.ActualWidth : 160;
-            var widthAnim = new DoubleAnimation
-            {
-                From = startWidth,
-                To = 0.0,
-                Duration = new Duration(TimeSpan.FromMilliseconds(160)),
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
-            };
-            var opacityAnim = new DoubleAnimation
-            {
-                From = tab.Opacity,
-                To = 0.0,
-                Duration = new Duration(TimeSpan.FromMilliseconds(160)),
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
-            };
-
-            var sb = new Storyboard();
-            Storyboard.SetTarget(widthAnim, tab);
-            Storyboard.SetTargetProperty(widthAnim, "Width");
-            Storyboard.SetTarget(opacityAnim, tab);
-            Storyboard.SetTargetProperty(opacityAnim, "Opacity");
-            sb.Children.Add(widthAnim);
-            sb.Children.Add(opacityAnim);
-
-            sb.Completed += (s, e) =>
-            {
-                onCompleted();
-            };
-            sb.Begin();
-        }
-        catch
-        {
-            onCompleted();
-        }
+        onCompleted?.Invoke();
     }
 
     public void AnimateWindowFadeIn()

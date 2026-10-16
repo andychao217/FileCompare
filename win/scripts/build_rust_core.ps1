@@ -1,4 +1,4 @@
-# WinCompare: PowerShell script to build Rust core
+﻿# WinCompare: PowerShell script to build Rust core
 $ErrorActionPreference = "Stop"
 
 Write-Host "=======================================================" -ForegroundColor Cyan

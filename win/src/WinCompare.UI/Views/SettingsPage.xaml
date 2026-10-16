@@ -7,10 +7,11 @@
         <StackPanel MaxWidth="680" Spacing="24">
             <TextBlock Text="偏好设置 (Settings)" FontSize="24" FontWeight="Bold" />
 
-            <!-- AI Engine Settings Card -->
+            <!-- AI Engine Settings Card (暂时隐藏) -->
             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1" CornerRadius="12" Padding="20">
+                    BorderThickness="1" CornerRadius="12" Padding="20"
+                    Visibility="Collapsed">
                 <StackPanel Spacing="16">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <FontIcon Glyph="&#xE945;" Foreground="{ThemeResource AIAccentBrush}" FontSize="18" VerticalAlignment="Center" />

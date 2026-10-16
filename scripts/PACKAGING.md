@@ -119,6 +119,28 @@ hdiutil attach dist/MacCompare-0.6.0.dmg
 
 ---
 
+### 🪟 Windows 平台打包 (WiX 安装包与便携版 ZIP)
+
+Windows 端提供了针对 Windows 10/11 的自动化打包流水线：
+- **WiX v4/v5 原生 MSI 安装包**：提供专业图形安装向导，自动创建**桌面快捷方式**、**开始菜单快捷方式**，并将应用安装目录自动注册至系统 `PATH` 环境变量中（使得 `wincmp` 命令在任何终端直接可用）。
+- **绿色便携版 ZIP**：自包含 WinUI 3 运行库与 Rust Core，解压即用。
+
+#### 快速打包命令（PowerShell）：
+```powershell
+# 一键生成 ZIP 与 WiX MSI 安装包（默认输出到 dist/ 目录）
+.\win\scripts\package_win.ps1 -Version 0.6.0
+
+# 仅生成便携版 ZIP
+.\win\scripts\package_win.ps1 -Version 0.6.0 -SkipInstaller
+```
+
+#### Windows 打包输出位置：
+* **MSI 安装包**：`dist/WinCompare-0.6.0-windows-x64-Setup.msi`
+* **主程序绿色包**：`dist/WinCompare-0.6.0-windows-x64.zip`
+* **独立 CLI 工具**：`dist/wincmp-0.6.0-windows-x64.zip`
+
+---
+
 <a name="english"></a>
 ## English
 
