@@ -1,8 +1,10 @@
-﻿using Microsoft.UI;
+﻿using System.Collections.ObjectModel;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
@@ -18,6 +20,16 @@ public sealed partial class FolderDiffPage : Page, IDisposable
     private string? _leftFolder;
     private string? _rightFolder;
     private List<FolderDiffDisplayItem> _allItems = new();
+    private readonly HashSet<string> _collapsedPaths = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _singleLeftCollapsedPaths = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _singleRightCollapsedPaths = new(StringComparer.OrdinalIgnoreCase);
+    private List<FolderSingleDisplayItem> _rawSingleLeftItems = new();
+    private List<FolderSingleDisplayItem> _rawSingleRightItems = new();
+
+    private readonly ObservableCollection<FolderDiffDisplayItem> _visibleDiffItems = new();
+    private readonly ObservableCollection<FolderSingleDisplayItem> _visibleSingleLeftItems = new();
+    private readonly ObservableCollection<FolderSingleDisplayItem> _visibleSingleRightItems = new();
+
     private string _currentFilter = "All";
     private int _folderDiffMode = 0; // 0: Fast, 1: DeepHash
     private bool _isInitialized = false;
@@ -49,6 +61,11 @@ public sealed partial class FolderDiffPage : Page, IDisposable
     public FolderDiffPage()
     {
         this.InitializeComponent();
+
+        if (FolderDiffListView != null) FolderDiffListView.ItemsSource = _visibleDiffItems;
+        if (LeftSingleListView != null) LeftSingleListView.ItemsSource = _visibleSingleLeftItems;
+        if (RightSingleListView != null) RightSingleListView.ItemsSource = _visibleSingleRightItems;
+
         _folderDiffMode = (int)SettingsManager.Instance.DefaultFolderDiffMode;
         SetModeButtonsVisual(_folderDiffMode);
 
@@ -69,12 +86,16 @@ public sealed partial class FolderDiffPage : Page, IDisposable
         if (SyncRightLeftText != null) SyncRightLeftText.Text = LanguageManager.Instance.Text("syncRightToLeft");
         if (RefreshText != null) RefreshText.Text = LanguageManager.Instance.Text("refreshCompare");
         if (ClearAllText != null) ClearAllText.Text = LanguageManager.Instance.Text("clearAll");
+        if (ExpandAllText != null) ExpandAllText.Text = LanguageManager.Instance.Text("expandAll");
+        if (CollapseAllText != null) CollapseAllText.Text = LanguageManager.Instance.Text("collapseAll");
         if (SyncPreviewText != null) SyncPreviewText.Text = LanguageManager.Instance.Text("dryRunPreview");
 
         if (SyncLeftRightBtn != null) ToolTipService.SetToolTip(SyncLeftRightBtn, LanguageManager.Instance.Text("syncLeftToRight"));
         if (SyncRightLeftBtn != null) ToolTipService.SetToolTip(SyncRightLeftBtn, LanguageManager.Instance.Text("syncRightToLeft"));
         if (RefreshBtn != null) ToolTipService.SetToolTip(RefreshBtn, LanguageManager.Instance.Text("refreshCompare"));
         if (ClearAllBtn != null) ToolTipService.SetToolTip(ClearAllBtn, LanguageManager.Instance.Text("clearAll"));
+        if (ExpandAllBtn != null) ToolTipService.SetToolTip(ExpandAllBtn, LanguageManager.Instance.Text("expandAll"));
+        if (CollapseAllBtn != null) ToolTipService.SetToolTip(CollapseAllBtn, LanguageManager.Instance.Text("collapseAll"));
 
         // Sidebar
         if (QuickPlacesTitle != null) QuickPlacesTitle.Text = LanguageManager.Instance.Text("quickPlaces");
@@ -352,8 +373,10 @@ public sealed partial class FolderDiffPage : Page, IDisposable
             });
 
             _allItems.Clear();
+            _collapsedPaths.Clear();
             var hashVis = _folderDiffMode == 1 ? Visibility.Visible : Visibility.Collapsed;
 
+            var rawItemList = new List<FolderDiffDisplayItem>(entries.Count);
             foreach (var entry in entries)
             {
                 bool isLeftMissing = entry.Status == FolderEntryStatus.Added;
@@ -438,12 +461,18 @@ public sealed partial class FolderDiffPage : Page, IDisposable
                     }
                 }
 
+                var (depth, parentPath, ancestors) = ComputeHierarchy(entry.RelativePath);
+
                 var item = new FolderDiffDisplayItem
                 {
                     RelativePath = relPath,
                     Name = fileName,
                     IsDirectory = isDir,
                     Status = entry.Status,
+                    Depth = depth,
+                    ParentPath = parentPath,
+                    AncestorPaths = ancestors,
+                    IsExpanded = true,
 
                     IsLeftMissing = isLeftMissing,
                     LeftName = fileName,
@@ -477,9 +506,10 @@ public sealed partial class FolderDiffPage : Page, IDisposable
                     IconColorBrush = iconBrush
                 };
 
-                _allItems.Add(item);
+                rawItemList.Add(item);
             }
 
+            _allItems = SortFolderDisplayItems(rawItemList);
             ApplyFilter();
 
             int modCount = _allItems.Count(i => i.Status == FolderEntryStatus.Modified);
@@ -513,7 +543,134 @@ public sealed partial class FolderDiffPage : Page, IDisposable
         }
     }
 
-    private void ApplyFilter()
+    private static (int depth, string parentPath, List<string> ancestorPaths) ComputeHierarchy(string relPath)
+    {
+        var parts = relPath.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+        int depth = Math.Max(0, parts.Length - 1);
+        if (parts.Length > 1)
+        {
+            string parent = string.Join('/', parts.Take(parts.Length - 1));
+            var ancestors = new List<string>(parts.Length - 1);
+            var current = "";
+            for (int i = 0; i < parts.Length - 1; i++)
+            {
+                if (i > 0) current += "/";
+                current += parts[i];
+                ancestors.Add(current);
+            }
+            return (depth, parent, ancestors);
+        }
+        return (0, string.Empty, new List<string>());
+    }
+
+    public static List<FolderDiffDisplayItem> SortFolderDisplayItems(List<FolderDiffDisplayItem> items)
+    {
+        return items.OrderBy(x => x, Comparer<FolderDiffDisplayItem>.Create((r1, r2) =>
+        {
+            var c1 = r1.RelativePath.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+            var c2 = r2.RelativePath.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+            int minCount = Math.Min(c1.Length, c2.Length);
+
+            for (int i = 0; i < minCount; i++)
+            {
+                if (!string.Equals(c1[i], c2[i], StringComparison.CurrentCultureIgnoreCase))
+                {
+                    bool isDir1 = (i < c1.Length - 1) || r1.IsDirectory;
+                    bool isDir2 = (i < c2.Length - 1) || r2.IsDirectory;
+                    if (isDir1 != isDir2)
+                    {
+                        return isDir1 ? -1 : 1;
+                    }
+                    return string.Compare(c1[i], c2[i], StringComparison.CurrentCultureIgnoreCase);
+                }
+            }
+
+            if (c1.Length != c2.Length)
+            {
+                return c1.Length.CompareTo(c2.Length);
+            }
+            if (r1.IsDirectory != r2.IsDirectory)
+            {
+                return r1.IsDirectory ? -1 : 1;
+            }
+            return 0;
+        })).ToList();
+    }
+
+    public static List<FolderSingleDisplayItem> SortFolderSingleItems(List<FolderSingleDisplayItem> items)
+    {
+        return items.OrderBy(x => x, Comparer<FolderSingleDisplayItem>.Create((r1, r2) =>
+        {
+            var c1 = r1.RelativePath.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+            var c2 = r2.RelativePath.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+            int minCount = Math.Min(c1.Length, c2.Length);
+
+            for (int i = 0; i < minCount; i++)
+            {
+                if (!string.Equals(c1[i], c2[i], StringComparison.CurrentCultureIgnoreCase))
+                {
+                    bool isDir1 = (i < c1.Length - 1) || r1.IsDirectory;
+                    bool isDir2 = (i < c2.Length - 1) || r2.IsDirectory;
+                    if (isDir1 != isDir2)
+                    {
+                        return isDir1 ? -1 : 1;
+                    }
+                    return string.Compare(c1[i], c2[i], StringComparison.CurrentCultureIgnoreCase);
+                }
+            }
+
+            if (c1.Length != c2.Length)
+            {
+                return c1.Length.CompareTo(c2.Length);
+            }
+            if (r1.IsDirectory != r2.IsDirectory)
+            {
+                return r1.IsDirectory ? -1 : 1;
+            }
+            return 0;
+        })).ToList();
+    }
+
+    private static void AnimateChevron(Button button, double toAngle)
+    {
+        try
+        {
+            if (button.Content is FontIcon icon && icon.RenderTransform is RotateTransform rotate)
+            {
+                var anim = new DoubleAnimation
+                {
+                    To = toAngle,
+                    Duration = new Duration(TimeSpan.FromMilliseconds(220)),
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                };
+                var sb = new Storyboard();
+                sb.Children.Add(anim);
+                Storyboard.SetTarget(anim, rotate);
+                Storyboard.SetTargetProperty(anim, "Angle");
+                sb.Begin();
+            }
+        }
+        catch
+        {
+            // fallback
+        }
+    }
+
+    private static ScrollViewer? GetScrollViewer(DependencyObject? depObj)
+    {
+        if (depObj == null) return null;
+        if (depObj is ScrollViewer sv) return sv;
+        int count = VisualTreeHelper.GetChildrenCount(depObj);
+        for (int i = 0; i < count; i++)
+        {
+            var child = VisualTreeHelper.GetChild(depObj, i);
+            var result = GetScrollViewer(child);
+            if (result != null) return result;
+        }
+        return null;
+    }
+
+    private List<FolderDiffDisplayItem> GetFilteredItems()
     {
         IEnumerable<FolderDiffDisplayItem> filtered = _allItems;
 
@@ -534,10 +691,324 @@ public sealed partial class FolderDiffPage : Page, IDisposable
             filtered = filtered.Where(i => i.Status == FolderEntryStatus.Deleted);
         }
 
-        if (FolderDiffListView != null)
+        return filtered.ToList();
+    }
+
+    private void ApplyFilter()
+    {
+        var filtered = GetFilteredItems();
+
+        List<FolderDiffDisplayItem> visibleList;
+        if (_collapsedPaths.Count == 0)
         {
-            FolderDiffListView.ItemsSource = null;
-            FolderDiffListView.ItemsSource = filtered.ToList();
+            foreach (var item in _allItems)
+            {
+                if (item.IsDirectory && !item.IsExpanded)
+                {
+                    item.IsExpanded = true;
+                }
+            }
+            visibleList = filtered;
+        }
+        else
+        {
+            visibleList = new List<FolderDiffDisplayItem>(_allItems.Count);
+            string? skipPrefix = null;
+
+            foreach (var item in filtered)
+            {
+                string normalizedPath = item.RelativePath.Replace('\\', '/');
+
+                if (skipPrefix != null)
+                {
+                    if (normalizedPath.StartsWith(skipPrefix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        skipPrefix = null;
+                    }
+                }
+
+                bool isHidden = false;
+                foreach (var ancestor in item.AncestorPaths)
+                {
+                    if (_collapsedPaths.Contains(ancestor))
+                    {
+                        isHidden = true;
+                        skipPrefix = ancestor + "/";
+                        break;
+                    }
+                }
+
+                if (isHidden) continue;
+
+                if (item.IsDirectory)
+                {
+                    bool isCollapsed = _collapsedPaths.Contains(normalizedPath);
+                    item.IsExpanded = !isCollapsed;
+                    if (isCollapsed)
+                    {
+                        skipPrefix = normalizedPath + "/";
+                    }
+                }
+
+                visibleList.Add(item);
+            }
+        }
+
+        var sv = GetScrollViewer(FolderDiffListView);
+        double? prevOffset = sv?.VerticalOffset;
+
+        if (FolderDiffListView != null && FolderDiffListView.ItemsSource != _visibleDiffItems)
+        {
+            FolderDiffListView.ItemsSource = _visibleDiffItems;
+        }
+
+        _visibleDiffItems.Clear();
+        foreach (var item in visibleList)
+        {
+            _visibleDiffItems.Add(item);
+        }
+
+        if (prevOffset.HasValue && prevOffset.Value > 0 && sv != null)
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                sv.ChangeView(null, prevOffset.Value, null, disableAnimation: true);
+            });
+        }
+    }
+
+    private void ToggleFolderExpansion(FolderDiffDisplayItem targetItem, Button? triggerButton)
+    {
+        if (!targetItem.IsDirectory) return;
+
+        string normPath = targetItem.RelativePath.Replace('\\', '/');
+        bool wasCollapsed = _collapsedPaths.Contains(normPath);
+
+        if (triggerButton != null)
+        {
+            AnimateChevron(triggerButton, wasCollapsed ? 90.0 : 0.0);
+        }
+
+        if (wasCollapsed)
+        {
+            // 展开当前文件夹
+            _collapsedPaths.Remove(normPath);
+            targetItem.IsExpanded = true;
+
+            int targetIdx = _visibleDiffItems.IndexOf(targetItem);
+            if (targetIdx < 0) return;
+
+            var filtered = GetFilteredItems();
+            int allIdx = filtered.IndexOf(targetItem);
+            if (allIdx < 0) return;
+
+            int insertIndex = targetIdx + 1;
+            for (int i = allIdx + 1; i < filtered.Count; i++)
+            {
+                var candidate = filtered[i];
+                if (!candidate.AncestorPaths.Contains(normPath))
+                {
+                    break;
+                }
+
+                bool isHidden = false;
+                foreach (var ancestor in candidate.AncestorPaths)
+                {
+                    if (ancestor.Length > normPath.Length && _collapsedPaths.Contains(ancestor))
+                    {
+                        isHidden = true;
+                        break;
+                    }
+                }
+
+                if (!isHidden)
+                {
+                    if (candidate.IsDirectory)
+                    {
+                        string candidateNorm = candidate.RelativePath.Replace('\\', '/');
+                        candidate.IsExpanded = !_collapsedPaths.Contains(candidateNorm);
+                    }
+                    _visibleDiffItems.Insert(insertIndex++, candidate);
+                }
+            }
+        }
+        else
+        {
+            // 折叠当前文件夹
+            _collapsedPaths.Add(normPath);
+            targetItem.IsExpanded = false;
+
+            int targetIdx = _visibleDiffItems.IndexOf(targetItem);
+            if (targetIdx < 0) return;
+
+            while (targetIdx + 1 < _visibleDiffItems.Count)
+            {
+                var nextItem = _visibleDiffItems[targetIdx + 1];
+                if (nextItem.AncestorPaths.Contains(normPath))
+                {
+                    _visibleDiffItems.RemoveAt(targetIdx + 1);
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+    }
+
+    private void ToggleSingleLeftFolderExpansion(FolderSingleDisplayItem targetItem, Button? triggerButton)
+    {
+        if (!targetItem.IsDirectory) return;
+
+        string normPath = targetItem.RelativePath.Replace('\\', '/');
+        bool wasCollapsed = _singleLeftCollapsedPaths.Contains(normPath);
+
+        if (triggerButton != null)
+        {
+            AnimateChevron(triggerButton, wasCollapsed ? 90.0 : 0.0);
+        }
+
+        if (wasCollapsed)
+        {
+            _singleLeftCollapsedPaths.Remove(normPath);
+            targetItem.IsExpanded = true;
+
+            int targetIdx = _visibleSingleLeftItems.IndexOf(targetItem);
+            if (targetIdx < 0) return;
+
+            int allIdx = _rawSingleLeftItems.IndexOf(targetItem);
+            if (allIdx < 0) return;
+
+            int insertIndex = targetIdx + 1;
+            for (int i = allIdx + 1; i < _rawSingleLeftItems.Count; i++)
+            {
+                var candidate = _rawSingleLeftItems[i];
+                if (!candidate.AncestorPaths.Contains(normPath))
+                {
+                    break;
+                }
+
+                bool isHidden = false;
+                foreach (var ancestor in candidate.AncestorPaths)
+                {
+                    if (ancestor.Length > normPath.Length && _singleLeftCollapsedPaths.Contains(ancestor))
+                    {
+                        isHidden = true;
+                        break;
+                    }
+                }
+
+                if (!isHidden)
+                {
+                    if (candidate.IsDirectory)
+                    {
+                        string candidateNorm = candidate.RelativePath.Replace('\\', '/');
+                        candidate.IsExpanded = !_singleLeftCollapsedPaths.Contains(candidateNorm);
+                    }
+                    _visibleSingleLeftItems.Insert(insertIndex++, candidate);
+                }
+            }
+        }
+        else
+        {
+            _singleLeftCollapsedPaths.Add(normPath);
+            targetItem.IsExpanded = false;
+
+            int targetIdx = _visibleSingleLeftItems.IndexOf(targetItem);
+            if (targetIdx < 0) return;
+
+            while (targetIdx + 1 < _visibleSingleLeftItems.Count)
+            {
+                var nextItem = _visibleSingleLeftItems[targetIdx + 1];
+                if (nextItem.AncestorPaths.Contains(normPath))
+                {
+                    _visibleSingleLeftItems.RemoveAt(targetIdx + 1);
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+    }
+
+    private void ToggleSingleRightFolderExpansion(FolderSingleDisplayItem targetItem, Button? triggerButton)
+    {
+        if (!targetItem.IsDirectory) return;
+
+        string normPath = targetItem.RelativePath.Replace('\\', '/');
+        bool wasCollapsed = _singleRightCollapsedPaths.Contains(normPath);
+
+        if (triggerButton != null)
+        {
+            AnimateChevron(triggerButton, wasCollapsed ? 90.0 : 0.0);
+        }
+
+        if (wasCollapsed)
+        {
+            _singleRightCollapsedPaths.Remove(normPath);
+            targetItem.IsExpanded = true;
+
+            int targetIdx = _visibleSingleRightItems.IndexOf(targetItem);
+            if (targetIdx < 0) return;
+
+            int allIdx = _rawSingleRightItems.IndexOf(targetItem);
+            if (allIdx < 0) return;
+
+            int insertIndex = targetIdx + 1;
+            for (int i = allIdx + 1; i < _rawSingleRightItems.Count; i++)
+            {
+                var candidate = _rawSingleRightItems[i];
+                if (!candidate.AncestorPaths.Contains(normPath))
+                {
+                    break;
+                }
+
+                bool isHidden = false;
+                foreach (var ancestor in candidate.AncestorPaths)
+                {
+                    if (ancestor.Length > normPath.Length && _singleRightCollapsedPaths.Contains(ancestor))
+                    {
+                        isHidden = true;
+                        break;
+                    }
+                }
+
+                if (!isHidden)
+                {
+                    if (candidate.IsDirectory)
+                    {
+                        string candidateNorm = candidate.RelativePath.Replace('\\', '/');
+                        candidate.IsExpanded = !_singleRightCollapsedPaths.Contains(candidateNorm);
+                    }
+                    _visibleSingleRightItems.Insert(insertIndex++, candidate);
+                }
+            }
+        }
+        else
+        {
+            _singleRightCollapsedPaths.Add(normPath);
+            targetItem.IsExpanded = false;
+
+            int targetIdx = _visibleSingleRightItems.IndexOf(targetItem);
+            if (targetIdx < 0) return;
+
+            while (targetIdx + 1 < _visibleSingleRightItems.Count)
+            {
+                var nextItem = _visibleSingleRightItems[targetIdx + 1];
+                if (nextItem.AncestorPaths.Contains(normPath))
+                {
+                    _visibleSingleRightItems.RemoveAt(targetIdx + 1);
+                }
+                else
+                {
+                    break;
+                }
+            }
         }
     }
 
@@ -672,6 +1143,12 @@ public sealed partial class FolderDiffPage : Page, IDisposable
         _leftFolder = null;
         _rightFolder = null;
         _allItems.Clear();
+        _collapsedPaths.Clear();
+        _singleLeftCollapsedPaths.Clear();
+        _singleRightCollapsedPaths.Clear();
+        _rawSingleLeftItems.Clear();
+        _rawSingleRightItems.Clear();
+
         if (FolderDiffListView != null) FolderDiffListView.ItemsSource = null;
         if (LeftSingleListView != null) LeftSingleListView.ItemsSource = null;
         if (RightSingleListView != null) RightSingleListView.ItemsSource = null;
@@ -971,11 +1448,255 @@ public sealed partial class FolderDiffPage : Page, IDisposable
         }
     }
 
+    private void OnChevronClicked(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is FolderDiffDisplayItem item)
+        {
+            if (!item.IsDirectory) return;
+            ToggleFolderExpansion(item, btn);
+        }
+    }
+
+    private void OnSingleLeftChevronClicked(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is FolderSingleDisplayItem item)
+        {
+            if (!item.IsDirectory) return;
+            ToggleSingleLeftFolderExpansion(item, btn);
+        }
+    }
+
+    private void OnSingleRightChevronClicked(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is FolderSingleDisplayItem item)
+        {
+            if (!item.IsDirectory) return;
+            ToggleSingleRightFolderExpansion(item, btn);
+        }
+    }
+
+    private void OnExpandAllClicked(object sender, RoutedEventArgs e)
+    {
+        if (ResultContainer?.Visibility == Visibility.Visible)
+        {
+            _collapsedPaths.Clear();
+            ApplyFilter();
+        }
+        else if (LeftSingleContainer?.Visibility == Visibility.Visible)
+        {
+            _singleLeftCollapsedPaths.Clear();
+            RecomputeSingleLeftVisible();
+        }
+        else if (RightSingleContainer?.Visibility == Visibility.Visible)
+        {
+            _singleRightCollapsedPaths.Clear();
+            RecomputeSingleRightVisible();
+        }
+    }
+
+    private void OnCollapseAllClicked(object sender, RoutedEventArgs e)
+    {
+        if (ResultContainer?.Visibility == Visibility.Visible)
+        {
+            _collapsedPaths.Clear();
+            foreach (var item in _allItems)
+            {
+                if (item.IsDirectory)
+                {
+                    _collapsedPaths.Add(item.RelativePath.Replace('\\', '/'));
+                }
+            }
+            ApplyFilter();
+        }
+        else if (LeftSingleContainer?.Visibility == Visibility.Visible)
+        {
+            _singleLeftCollapsedPaths.Clear();
+            foreach (var item in _rawSingleLeftItems)
+            {
+                if (item.IsDirectory)
+                {
+                    _singleLeftCollapsedPaths.Add(item.RelativePath.Replace('\\', '/'));
+                }
+            }
+            RecomputeSingleLeftVisible();
+        }
+        else if (RightSingleContainer?.Visibility == Visibility.Visible)
+        {
+            _singleRightCollapsedPaths.Clear();
+            foreach (var item in _rawSingleRightItems)
+            {
+                if (item.IsDirectory)
+                {
+                    _singleRightCollapsedPaths.Add(item.RelativePath.Replace('\\', '/'));
+                }
+            }
+            RecomputeSingleRightVisible();
+        }
+    }
+
+    private void RecomputeSingleLeftVisible()
+    {
+        if (_rawSingleLeftItems == null || _rawSingleLeftItems.Count == 0)
+        {
+            _visibleSingleLeftItems.Clear();
+            return;
+        }
+
+        List<FolderSingleDisplayItem> visible;
+        if (_singleLeftCollapsedPaths.Count == 0)
+        {
+            foreach (var item in _rawSingleLeftItems)
+            {
+                if (item.IsDirectory && !item.IsExpanded) item.IsExpanded = true;
+            }
+            visible = _rawSingleLeftItems;
+        }
+        else
+        {
+            visible = new List<FolderSingleDisplayItem>(_rawSingleLeftItems.Count);
+            string? skipPrefix = null;
+
+            foreach (var item in _rawSingleLeftItems)
+            {
+                string norm = item.RelativePath.Replace('\\', '/');
+                if (skipPrefix != null)
+                {
+                    if (norm.StartsWith(skipPrefix, StringComparison.OrdinalIgnoreCase)) continue;
+                    else skipPrefix = null;
+                }
+
+                bool isHidden = false;
+                foreach (var ancestor in item.AncestorPaths)
+                {
+                    if (_singleLeftCollapsedPaths.Contains(ancestor))
+                    {
+                        isHidden = true;
+                        skipPrefix = ancestor + "/";
+                        break;
+                    }
+                }
+                if (isHidden) continue;
+
+                if (item.IsDirectory)
+                {
+                    bool isCollapsed = _singleLeftCollapsedPaths.Contains(norm);
+                    item.IsExpanded = !isCollapsed;
+                    if (isCollapsed) skipPrefix = norm + "/";
+                }
+
+                visible.Add(item);
+            }
+        }
+
+        var sv = GetScrollViewer(LeftSingleListView);
+        double? prevOffset = sv?.VerticalOffset;
+
+        if (LeftSingleListView != null && LeftSingleListView.ItemsSource != _visibleSingleLeftItems)
+        {
+            LeftSingleListView.ItemsSource = _visibleSingleLeftItems;
+        }
+
+        _visibleSingleLeftItems.Clear();
+        foreach (var item in visible)
+        {
+            _visibleSingleLeftItems.Add(item);
+        }
+
+        if (prevOffset.HasValue && prevOffset.Value > 0 && sv != null)
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                sv.ChangeView(null, prevOffset.Value, null, disableAnimation: true);
+            });
+        }
+    }
+
+    private void RecomputeSingleRightVisible()
+    {
+        if (_rawSingleRightItems == null || _rawSingleRightItems.Count == 0)
+        {
+            _visibleSingleRightItems.Clear();
+            return;
+        }
+
+        List<FolderSingleDisplayItem> visible;
+        if (_singleRightCollapsedPaths.Count == 0)
+        {
+            foreach (var item in _rawSingleRightItems)
+            {
+                if (item.IsDirectory && !item.IsExpanded) item.IsExpanded = true;
+            }
+            visible = _rawSingleRightItems;
+        }
+        else
+        {
+            visible = new List<FolderSingleDisplayItem>(_rawSingleRightItems.Count);
+            string? skipPrefix = null;
+
+            foreach (var item in _rawSingleRightItems)
+            {
+                string norm = item.RelativePath.Replace('\\', '/');
+                if (skipPrefix != null)
+                {
+                    if (norm.StartsWith(skipPrefix, StringComparison.OrdinalIgnoreCase)) continue;
+                    else skipPrefix = null;
+                }
+
+                bool isHidden = false;
+                foreach (var ancestor in item.AncestorPaths)
+                {
+                    if (_singleRightCollapsedPaths.Contains(ancestor))
+                    {
+                        isHidden = true;
+                        skipPrefix = ancestor + "/";
+                        break;
+                    }
+                }
+                if (isHidden) continue;
+
+                if (item.IsDirectory)
+                {
+                    bool isCollapsed = _singleRightCollapsedPaths.Contains(norm);
+                    item.IsExpanded = !isCollapsed;
+                    if (isCollapsed) skipPrefix = norm + "/";
+                }
+
+                visible.Add(item);
+            }
+        }
+
+        var sv = GetScrollViewer(RightSingleListView);
+        double? prevOffset = sv?.VerticalOffset;
+
+        if (RightSingleListView != null && RightSingleListView.ItemsSource != _visibleSingleRightItems)
+        {
+            RightSingleListView.ItemsSource = _visibleSingleRightItems;
+        }
+
+        _visibleSingleRightItems.Clear();
+        foreach (var item in visible)
+        {
+            _visibleSingleRightItems.Add(item);
+        }
+
+        if (prevOffset.HasValue && prevOffset.Value > 0 && sv != null)
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                sv.ChangeView(null, prevOffset.Value, null, disableAnimation: true);
+            });
+        }
+    }
+
     private void OnItemDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
         if (FolderDiffListView?.SelectedItem is FolderDiffDisplayItem item)
         {
-            if (item.IsDirectory) return;
+            if (item.IsDirectory)
+            {
+                ToggleFolderExpansion(item, null);
+                return;
+            }
             string leftFile = (!string.IsNullOrEmpty(_leftFolder) && !item.IsLeftMissing) ? Path.Combine(_leftFolder, item.RelativePath.Replace('/', '\\')) : "";
             string rightFile = (!string.IsNullOrEmpty(_rightFolder) && !item.IsRightMissing) ? Path.Combine(_rightFolder, item.RelativePath.Replace('/', '\\')) : "";
 
@@ -1002,7 +1723,12 @@ public sealed partial class FolderDiffPage : Page, IDisposable
     {
         if (LeftSingleListView?.SelectedItem is FolderSingleDisplayItem item)
         {
-            if (item.IsDirectory || string.IsNullOrEmpty(_leftFolder)) return;
+            if (item.IsDirectory)
+            {
+                ToggleSingleLeftFolderExpansion(item, null);
+                return;
+            }
+            if (string.IsNullOrEmpty(_leftFolder)) return;
             string fullPath = Path.Combine(_leftFolder, item.RelativePath.Replace('/', '\\'));
             OpenSingleFile(fullPath);
         }
@@ -1012,7 +1738,12 @@ public sealed partial class FolderDiffPage : Page, IDisposable
     {
         if (RightSingleListView?.SelectedItem is FolderSingleDisplayItem item)
         {
-            if (item.IsDirectory || string.IsNullOrEmpty(_rightFolder)) return;
+            if (item.IsDirectory)
+            {
+                ToggleSingleRightFolderExpansion(item, null);
+                return;
+            }
+            if (string.IsNullOrEmpty(_rightFolder)) return;
             string fullPath = Path.Combine(_rightFolder, item.RelativePath.Replace('/', '\\'));
             OpenSingleFile(fullPath);
         }
@@ -1332,18 +2063,24 @@ public sealed partial class FolderDiffPage : Page, IDisposable
                 System.Diagnostics.Debug.WriteLine($"ScanSingleFolderAsync background scan error: {ex.Message}");
             }
 
-            return results.OrderBy(x => !x.IsDirectory).ThenBy(x => x.RelativePath, StringComparer.OrdinalIgnoreCase).ToList();
+            return results;
         });
 
         var displayItems = new List<FolderSingleDisplayItem>(rawList.Count);
         foreach (var raw in rawList)
         {
             var (glyph, brush) = raw.IsDirectory ? ("\uED25", FolderIconBrush) : GetFileIcon(raw.Extension);
+            var (depth, parentPath, ancestors) = ComputeHierarchy(raw.RelativePath);
+
             displayItems.Add(new FolderSingleDisplayItem
             {
                 RelativePath = raw.RelativePath,
                 Name = raw.Name,
                 IsDirectory = raw.IsDirectory,
+                Depth = depth,
+                ParentPath = parentPath,
+                AncestorPaths = ancestors,
+                IsExpanded = true,
                 SizeFormatted = raw.IsDirectory ? "---" : FormatSize(raw.Size),
                 ModifiedFormatted = raw.ModifiedTime.ToString("yyyy-MM-dd HH:mm"),
                 IconGlyph = glyph,
@@ -1351,7 +2088,7 @@ public sealed partial class FolderDiffPage : Page, IDisposable
             });
         }
 
-        return displayItems;
+        return SortFolderSingleItems(displayItems);
     }
 
     private async Task LoadSingleFolderPreviewAsync(string folderPath, bool isLeft)
@@ -1381,13 +2118,17 @@ public sealed partial class FolderDiffPage : Page, IDisposable
 
             if (isLeft)
             {
-                if (LeftSingleListView != null) LeftSingleListView.ItemsSource = items;
+                _rawSingleLeftItems = items;
+                _singleLeftCollapsedPaths.Clear();
+                RecomputeSingleLeftVisible();
                 if (LeftSingleContainer != null) LeftSingleContainer.Visibility = Visibility.Visible;
                 SetStatusPrompt(string.Format(LanguageManager.Instance.Text("scannedItemsPleaseSelectTarget"), items.Count));
             }
             else
             {
-                if (RightSingleListView != null) RightSingleListView.ItemsSource = items;
+                _rawSingleRightItems = items;
+                _singleRightCollapsedPaths.Clear();
+                RecomputeSingleRightVisible();
                 if (RightSingleContainer != null) RightSingleContainer.Visibility = Visibility.Visible;
                 SetStatusPrompt(string.Format(LanguageManager.Instance.Text("scannedItemsPleaseSelectSource"), items.Count));
             }
@@ -1452,6 +2193,11 @@ public sealed partial class FolderDiffPage : Page, IDisposable
             }
 
             _allItems?.Clear();
+            _collapsedPaths?.Clear();
+            _singleLeftCollapsedPaths?.Clear();
+            _singleRightCollapsedPaths?.Clear();
+            _rawSingleLeftItems?.Clear();
+            _rawSingleRightItems?.Clear();
             App.Log("[FolderDiffPage] Dispose completed.");
         }
         catch (Exception ex)

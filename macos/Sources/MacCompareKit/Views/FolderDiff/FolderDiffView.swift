@@ -104,31 +104,37 @@ public struct FolderDiffView: View {
                 Divider()
 
                 // Dual Pane Folder Comparison Tree
-                HStack(spacing: 0) {
-                    // Left Folder Pane
-                    folderColumn(
-                        title: viewModel.leftFolderURL != nil ? viewModel.leftFolderName : languageManager.text(.noSourceFolder),
-                        isLeft: true,
-                        hasFolder: viewModel.leftFolderURL != nil,
-                        onChoose: { viewModel.chooseLeftFolder() }
-                    )
-                    .background(isLeftDropTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
-                    .onDrop(of: [.fileURL], isTargeted: $isLeftDropTargeted) { providers in
-                        handleFolderDrop(providers: providers, isLeft: true)
-                    }
+                if viewModel.leftFolderURL != nil && viewModel.rightFolderURL != nil {
+                    dualPaneComparisonView()
+                } else {
+                    HStack(spacing: 0) {
+                        // Left Folder Pane
+                        folderColumn(
+                            title: viewModel.leftFolderURL != nil ? viewModel.leftFolderName : languageManager.text(.noSourceFolder),
+                            isLeft: true,
+                            hasFolder: viewModel.leftFolderURL != nil,
+                            onChoose: { viewModel.chooseLeftFolder() }
+                        )
+                        .background(isLeftDropTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
+                        .onDrop(of: [.fileURL], isTargeted: $isLeftDropTargeted) { providers in
+                            handleFolderDrop(providers: providers, isLeft: true)
+                        }
 
-                    Divider()
+                        Rectangle()
+                            .fill(Color(nsColor: .separatorColor))
+                            .frame(width: 1)
 
-                    // Right Folder Pane
-                    folderColumn(
-                        title: viewModel.rightFolderURL != nil ? viewModel.rightFolderName : languageManager.text(.noTargetFolder),
-                        isLeft: false,
-                        hasFolder: viewModel.rightFolderURL != nil,
-                        onChoose: { viewModel.chooseRightFolder() }
-                    )
-                    .background(isRightDropTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
-                    .onDrop(of: [.fileURL], isTargeted: $isRightDropTargeted) { providers in
-                        handleFolderDrop(providers: providers, isLeft: false)
+                        // Right Folder Pane
+                        folderColumn(
+                            title: viewModel.rightFolderURL != nil ? viewModel.rightFolderName : languageManager.text(.noTargetFolder),
+                            isLeft: false,
+                            hasFolder: viewModel.rightFolderURL != nil,
+                            onChoose: { viewModel.chooseRightFolder() }
+                        )
+                        .background(isRightDropTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
+                        .onDrop(of: [.fileURL], isTargeted: $isRightDropTargeted) { providers in
+                            handleFolderDrop(providers: providers, isLeft: false)
+                        }
                     }
                 }
 
@@ -240,6 +246,34 @@ public struct FolderDiffView: View {
             .disabled(!viewModel.hasFoldersLoaded)
             .help("Preview and sync all target files to source")
 
+            Divider().frame(height: 16)
+
+            Button {
+                withAnimation(.snappy(duration: 0.25, extraBounce: 0.0)) {
+                    viewModel.expandAllFolders()
+                }
+            } label: {
+                Label(languageManager.text(.expandAll), systemImage: "arrow.down.right.and.arrow.up.left")
+                    .font(.system(size: 11))
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .disabled(!viewModel.hasFoldersLoaded)
+            .help(languageManager.text(.expandAll))
+
+            Button {
+                withAnimation(.snappy(duration: 0.25, extraBounce: 0.0)) {
+                    viewModel.collapseAllFolders()
+                }
+            } label: {
+                Label(languageManager.text(.collapseAll), systemImage: "arrow.up.right.and.arrow.down.left")
+                    .font(.system(size: 11))
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .disabled(!viewModel.hasFoldersLoaded)
+            .help(languageManager.text(.collapseAll))
+
             Spacer()
 
             Button {
@@ -286,6 +320,127 @@ public struct FolderDiffView: View {
         .background(Color(nsColor: .controlBackgroundColor))
     }
 
+    private func dualPaneComparisonView() -> some View {
+        VStack(spacing: 0) {
+            // Pane Header
+            HStack(spacing: 0) {
+                folderHeaderBar(
+                    title: viewModel.leftFolderName,
+                    isLeft: true,
+                    onChoose: { viewModel.chooseLeftFolder() }
+                )
+                .background(isLeftDropTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
+                .onDrop(of: [.fileURL], isTargeted: $isLeftDropTargeted) { providers in
+                    handleFolderDrop(providers: providers, isLeft: true)
+                }
+                .frame(maxWidth: .infinity)
+
+                Rectangle()
+                    .fill(Color(nsColor: .separatorColor))
+                    .frame(width: 1)
+
+                folderHeaderBar(
+                    title: viewModel.rightFolderName,
+                    isLeft: false,
+                    onChoose: { viewModel.chooseRightFolder() }
+                )
+                .background(isRightDropTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
+                .onDrop(of: [.fileURL], isTargeted: $isRightDropTargeted) { providers in
+                    handleFolderDrop(providers: providers, isLeft: false)
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+
+            Divider()
+
+            // Column Titles
+            HStack(spacing: 0) {
+                columnTitlesBar()
+                    .frame(maxWidth: .infinity)
+
+                Rectangle()
+                    .fill(Color(nsColor: .separatorColor))
+                    .frame(width: 1)
+
+                columnTitlesBar()
+                    .frame(maxWidth: .infinity)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+
+            Divider()
+
+            // Unified Tree Rows (Single ScrollView for 100% Synchronized Vertical Scrolling)
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(viewModel.visibleEntries, id: \.id) { entry in
+                        HStack(spacing: 0) {
+                            singleSideRowView(entry: entry, isLeft: true)
+                                .frame(maxWidth: .infinity)
+
+                            Rectangle()
+                                .fill(Color(nsColor: .separatorColor).opacity(0.3))
+                                .frame(width: 1)
+
+                            singleSideRowView(entry: entry, isLeft: false)
+                                .frame(maxWidth: .infinity)
+                        }
+                        .fixedSize(horizontal: false, vertical: true)
+                        .transition(.opacity)
+                        .contentShape(Rectangle())
+                        .onTapGesture(count: 2) {
+                            withAnimation(.snappy(duration: 0.22, extraBounce: 0.0)) {
+                                viewModel.handleRowDoubleClick(entry: entry)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func folderHeaderBar(
+        title: String,
+        isLeft: Bool,
+        onChoose: @escaping () -> Void
+    ) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "folder.fill")
+                .foregroundColor(isLeft ? .blue : .green)
+            Text(title)
+                .font(.system(size: 12, weight: .semibold))
+                .lineLimit(1)
+
+            Spacer()
+
+            Button(languageManager.text(.chooseButton)) {
+                onChoose()
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.mini)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+    }
+
+    private func columnTitlesBar() -> some View {
+        HStack {
+            Text(languageManager.text(.colName)).frame(maxWidth: .infinity, alignment: .leading)
+            if viewModel.selectedMode == .deepHash {
+                Text(languageManager.text(.colHash)).frame(width: 80, alignment: .trailing)
+            }
+            Text(languageManager.text(.colSize)).frame(width: 70, alignment: .trailing)
+            Text(languageManager.text(.colModified)).frame(width: 140, alignment: .trailing)
+        }
+        .font(.system(size: 11, weight: .medium))
+        .foregroundColor(.secondary)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 4)
+        .background(Color(nsColor: .windowBackgroundColor).opacity(0.3))
+    }
+
     private func folderColumn(
         title: String,
         isLeft: Bool,
@@ -293,55 +448,26 @@ public struct FolderDiffView: View {
         onChoose: @escaping () -> Void
     ) -> some View {
         VStack(spacing: 0) {
-            // Pane Header
-            HStack(spacing: 6) {
-                Image(systemName: "folder.fill")
-                    .foregroundColor(isLeft ? .blue : .green)
-                Text(title)
-                    .font(.system(size: 12, weight: .semibold))
-                    .lineLimit(1)
-
-                Spacer()
-
-                Button(languageManager.text(.chooseButton)) {
-                    onChoose()
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.mini)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+            folderHeaderBar(title: title, isLeft: isLeft, onChoose: onChoose)
 
             Divider()
 
             if !hasFolder {
                 emptyFolderDropZone(isLeft: isLeft, onChoose: onChoose)
             } else {
-                // Column Titles
-                HStack {
-                    Text("Name").frame(maxWidth: .infinity, alignment: .leading)
-                    if viewModel.selectedMode == .deepHash {
-                        Text("CRC32").frame(width: 80, alignment: .trailing)
-                    }
-                    Text("Size").frame(width: 70, alignment: .trailing)
-                    Text("Modified").frame(width: 140, alignment: .trailing)
-                }
-                .font(.system(size: 11, weight: .medium))
-                .foregroundColor(.secondary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 4)
-                .background(Color(nsColor: .windowBackgroundColor).opacity(0.3))
+                columnTitlesBar()
 
                 Divider()
 
-                // Tree Rows
                 ScrollView {
-                    VStack(spacing: 0) {
-                        ForEach(viewModel.entries) { entry in
-                            rowView(entry: entry, isLeft: isLeft)
+                    LazyVStack(spacing: 0) {
+                        ForEach(viewModel.visibleEntries, id: \.id) { entry in
+                            singleSideRowView(entry: entry, isLeft: isLeft)
+                                .transition(.opacity)
                                 .onTapGesture(count: 2) {
-                                    viewModel.handleRowDoubleClick(entry: entry)
+                                    withAnimation(.snappy(duration: 0.22, extraBounce: 0.0)) {
+                                        viewModel.handleRowDoubleClick(entry: entry)
+                                    }
                                 }
                         }
                     }
@@ -375,12 +501,20 @@ public struct FolderDiffView: View {
         .padding(24)
     }
 
-    private func rowView(entry: AlignedFolderRow, isLeft: Bool) -> some View {
-        HStack {
+    private func singleSideRowView(entry: AlignedFolderRow, isLeft: Bool) -> some View {
+        HStack(spacing: 0) {
             if isLeft && entry.isLeftMissing || !isLeft && entry.isRightMissing {
-                Text("-----------------")
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundColor(.secondary.opacity(0.4))
+                HStack(spacing: 4) {
+                    if entry.depth > 0 {
+                        Spacer()
+                            .frame(width: CGFloat(entry.depth) * 16)
+                    }
+                    Spacer()
+                        .frame(width: 14)
+                    Text("-----------------")
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(.secondary.opacity(0.4))
+                }
                 Spacer()
                 if viewModel.selectedMode == .deepHash {
                     Text("---").frame(width: 80, alignment: .trailing).foregroundColor(.secondary.opacity(0.4))
@@ -388,11 +522,39 @@ public struct FolderDiffView: View {
                 Text("---").frame(width: 70, alignment: .trailing).foregroundColor(.secondary.opacity(0.4))
                 Text("---").frame(width: 140, alignment: .trailing).foregroundColor(.secondary.opacity(0.4))
             } else {
-                HStack(spacing: 6) {
-                    Image(systemName: entry.isDirectory ? "folder.fill" : "doc.text")
+                HStack(spacing: 4) {
+                    // 1. 层级深度缩进
+                    if entry.depth > 0 {
+                        Spacer()
+                            .frame(width: CGFloat(entry.depth) * 16)
+                    }
+
+                    // 2. 文件夹展开/折叠三角指示器（顺滑旋转动画）
+                    if entry.isDirectory {
+                        Button {
+                            withAnimation(.snappy(duration: 0.22, extraBounce: 0.0)) {
+                                viewModel.toggleFolderExpansion(path: entry.relativePath)
+                            }
+                        } label: {
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundColor(.secondary)
+                                .frame(width: 14, height: 14)
+                                .rotationEffect(.degrees(viewModel.isFolderExpanded(path: entry.relativePath) ? 90 : 0))
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        // 文件占位对齐
+                        Spacer()
+                            .frame(width: 14)
+                    }
+
+                    // 3. 文件/目录图标
+                    Image(systemName: entry.isDirectory ? (viewModel.isFolderExpanded(path: entry.relativePath) ? "folder.fill" : "folder") : "doc.text")
                         .foregroundColor(entry.isDirectory ? .blue : .secondary)
                         .font(.system(size: 11))
 
+                    // 4. 名称
                     Text(entry.name)
                         .font(.system(size: 11))
                         .lineLimit(1)

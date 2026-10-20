@@ -216,4 +216,199 @@ final class MacCompareTests: XCTestCase {
         XCTAssertEqual(checker.localizedReleaseNotes(for: .zhHans), "Plain notes without language tags.")
         XCTAssertEqual(checker.localizedReleaseNotes(for: .en), "Plain notes without language tags.")
     }
+
+    @MainActor
+    func testFolderRowDepthAndParentPath() {
+        let rootFile = AlignedFolderRow(
+            relativePath: ".dockerignore",
+            name: ".dockerignore",
+            isDirectory: false,
+            status: .equal,
+            leftSizeFormatted: "10 B",
+            leftModifiedFormatted: "-",
+            rightSizeFormatted: "10 B",
+            rightModifiedFormatted: "-",
+            leftHash: nil,
+            rightHash: nil,
+            leftURL: nil,
+            rightURL: nil
+        )
+        XCTAssertEqual(rootFile.depth, 0)
+        XCTAssertNil(rootFile.parentPath)
+
+        let subFolder = AlignedFolderRow(
+            relativePath: "issue_templates",
+            name: "issue_templates",
+            isDirectory: true,
+            status: .equal,
+            leftSizeFormatted: "-",
+            leftModifiedFormatted: "-",
+            rightSizeFormatted: "-",
+            rightModifiedFormatted: "-",
+            leftHash: nil,
+            rightHash: nil,
+            leftURL: nil,
+            rightURL: nil
+        )
+        XCTAssertEqual(subFolder.depth, 0)
+        XCTAssertNil(subFolder.parentPath)
+
+        let childFile = AlignedFolderRow(
+            relativePath: "issue_templates/Bug.md",
+            name: "Bug.md",
+            isDirectory: false,
+            status: .equal,
+            leftSizeFormatted: "973 B",
+            leftModifiedFormatted: "-",
+            rightSizeFormatted: "973 B",
+            rightModifiedFormatted: "-",
+            leftHash: nil,
+            rightHash: nil,
+            leftURL: nil,
+            rightURL: nil
+        )
+        XCTAssertEqual(childFile.depth, 1)
+        XCTAssertEqual(childFile.parentPath, "issue_templates")
+
+        let nestedFile = AlignedFolderRow(
+            relativePath: "a/b/c/nested.txt",
+            name: "nested.txt",
+            isDirectory: false,
+            status: .equal,
+            leftSizeFormatted: "100 B",
+            leftModifiedFormatted: "-",
+            rightSizeFormatted: "100 B",
+            rightModifiedFormatted: "-",
+            leftHash: nil,
+            rightHash: nil,
+            leftURL: nil,
+            rightURL: nil
+        )
+        XCTAssertEqual(nestedFile.depth, 3)
+        XCTAssertEqual(nestedFile.parentPath, "a/b/c")
+    }
+
+    @MainActor
+    func testFolderTreeSorting() {
+        let r1 = AlignedFolderRow(
+            relativePath: "issue_templates/Bug.md",
+            name: "Bug.md",
+            isDirectory: false,
+            status: .equal,
+            leftSizeFormatted: "-",
+            leftModifiedFormatted: "-",
+            rightSizeFormatted: "-",
+            rightModifiedFormatted: "-",
+            leftHash: nil, rightHash: nil, leftURL: nil, rightURL: nil
+        )
+        let r2 = AlignedFolderRow(
+            relativePath: "issue_templates",
+            name: "issue_templates",
+            isDirectory: true,
+            status: .equal,
+            leftSizeFormatted: "-",
+            leftModifiedFormatted: "-",
+            rightSizeFormatted: "-",
+            rightModifiedFormatted: "-",
+            leftHash: nil, rightHash: nil, leftURL: nil, rightURL: nil
+        )
+        let r3 = AlignedFolderRow(
+            relativePath: ".dockerignore",
+            name: ".dockerignore",
+            isDirectory: false,
+            status: .equal,
+            leftSizeFormatted: "-",
+            leftModifiedFormatted: "-",
+            rightSizeFormatted: "-",
+            rightModifiedFormatted: "-",
+            leftHash: nil, rightHash: nil, leftURL: nil, rightURL: nil
+        )
+        let r4 = AlignedFolderRow(
+            relativePath: "issue_templates/sub_dir",
+            name: "sub_dir",
+            isDirectory: true,
+            status: .equal,
+            leftSizeFormatted: "-",
+            leftModifiedFormatted: "-",
+            rightSizeFormatted: "-",
+            rightModifiedFormatted: "-",
+            leftHash: nil, rightHash: nil, leftURL: nil, rightURL: nil
+        )
+
+        let sorted = FolderDiffViewModel.sortFolderRows([r1, r2, r3, r4])
+        let sortedPaths = sorted.map { $0.relativePath }
+
+        // .dockerignore is file in root; issue_templates is folder in root (folder first, or sorted relative)
+        // Parent folder issue_templates must precede its child issue_templates/Bug.md and sub_dir
+        XCTAssertTrue(sortedPaths.firstIndex(of: "issue_templates")! < sortedPaths.firstIndex(of: "issue_templates/Bug.md")!)
+        XCTAssertTrue(sortedPaths.firstIndex(of: "issue_templates")! < sortedPaths.firstIndex(of: "issue_templates/sub_dir")!)
+        // In issue_templates: sub_dir is directory, should precede Bug.md file
+        XCTAssertTrue(sortedPaths.firstIndex(of: "issue_templates/sub_dir")! < sortedPaths.firstIndex(of: "issue_templates/Bug.md")!)
+    }
+
+    @MainActor
+    func testFolderCollapseAndExpand() {
+        let vm = FolderDiffViewModel()
+
+        let folder = AlignedFolderRow(
+            relativePath: "issue_templates",
+            name: "issue_templates",
+            isDirectory: true,
+            status: .equal,
+            leftSizeFormatted: "-", leftModifiedFormatted: "-", rightSizeFormatted: "-", rightModifiedFormatted: "-",
+            leftHash: nil, rightHash: nil, leftURL: nil, rightURL: nil
+        )
+        let child1 = AlignedFolderRow(
+            relativePath: "issue_templates/Bug.md",
+            name: "Bug.md",
+            isDirectory: false,
+            status: .equal,
+            leftSizeFormatted: "-", leftModifiedFormatted: "-", rightSizeFormatted: "-", rightModifiedFormatted: "-",
+            leftHash: nil, rightHash: nil, leftURL: nil, rightURL: nil
+        )
+        let child2 = AlignedFolderRow(
+            relativePath: "issue_templates/sub/Deep.md",
+            name: "Deep.md",
+            isDirectory: false,
+            status: .equal,
+            leftSizeFormatted: "-", leftModifiedFormatted: "-", rightSizeFormatted: "-", rightModifiedFormatted: "-",
+            leftHash: nil, rightHash: nil, leftURL: nil, rightURL: nil
+        )
+        let otherFile = AlignedFolderRow(
+            relativePath: ".gitignore",
+            name: ".gitignore",
+            isDirectory: false,
+            status: .equal,
+            leftSizeFormatted: "-", leftModifiedFormatted: "-", rightSizeFormatted: "-", rightModifiedFormatted: "-",
+            leftHash: nil, rightHash: nil, leftURL: nil, rightURL: nil
+        )
+
+        vm.entries = [folder, child1, child2, otherFile]
+
+        // Default: all expanded
+        XCTAssertTrue(vm.isFolderExpanded(path: "issue_templates"))
+        XCTAssertEqual(vm.visibleEntries.count, 4)
+
+        // Toggle to collapse
+        vm.toggleFolderExpansion(path: "issue_templates")
+        XCTAssertFalse(vm.isFolderExpanded(path: "issue_templates"))
+        // Both child1 and deep child2 must be hidden; folder itself and otherFile remain visible
+        XCTAssertEqual(vm.visibleEntries.count, 2)
+        XCTAssertEqual(vm.visibleEntries.map { $0.relativePath }, ["issue_templates", ".gitignore"])
+
+        // Expand all
+        vm.expandAllFolders()
+        XCTAssertTrue(vm.isFolderExpanded(path: "issue_templates"))
+        XCTAssertEqual(vm.visibleEntries.count, 4)
+
+        // Collapse all
+        vm.collapseAllFolders()
+        XCTAssertFalse(vm.isFolderExpanded(path: "issue_templates"))
+        XCTAssertEqual(vm.visibleEntries.count, 2)
+
+        // Test double click folder toggles expansion
+        vm.handleRowDoubleClick(entry: folder)
+        XCTAssertTrue(vm.isFolderExpanded(path: "issue_templates"))
+        XCTAssertEqual(vm.visibleEntries.count, 4)
+    }
 }

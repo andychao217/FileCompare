@@ -25,7 +25,7 @@ public struct RecentCompareSession: Identifiable, Sendable, Codable, Equatable {
     }
 }
 
-public struct AlignedFolderRow: Identifiable, Sendable {
+public struct AlignedFolderRow: Identifiable, Sendable, Equatable {
     public var id: String { relativePath }
     public let relativePath: String
     public let name: String
@@ -42,8 +42,57 @@ public struct AlignedFolderRow: Identifiable, Sendable {
     public let leftURL: URL?
     public let rightURL: URL?
 
+    public let depth: Int
+    public let parentPath: String?
+    public let ancestorPaths: [String]
+
     public var isLeftMissing: Bool { status == .rightOnly }
     public var isRightMissing: Bool { status == .leftOnly }
+
+    public init(
+        relativePath: String,
+        name: String,
+        isDirectory: Bool,
+        status: FolderItemStatus,
+        leftSizeFormatted: String,
+        leftModifiedFormatted: String,
+        rightSizeFormatted: String,
+        rightModifiedFormatted: String,
+        leftHash: String?,
+        rightHash: String?,
+        leftURL: URL?,
+        rightURL: URL?
+    ) {
+        self.relativePath = relativePath
+        self.name = name
+        self.isDirectory = isDirectory
+        self.status = status
+        self.leftSizeFormatted = leftSizeFormatted
+        self.leftModifiedFormatted = leftModifiedFormatted
+        self.rightSizeFormatted = rightSizeFormatted
+        self.rightModifiedFormatted = rightModifiedFormatted
+        self.leftHash = leftHash
+        self.rightHash = rightHash
+        self.leftURL = leftURL
+        self.rightURL = rightURL
+
+        let parts = relativePath.split(separator: "/")
+        self.depth = max(0, parts.count - 1)
+        if parts.count > 1 {
+            self.parentPath = parts.dropLast().joined(separator: "/")
+            var ancestors: [String] = []
+            var current = ""
+            for i in 0..<(parts.count - 1) {
+                if i > 0 { current += "/" }
+                current += parts[i]
+                ancestors.append(current)
+            }
+            self.ancestorPaths = ancestors
+        } else {
+            self.parentPath = nil
+            self.ancestorPaths = []
+        }
+    }
 }
 
 @MainActor
@@ -66,7 +115,12 @@ public final class FolderDiffViewModel {
     public var syncExecutionResult: String?
     public var isScanning: Bool = false
 
-    public var entries: [AlignedFolderRow] = []
+    public var entries: [AlignedFolderRow] = [] {
+        didSet { recomputeVisibleEntries() }
+    }
+    public var collapsedPaths: Set<String> = []
+    public private(set) var visibleEntries: [AlignedFolderRow] = []
+
     public var totalScanned: Int = 0
     public var modifiedCount: Int = 0
     public var addedCount: Int = 0
@@ -128,6 +182,8 @@ public final class FolderDiffViewModel {
         leftFolderName = LanguageManager.shared.text(.noSourceFolder)
         rightFolderName = LanguageManager.shared.text(.noTargetFolder)
         entries = []
+        collapsedPaths.removeAll()
+        visibleEntries = []
         pendingSyncPlan = []
         syncExecutionResult = nil
         isScanning = false
@@ -135,6 +191,97 @@ public final class FolderDiffViewModel {
         modifiedCount = 0
         addedCount = 0
         deletedCount = 0
+    }
+
+    public func recomputeVisibleEntries() {
+        guard !collapsedPaths.isEmpty else {
+            self.visibleEntries = entries
+            return
+        }
+
+        var visible: [AlignedFolderRow] = []
+        visible.reserveCapacity(entries.count)
+
+        var skipPrefix: String? = nil
+
+        for entry in entries {
+            if let activeSkip = skipPrefix {
+                if entry.relativePath.hasPrefix(activeSkip) {
+                    continue
+                } else {
+                    skipPrefix = nil
+                }
+            }
+
+            var isHidden = false
+            for ancestor in entry.ancestorPaths {
+                if collapsedPaths.contains(ancestor) {
+                    isHidden = true
+                    skipPrefix = ancestor + "/"
+                    break
+                }
+            }
+
+            if isHidden {
+                continue
+            }
+
+            visible.append(entry)
+
+            if entry.isDirectory && collapsedPaths.contains(entry.relativePath) {
+                skipPrefix = entry.relativePath + "/"
+            }
+        }
+
+        self.visibleEntries = visible
+    }
+
+    public func isFolderExpanded(path: String) -> Bool {
+        !collapsedPaths.contains(path)
+    }
+
+    public func toggleFolderExpansion(path: String) {
+        if collapsedPaths.contains(path) {
+            collapsedPaths.remove(path)
+        } else {
+            collapsedPaths.insert(path)
+        }
+        recomputeVisibleEntries()
+    }
+
+    public func expandAllFolders() {
+        collapsedPaths.removeAll()
+        recomputeVisibleEntries()
+    }
+
+    public func collapseAllFolders() {
+        let dirPaths = entries.filter { $0.isDirectory }.map { $0.relativePath }
+        collapsedPaths = Set(dirPaths)
+        recomputeVisibleEntries()
+    }
+
+    public static func sortFolderRows(_ rows: [AlignedFolderRow]) -> [AlignedFolderRow] {
+        rows.sorted { (r1: AlignedFolderRow, r2: AlignedFolderRow) in
+            let c1 = r1.relativePath.split(separator: "/").map(String.init)
+            let c2 = r2.relativePath.split(separator: "/").map(String.init)
+            let minCount = min(c1.count, c2.count)
+
+            for i in 0..<minCount {
+                if c1[i] != c2[i] {
+                    let isDir1 = (i < c1.count - 1) ? true : r1.isDirectory
+                    let isDir2 = (i < c2.count - 1) ? true : r2.isDirectory
+                    if isDir1 != isDir2 {
+                        return isDir1
+                    }
+                    return c1[i].localizedStandardCompare(c2[i]) == .orderedAscending
+                }
+            }
+
+            if c1.count != c2.count {
+                return c1.count < c2.count
+            }
+            return r1.isDirectory && !r2.isDirectory
+        }
     }
 
     public func loadSingleFolder(from url: URL, isLeft: Bool) {
@@ -281,12 +428,7 @@ public final class FolderDiffViewModel {
             results.append(row)
         }
 
-        return results.sorted { (r1: AlignedFolderRow, r2: AlignedFolderRow) in
-            if r1.isDirectory != r2.isDirectory {
-                return r1.isDirectory
-            }
-            return r1.relativePath.localizedStandardCompare(r2.relativePath) == .orderedAscending
-        }
+        return Self.sortFolderRows(results)
     }
 
     public func scanDirectories() async {
@@ -344,7 +486,7 @@ public final class FolderDiffViewModel {
                 )
             }
 
-            self.entries = mapped
+            self.entries = Self.sortFolderRows(mapped)
             self.totalScanned = mapped.count
             self.modifiedCount = mod
             self.addedCount = add
@@ -353,7 +495,7 @@ public final class FolderDiffViewModel {
         } else if let left = leftFolderURL {
             isScanning = true
             let mapped = await scanSingleDirectory(url: left, isLeft: true)
-            self.entries = mapped
+            self.entries = Self.sortFolderRows(mapped)
             self.totalScanned = mapped.count
             self.modifiedCount = 0
             self.addedCount = 0
@@ -362,7 +504,7 @@ public final class FolderDiffViewModel {
         } else if let right = rightFolderURL {
             isScanning = true
             let mapped = await scanSingleDirectory(url: right, isLeft: false)
-            self.entries = mapped
+            self.entries = Self.sortFolderRows(mapped)
             self.totalScanned = mapped.count
             self.modifiedCount = 0
             self.addedCount = mapped.count
@@ -379,7 +521,10 @@ public final class FolderDiffViewModel {
     }
 
     public func handleRowDoubleClick(entry: AlignedFolderRow) {
-        guard !entry.isDirectory else { return }
+        if entry.isDirectory {
+            toggleFolderExpansion(path: entry.relativePath)
+            return
+        }
         guard let lURL = entry.leftURL ?? leftFolderURL?.appendingPathComponent(entry.relativePath),
               let rURL = entry.rightURL ?? rightFolderURL?.appendingPathComponent(entry.relativePath) else {
             return

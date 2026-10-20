@@ -1403,6 +1403,18 @@ public sealed class LanguageManager
             [AppLanguage.En] = "Drop or select right folder",
             [AppLanguage.Ja] = "右側のフォルダをドロップまたは選択"
         },
+        ["expandAll"] = new()
+        {
+            [AppLanguage.ZhHans] = "全部展开",
+            [AppLanguage.En] = "Expand All",
+            [AppLanguage.Ja] = "すべて展開"
+        },
+        ["collapseAll"] = new()
+        {
+            [AppLanguage.ZhHans] = "全部折叠",
+            [AppLanguage.En] = "Collapse All",
+            [AppLanguage.Ja] = "すべて折りたたむ"
+        },
         ["folderColName"] = new()
         {
             [AppLanguage.ZhHans] = "名称",

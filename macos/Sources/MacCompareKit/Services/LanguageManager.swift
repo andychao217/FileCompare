@@ -179,6 +179,12 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case modifiedCount
     case addedCount
     case deletedCount
+    case colName
+    case colSize
+    case colModified
+    case colHash
+    case expandAll
+    case collapseAll
 
     // Sync Sheet
     case dryRunTitle
@@ -755,6 +761,12 @@ public final class LanguageManager {
         .modifiedCount: "modified",
         .addedCount: "added",
         .deletedCount: "deleted",
+        .colName: "Name",
+        .colSize: "Size",
+        .colModified: "Modified",
+        .colHash: "CRC32",
+        .expandAll: "Expand All",
+        .collapseAll: "Collapse All",
         .dryRunTitle: "Dry Run: Sync Actions Preview",
         .dryRunSubtitle: "Review pending disk operations before executing.",
         .completelyInSync: "Directories are completely in sync.",
@@ -1071,6 +1083,12 @@ public final class LanguageManager {
         .modifiedCount: "处修改",
         .addedCount: "处新增",
         .deletedCount: "处删除",
+        .colName: "名称",
+        .colSize: "大小",
+        .colModified: "修改时间",
+        .colHash: "CRC32",
+        .expandAll: "全部展开",
+        .collapseAll: "全部折叠",
         .dryRunTitle: "预演: 文件同步操作清单",
         .dryRunSubtitle: "在执行实际磁盘写操作前仔细检查以下变更项目。",
         .completelyInSync: "两侧文件夹内容完全一致，无需同步。",
@@ -1387,6 +1405,12 @@ public final class LanguageManager {
         .modifiedCount: "件の変更",
         .addedCount: "件の追加",
         .deletedCount: "件の削除",
+        .colName: "名前",
+        .colSize: "サイズ",
+        .colModified: "変更日時",
+        .colHash: "CRC32",
+        .expandAll: "すべて展開",
+        .collapseAll: "すべて折りたたむ",
         .dryRunTitle: "プレビュー: 同期アクション一覧",
         .dryRunSubtitle: "実際の同期を実行する前に変更内容を確認してください。",
         .completelyInSync: "両側のフォルダは完全に一致しています。",
