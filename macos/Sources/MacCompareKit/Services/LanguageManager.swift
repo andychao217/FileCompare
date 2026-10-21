@@ -383,6 +383,11 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case suggestSwitchToFolder
     case btnSwitchMode
     case btnGotIt
+
+    // Edit Mode Specific
+    case diffMode
+    case editMode
+    case doubleClickToEdit
 }
 
 @MainActor
@@ -949,7 +954,10 @@ public final class LanguageManager {
         .suggestSwitchToExcel: "The selected file is a spreadsheet. We recommend using the dedicated multi-sheet engine.\nWould you like to switch to 'Excel Diff' mode?",
         .suggestSwitchToFolder: "The selected item is a folder. Would you like to switch to 'Folder Diff' mode?",
         .btnSwitchMode: "Switch Mode & Open",
-        .btnGotIt: "Got It"
+        .btnGotIt: "Got It",
+        .diffMode: "Diff View",
+        .editMode: "Free Edit",
+        .doubleClickToEdit: "Double-click to edit line"
     ]
 
     private let zhHansDictionary: [L10nKey: String] = [
@@ -1271,7 +1279,10 @@ public final class LanguageManager {
         .suggestSwitchToExcel: "检测到您选择的是表格文件，建议使用多工作表对比引擎。\n是否切换至【Excel 对比】模式？",
         .suggestSwitchToFolder: "检测到所选项目为文件夹，是否切换至【文件夹对比】模式？",
         .btnSwitchMode: "切换模式并打开",
-        .btnGotIt: "我知道了"
+        .btnGotIt: "我知道了",
+        .diffMode: "对比视图",
+        .editMode: "自由编辑",
+        .doubleClickToEdit: "双击行可直接编辑"
     ]
 
     private let jaDictionary: [L10nKey: String] = [
@@ -1593,6 +1604,9 @@ public final class LanguageManager {
         .suggestSwitchToExcel: "選択されたファイルはスプレッドシートです。専用の表比較エンジンの使用を推奨します。\n「Excel 比較」モードに切り替えますか？",
         .suggestSwitchToFolder: "選択された項目はフォルダーです。「フォルダー比較」モードに切り替えますか？",
         .btnSwitchMode: "切り替えて開く",
-        .btnGotIt: "了解"
+        .btnGotIt: "了解",
+        .diffMode: "差分表示",
+        .editMode: "自由編集",
+        .doubleClickToEdit: "行をダブルクリックして編集"
     ]
 }

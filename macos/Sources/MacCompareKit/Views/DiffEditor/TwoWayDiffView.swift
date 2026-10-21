@@ -8,6 +8,7 @@ public struct TwoWayDiffView: View {
     @State private var isRightDropTargeted: Bool = false
     @State private var languageManager = LanguageManager.shared
     @State private var validationResult: ValidationResult?
+    @FocusState private var isLineEditorFocused: Bool
 
     public init(viewModel: TextDiffViewModel, tabManager: TabManager? = nil) {
         self.viewModel = viewModel
@@ -82,7 +83,7 @@ public struct TwoWayDiffView: View {
 
             Divider()
 
-            // Main Diff / Editor View
+            // Main Diff / Editor View (Always in-place editable diff)
             if isBothEmpty {
                 HStack(spacing: 0) {
                     emptyDropZone(isLeft: true)
@@ -225,6 +226,32 @@ public struct TwoWayDiffView: View {
                 )
             }
         }
+        .background {
+            Group {
+                Button("") {
+                    if viewModel.isLeftDirty { viewModel.saveLeftFile() }
+                    if viewModel.isRightDirty { viewModel.saveRightFile() }
+                }
+                .keyboardShortcut("s", modifiers: .command)
+
+                Button("") {
+                    viewModel.previousDiff()
+                }
+                .keyboardShortcut("[", modifiers: .command)
+
+                Button("") {
+                    viewModel.nextDiff()
+                }
+                .keyboardShortcut("]", modifiers: .command)
+            }
+            .opacity(0)
+            .frame(width: 0, height: 0)
+        }
+        .onChange(of: isLineEditorFocused) { _, isFocused in
+            if !isFocused {
+                commitCurrentLineEditIfAny()
+            }
+        }
     }
 
     private func singleEditorView(isLeft: Bool) -> some View {
@@ -244,15 +271,44 @@ public struct TwoWayDiffView: View {
                         .background(Color(nsColor: .windowBackgroundColor).opacity(0.3))
 
                         // Text content with clean neutral background
+                        let lineNum = UInt32(idx + 1)
+                        let key = isLeft ? "SL-\(lineNum)" : "SR-\(lineNum)"
+                        let content = isLeft ? line.contentLeft : line.contentRight
                         HStack {
-                            Text(isLeft ? line.contentLeft : line.contentRight)
-                                .font(.system(size: 12, design: .monospaced))
-                                .foregroundColor(.primary)
-                                .lineLimit(1)
+                            if viewModel.editingLineKey == key {
+                                CodeLineTextField(
+                                    text: $viewModel.editingLineDraft,
+                                    onCommit: {
+                                        commitCurrentLineEditIfAny()
+                                    },
+                                    onInsertNewline: { cursorOffset in
+                                        commitCurrentLineEditIfAny()
+                                        viewModel.splitLine(lineNumber: lineNum, isLeft: isLeft, cursorOffset: cursorOffset)
+                                    },
+                                    onDeleteBackwardAtStart: {
+                                        commitCurrentLineEditIfAny()
+                                        viewModel.deleteOrMergeLine(lineNumber: lineNum, isLeft: isLeft)
+                                    },
+                                    onCancel: {
+                                        cancelLineEdit()
+                                    }
+                                )
+                                .frame(height: 20)
+                                .background(Color(nsColor: .selectedTextBackgroundColor).opacity(0.3))
+                            } else {
+                                Text(content.isEmpty ? " " : content)
+                                    .font(.system(size: 12, design: .monospaced))
+                                    .foregroundColor(.primary)
+                                    .lineLimit(1)
+                            }
                             Spacer()
                         }
                         .padding(.horizontal, 6)
                         .frame(maxWidth: .infinity, maxHeight: 20, alignment: .leading)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            startLineEdit(key: key, content: content)
+                        }
                     }
                     .frame(height: 20)
                 }
@@ -377,15 +433,43 @@ public struct TwoWayDiffView: View {
 
                 // Line Content
                 HStack {
-                    Text(line.contentLeft)
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
+                    if let lineNum = line.leftLineNumber, viewModel.editingLineKey == "L-\(lineNum)" {
+                        CodeLineTextField(
+                            text: $viewModel.editingLineDraft,
+                            onCommit: {
+                                commitCurrentLineEditIfAny()
+                            },
+                            onInsertNewline: { cursorOffset in
+                                commitCurrentLineEditIfAny()
+                                viewModel.splitLine(lineNumber: lineNum, isLeft: true, cursorOffset: cursorOffset)
+                            },
+                            onDeleteBackwardAtStart: {
+                                commitCurrentLineEditIfAny()
+                                viewModel.deleteOrMergeLine(lineNumber: lineNum, isLeft: true)
+                            },
+                            onCancel: {
+                                cancelLineEdit()
+                            }
+                        )
+                        .frame(height: 20)
+                        .background(Color(nsColor: .selectedTextBackgroundColor).opacity(0.3))
+                    } else {
+                        Text(line.contentLeft.isEmpty ? " " : line.contentLeft)
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
+                    }
                     Spacer()
                 }
                 .padding(.horizontal, 6)
                 .frame(maxWidth: .infinity, maxHeight: 20, alignment: .leading)
                 .background(lineBackground(for: line.changeType, isLeft: true))
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if let lineNum = line.leftLineNumber {
+                        startLineEdit(key: "L-\(lineNum)", content: line.contentLeft)
+                    }
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: 20, alignment: .leading)
@@ -419,18 +503,80 @@ public struct TwoWayDiffView: View {
 
                 // Line Content
                 HStack {
-                    Text(line.contentRight)
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
+                    if let lineNum = line.rightLineNumber, viewModel.editingLineKey == "R-\(lineNum)" {
+                        CodeLineTextField(
+                            text: $viewModel.editingLineDraft,
+                            onCommit: {
+                                commitCurrentLineEditIfAny()
+                            },
+                            onInsertNewline: { cursorOffset in
+                                commitCurrentLineEditIfAny()
+                                viewModel.splitLine(lineNumber: lineNum, isLeft: false, cursorOffset: cursorOffset)
+                            },
+                            onDeleteBackwardAtStart: {
+                                commitCurrentLineEditIfAny()
+                                viewModel.deleteOrMergeLine(lineNumber: lineNum, isLeft: false)
+                            },
+                            onCancel: {
+                                cancelLineEdit()
+                            }
+                        )
+                        .frame(height: 20)
+                        .background(Color(nsColor: .selectedTextBackgroundColor).opacity(0.3))
+                    } else {
+                        Text(line.contentRight.isEmpty ? " " : line.contentRight)
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
+                    }
                     Spacer()
                 }
                 .padding(.horizontal, 6)
                 .frame(maxWidth: .infinity, maxHeight: 20, alignment: .leading)
                 .background(lineBackground(for: line.changeType, isLeft: false))
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if let lineNum = line.rightLineNumber {
+                        startLineEdit(key: "R-\(lineNum)", content: line.contentRight)
+                    }
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: 20, alignment: .leading)
+    }
+
+    private func commitCurrentLineEditIfAny() {
+        guard let key = viewModel.editingLineKey else { return }
+        let draft = viewModel.editingLineDraft
+        if key.hasPrefix("L-"), let lineNumStr = key.split(separator: "-").last, let lineNum = UInt32(lineNumStr) {
+            viewModel.updateLeftLine(lineNumber: lineNum, newContent: draft)
+        } else if key.hasPrefix("R-"), let lineNumStr = key.split(separator: "-").last, let lineNum = UInt32(lineNumStr) {
+            viewModel.updateRightLine(lineNumber: lineNum, newContent: draft)
+        } else if key.hasPrefix("SL-"), let lineNumStr = key.split(separator: "-").last, let lineNum = UInt32(lineNumStr) {
+            viewModel.updateLeftLine(lineNumber: lineNum, newContent: draft)
+        } else if key.hasPrefix("SR-"), let lineNumStr = key.split(separator: "-").last, let lineNum = UInt32(lineNumStr) {
+            viewModel.updateRightLine(lineNumber: lineNum, newContent: draft)
+        }
+        viewModel.editingLineKey = nil
+        viewModel.editingLineDraft = ""
+        isLineEditorFocused = false
+    }
+
+    private func startLineEdit(key: String, content: String) {
+        if viewModel.editingLineKey == key { return }
+        // 自动先持久化上一行的编辑修改！切换行绝不丢字！
+        commitCurrentLineEditIfAny()
+        viewModel.editingLineKey = key
+        viewModel.editingLineDraft = content
+        DispatchQueue.main.async {
+            isLineEditorFocused = true
+        }
+    }
+
+    private func cancelLineEdit() {
+        viewModel.editingLineKey = nil
+        viewModel.editingLineDraft = ""
+        isLineEditorFocused = false
     }
 
     private func lineBackground(for type: ChangeType, isLeft: Bool) -> Color {

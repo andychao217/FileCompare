@@ -59,6 +59,24 @@ public sealed class LanguageManager
 
     private static readonly Dictionary<string, Dictionary<AppLanguage, string>> Translations = new()
     {
+        ["diffMode"] = new()
+        {
+            [AppLanguage.ZhHans] = "对比视图",
+            [AppLanguage.En] = "Diff View",
+            [AppLanguage.Ja] = "差分表示"
+        },
+        ["editMode"] = new()
+        {
+            [AppLanguage.ZhHans] = "自由编辑",
+            [AppLanguage.En] = "Free Edit",
+            [AppLanguage.Ja] = "自由編集"
+        },
+        ["doubleClickToEdit"] = new()
+        {
+            [AppLanguage.ZhHans] = "双击行可直接编辑",
+            [AppLanguage.En] = "Double-click to edit line",
+            [AppLanguage.Ja] = "行をダブルクリックして編集"
+        },
         ["dialogNoticeTitle"] = new()
         {
             [AppLanguage.ZhHans] = "格式提示",

@@ -59,6 +59,7 @@ public struct DiffToolbarView: View {
 
             Spacer()
 
+
             // Merge Actions
             HStack(spacing: 6) {
                 Button {

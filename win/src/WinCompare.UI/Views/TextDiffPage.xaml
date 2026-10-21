@@ -1,9 +1,10 @@
-﻿<Page
+<Page
     x:Class="WinCompare.UI.Views.TextDiffPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:WinCompare.UI.Controls">
 
-    <Grid Background="Transparent">
+    <Grid Background="Transparent" KeyDown="OnPageKeyDown">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -135,6 +136,7 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="1" />
                         <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
                     <!-- Left File Header -->
@@ -165,6 +167,12 @@
                             <Button x:Name="RightSaveBtn" Content="保存" FontSize="11" Padding="8,2" Click="OnSaveRightFileClicked" CornerRadius="4" Height="24" />
                         </StackPanel>
                     </Grid>
+
+                    <!-- Minimap Header Spacer (Matching Mac Header Bar) -->
+                    <StackPanel x:Name="MinimapHeaderSpacer" Grid.Column="3" Orientation="Horizontal" Visibility="Collapsed">
+                        <Rectangle Width="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+                        <Border Width="58" Background="Transparent" />
+                    </StackPanel>
                 </Grid>
             </Border>
 
@@ -275,7 +283,13 @@
             <Grid x:Name="DiffListContainer" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Visibility="Collapsed"
                   Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
                   AllowDrop="True" DragOver="OnDiffContainerDragOver" Drop="OnDiffContainerDrop">
-                <ListView x:Name="DiffListView" SelectionMode="Single" Padding="0"
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="1" />
+                    <ColumnDefinition Width="58" />
+                </Grid.ColumnDefinitions>
+
+                <ListView x:Name="DiffListView" Grid.Column="0" SelectionMode="Single" Padding="0"
                           HorizontalContentAlignment="Stretch"
                           ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                           ScrollViewer.HorizontalScrollMode="Disabled"
@@ -320,10 +334,13 @@
                                         <TextBlock Grid.Column="1" Text="{Binding LeftLineNumText}" HorizontalAlignment="Right" VerticalAlignment="Center"
                                                    FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                                     </Grid>
-                                    <!-- Line text -->
-                                    <TextBlock Grid.Column="1" Text="{Binding LeftText}" VerticalAlignment="Center" Padding="8,0,8,0"
-                                               FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}"
-                                               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                                    <!-- Direct In-Place Line Editor -->
+                                    <TextBox Grid.Column="1" Text="{Binding LeftText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Padding="8,1,8,1"
+                                             MinHeight="20" Height="20" BorderThickness="0" Background="Transparent"
+                                             FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                             TextWrapping="NoWrap" IsReadOnly="{Binding IsPhantomLeft}"
+                                             IsSpellCheckEnabled="False" IsTextPredictionEnabled="False"
+                                             TextChanged="OnCellTextChanged" LostFocus="OnCellLostFocus" KeyDown="OnLeftCellKeyDown" Tag="{Binding}" />
                                 </Grid>
 
                                 <!-- Center Divider -->
@@ -348,15 +365,24 @@
                                         <TextBlock Grid.Column="1" Text="{Binding RightLineNumText}" HorizontalAlignment="Right" VerticalAlignment="Center"
                                                    FontSize="11" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                                     </Grid>
-                                    <!-- Line text -->
-                                    <TextBlock Grid.Column="1" Text="{Binding RightText}" VerticalAlignment="Center" Padding="8,0,8,0"
-                                               FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}"
-                                               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                                    <!-- Direct In-Place Line Editor -->
+                                    <TextBox Grid.Column="1" Text="{Binding RightText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Padding="8,1,8,1"
+                                             MinHeight="20" Height="20" BorderThickness="0" Background="Transparent"
+                                             FontSize="12" FontFamily="{StaticResource CodeFontFamily}" Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                             TextWrapping="NoWrap" IsReadOnly="{Binding IsPhantomRight}"
+                                             IsSpellCheckEnabled="False" IsTextPredictionEnabled="False"
+                                             TextChanged="OnCellTextChanged" LostFocus="OnCellLostFocus" KeyDown="OnRightCellKeyDown" Tag="{Binding}" />
                                 </Grid>
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
+
+                <!-- Vertical Divider before Minimap -->
+                <Rectangle Grid.Column="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                <!-- Minimap 缩略侧边栏 (58px 对齐 Mac) -->
+                <controls:MinimapControl x:Name="DiffMinimap" Grid.Column="2" />
             </Grid>
 
             <!-- Direct Editable Editors (Left & Right - fallback / direct edit) -->
@@ -364,6 +390,7 @@
                      FontFamily="{StaticResource CodeFontFamily}" FontSize="13"
                      ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
                      BorderThickness="0" Background="Transparent" TextChanged="OnTextChanged" Visibility="Collapsed"
+                     IsSpellCheckEnabled="False" IsTextPredictionEnabled="False"
                      AllowDrop="True" DragOver="OnLeftDragOver" Drop="OnLeftDrop" />
 
             <!-- Left Loading Overlay -->
@@ -378,6 +405,7 @@
                      FontFamily="{StaticResource CodeFontFamily}" FontSize="13"
                      ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
                      BorderThickness="0" Background="Transparent" TextChanged="OnTextChanged" Visibility="Collapsed"
+                     IsSpellCheckEnabled="False" IsTextPredictionEnabled="False"
                      AllowDrop="True" DragOver="OnRightDragOver" Drop="OnRightDrop" />
 
             <!-- Right Loading Overlay -->

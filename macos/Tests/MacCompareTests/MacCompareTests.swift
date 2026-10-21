@@ -411,4 +411,41 @@ final class MacCompareTests: XCTestCase {
         XCTAssertTrue(vm.isFolderExpanded(path: "issue_templates"))
         XCTAssertEqual(vm.visibleEntries.count, 4)
     }
+
+    @MainActor
+    func testTextDiffInPlaceEditingAndBoundary() async {
+        let vm = TextDiffViewModel()
+        vm.leftContent = "First Line\nSecond Line\nThird Line"
+        vm.rightContent = "Target 1\nTarget 2"
+        vm.isLeftDirty = false
+        vm.isRightDirty = false
+
+        // 1. Normal in-place line update
+        vm.updateLeftLine(lineNumber: 2, newContent: "Second Line Edited")
+        XCTAssertEqual(vm.leftContent, "First Line\nSecond Line Edited\nThird Line")
+        XCTAssertTrue(vm.isLeftDirty)
+
+        // 2. Out of bounds index (upper)
+        vm.updateLeftLine(lineNumber: 999, newContent: "Out of Bounds")
+        XCTAssertEqual(vm.leftContent, "First Line\nSecond Line Edited\nThird Line")
+
+        // 3. Out of bounds index (zero or negative)
+        vm.updateLeftLine(lineNumber: 0, newContent: "Zero Line")
+        XCTAssertEqual(vm.leftContent, "First Line\nSecond Line Edited\nThird Line")
+
+        // 4. Same content update should not trigger modification
+        let currentLeft = vm.leftContent
+        vm.updateLeftLine(lineNumber: 1, newContent: "First Line")
+        XCTAssertEqual(vm.leftContent, currentLeft)
+
+        // 5. Right side in-place line update
+        vm.updateRightLine(lineNumber: 1, newContent: "Target 1 Modified")
+        XCTAssertEqual(vm.rightContent, "Target 1 Modified\nTarget 2")
+        XCTAssertTrue(vm.isRightDirty)
+
+        // 6. Direct edit mode toggle
+        XCTAssertFalse(vm.isDirectEditMode)
+        vm.isDirectEditMode = true
+        XCTAssertTrue(vm.isDirectEditMode)
+    }
 }

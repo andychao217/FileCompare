@@ -49,8 +49,107 @@ public final class TextDiffViewModel {
     public var currentHunkIndex: Int = 0
     public var scrollToLineIndex: Int?
 
+    public var isDirectEditMode: Bool = false
+    public var editingLineKey: String? = nil // e.g. "L-15" or "R-20" for in-place line editing
+    public var editingLineDraft: String = ""
+
     private let diffEngine: DiffEngineProtocol
     private var debounceTask: Task<Void, Never>?
+
+    private func splitLinesNormalized(_ text: String) -> [String] {
+        let normalized = text.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n")
+        return normalized.components(separatedBy: "\n")
+    }
+
+    public func updateLeftLine(lineNumber: UInt32, newContent: String) {
+        var lines = splitLinesNormalized(leftContent)
+        let idx = Int(lineNumber) - 1
+        guard idx >= 0 && idx < lines.count else { return }
+        guard lines[idx] != newContent else { return }
+        lines[idx] = newContent
+        self.leftContent = lines.joined(separator: "\n")
+    }
+
+    public func updateRightLine(lineNumber: UInt32, newContent: String) {
+        var lines = splitLinesNormalized(rightContent)
+        let idx = Int(lineNumber) - 1
+        guard idx >= 0 && idx < lines.count else { return }
+        guard lines[idx] != newContent else { return }
+        lines[idx] = newContent
+        self.rightContent = lines.joined(separator: "\n")
+    }
+
+    @discardableResult
+    public func splitLine(lineNumber: UInt32, isLeft: Bool, cursorOffset: Int) -> UInt32? {
+        var lines = splitLinesNormalized(isLeft ? leftContent : rightContent)
+        let idx = Int(lineNumber) - 1
+        guard idx >= 0 && idx < lines.count else { return nil }
+
+        let currentLine = lines[idx]
+        let safeOffset = max(0, min(cursorOffset, currentLine.count))
+        let splitIndex = currentLine.index(currentLine.startIndex, offsetBy: safeOffset)
+        let firstPart = String(currentLine[..<splitIndex])
+        let secondPart = String(currentLine[splitIndex...])
+
+        lines[idx] = firstPart
+        lines.insert(secondPart, at: idx + 1)
+
+        let newContent = lines.joined(separator: "\n")
+        if isLeft {
+            self.leftContent = newContent
+        } else {
+            self.rightContent = newContent
+        }
+
+        let newLineNumber = lineNumber + 1
+        let sidePrefix = isLeft ? "L" : "R"
+        self.editingLineKey = "\(sidePrefix)-\(newLineNumber)"
+        self.editingLineDraft = secondPart
+        return newLineNumber
+    }
+
+    @discardableResult
+    public func deleteOrMergeLine(lineNumber: UInt32, isLeft: Bool) -> UInt32? {
+        var lines = splitLinesNormalized(isLeft ? leftContent : rightContent)
+        let idx = Int(lineNumber) - 1
+        guard idx >= 0 && idx < lines.count else { return nil }
+
+        if lines.count <= 1 && lines[0].isEmpty { return nil }
+        let sidePrefix = isLeft ? "L" : "R"
+
+        if idx > 0 {
+            // 合并到上一行
+            let prevLine = lines[idx - 1]
+            let currentLine = lines[idx]
+            lines[idx - 1] = prevLine + currentLine
+            lines.remove(at: idx)
+
+            let newContent = lines.joined(separator: "\n")
+            if isLeft {
+                self.leftContent = newContent
+            } else {
+                self.rightContent = newContent
+            }
+
+            let prevLineNumber = lineNumber - 1
+            self.editingLineKey = "\(sidePrefix)-\(prevLineNumber)"
+            self.editingLineDraft = lines[idx - 1]
+            return prevLineNumber
+        } else if lines.count > 1 {
+            // 第一行删掉
+            lines.remove(at: 0)
+            let newContent = lines.joined(separator: "\n")
+            if isLeft {
+                self.leftContent = newContent
+            } else {
+                self.rightContent = newContent
+            }
+            self.editingLineKey = "\(sidePrefix)-1"
+            self.editingLineDraft = lines[0]
+            return 1
+        }
+        return nil
+    }
 
     public var hasFilesLoaded: Bool {
         leftFileURL != nil || rightFileURL != nil || !leftContent.isEmpty || !rightContent.isEmpty
