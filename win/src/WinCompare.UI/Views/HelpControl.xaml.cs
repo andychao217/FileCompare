@@ -130,7 +130,11 @@ public sealed partial class HelpControl : UserControl
 
             if (WordDiffTitleText != null) WordDiffTitleText.Text = LanguageManager.Instance.Text("wordDiffTitle") + " (Word Diff)";
             if (WordDiffDescText != null) WordDiffDescText.Text = LanguageManager.Instance.Text("wordDiffDesc");
-            if (WordDiffDetailText != null) WordDiffDetailText.Text = LanguageManager.Instance.Text("wordDiffGuideDetail");
+                        if (WordDiffDetailText != null) WordDiffDetailText.Text = LanguageManager.Instance.Text("wordDiffGuideDetail");
+
+            if (PdfDiffTitleText != null) PdfDiffTitleText.Text = LanguageManager.Instance.Text("pdfDiffTitle") + " (PDF Diff)";
+            if (PdfDiffDescText != null) PdfDiffDescText.Text = LanguageManager.Instance.Text("pdfDiffDesc");
+            if (PdfDiffDetailText != null) PdfDiffDetailText.Text = LanguageManager.Instance.Text("pdfDiffGuideDetail");
 
             if (FolderDiffHelpTitleText != null) FolderDiffHelpTitleText.Text = LanguageManager.Instance.Text("folderDiffTitle") + " (Folder Diff)";
             if (FolderDiffHelpDescText != null) FolderDiffHelpDescText.Text = LanguageManager.Instance.Text("folderDiffDesc");
@@ -154,6 +158,7 @@ public sealed partial class HelpControl : UserControl
             if (ShortcutNewTextText != null) ShortcutNewTextText.Text = LanguageManager.Instance.Text("textDiffTitle");
             if (ShortcutNewExcelText != null) ShortcutNewExcelText.Text = LanguageManager.Instance.Text("excelDiffTitle");
             if (ShortcutNewWordText != null) ShortcutNewWordText.Text = LanguageManager.Instance.Text("wordDiffTitle");
+            if (ShortcutNewPdfText != null) ShortcutNewPdfText.Text = LanguageManager.Instance.Text("pdfDiffTitle");
             if (ShortcutNewFolderText != null) ShortcutNewFolderText.Text = LanguageManager.Instance.Text("folderDiffTitle");
             if (ShortcutNewMergeText != null) ShortcutNewMergeText.Text = LanguageManager.Instance.Text("threeWayMerge");
             if (ShortcutNextTabText != null) ShortcutNextTabText.Text = LanguageManager.Instance.Text("nextTab");

@@ -30,6 +30,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <!-- Text Diff Card -->
@@ -98,8 +99,29 @@
                     </Grid>
                 </Button>
 
+                <!-- PDF Diff Card -->
+                <Button Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Padding="16" CornerRadius="12" Click="OnPdfDiffClicked">
+                    <Grid ColumnSpacing="14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border Width="44" Height="44" CornerRadius="10" Background="{ThemeResource WelcomePdfDiffBgBrush}">
+                            <Viewbox Width="22" Height="22">
+                                <Path Fill="{ThemeResource WelcomePdfDiffFgBrush}" Data="M6 2C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2H6ZM13 3.5L18.5 9H13V3.5ZM8 11H16V12.5H8V11ZM8 14H16V15.5H8V14ZM8 17H13V18.5H8V17Z" />
+                            </Viewbox>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock x:Name="PdfDiffTitleBlock" Text="PDF 对比" FontWeight="SemiBold" FontSize="15" />
+                            <TextBlock x:Name="PdfDiffDescBlock" Text="双联同步审阅、文本流差分与视觉遮罩" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Text="⇧Ctrl+P" FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" VerticalAlignment="Top" />
+                    </Grid>
+                </Button>
+
                 <!-- Folder Diff Card -->
-                <Button Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Padding="16" CornerRadius="12" Click="OnFolderDiffClicked">
+                <Button Grid.Row="2" Grid.Column="0" HorizontalAlignment="Stretch" Padding="16" CornerRadius="12" Click="OnFolderDiffClicked">
                     <Grid ColumnSpacing="14">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />

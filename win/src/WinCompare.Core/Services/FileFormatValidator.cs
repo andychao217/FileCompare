@@ -32,13 +32,18 @@ public static class FileFormatValidator
         ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".ico", ".tiff", ".psd", ".ai",
         ".zip", ".tar", ".gz", ".tgz", ".bz2", ".7z", ".rar", ".xz", ".dmg", ".pkg", ".iso",
         ".exe", ".dll", ".dylib", ".so", ".a", ".bin", ".o", ".obj", ".class", ".jar",
-        ".pdf", ".mp3", ".mp4", ".mov", ".wav", ".m4a", ".flac", ".avi", ".mkv",
+        ".mp3", ".mp4", ".mov", ".wav", ".m4a", ".flac", ".avi", ".mkv",
         ".ttf", ".otf", ".woff", ".woff2", ".eot", ".db", ".sqlite", ".sqlite3"
     };
 
     private static readonly HashSet<string> WordExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
         ".docx", ".doc", ".rtf"
+    };
+
+    private static readonly HashSet<string> PdfExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".pdf"
     };
 
     private static readonly HashSet<string> ExcelExtensions = new(StringComparer.OrdinalIgnoreCase)
@@ -116,6 +121,18 @@ public static class FileFormatValidator
         {
             case CompareType.TextDiff:
             case CompareType.ThreeWayMerge:
+                if (PdfExtensions.Contains(ext))
+                {
+                    return new ValidationResult
+                    {
+                        IsValid = false,
+                        TitleKey = "suggestSwitchModeTitle",
+                        MessageKey = "suggestSwitchToPdf",
+                        PromptType = ValidationPromptType.SuggestSwitch,
+                        RecommendedMode = CompareType.PdfDiff,
+                        TargetPath = path
+                    };
+                }
                 if (WordExtensions.Contains(ext))
                 {
                     return new ValidationResult
@@ -158,6 +175,18 @@ public static class FileFormatValidator
                 {
                     return ValidationResult.Valid(path);
                 }
+                if (PdfExtensions.Contains(ext))
+                {
+                    return new ValidationResult
+                    {
+                        IsValid = false,
+                        TitleKey = "suggestSwitchModeTitle",
+                        MessageKey = "suggestSwitchToPdf",
+                        PromptType = ValidationPromptType.SuggestSwitch,
+                        RecommendedMode = CompareType.PdfDiff,
+                        TargetPath = path
+                    };
+                }
                 if (ExcelExtensions.Contains(ext))
                 {
                     return new ValidationResult
@@ -179,10 +208,60 @@ public static class FileFormatValidator
                     TargetPath = path
                 };
 
+            case CompareType.PdfDiff:
+                if (PdfExtensions.Contains(ext))
+                {
+                    return ValidationResult.Valid(path);
+                }
+                if (WordExtensions.Contains(ext))
+                {
+                    return new ValidationResult
+                    {
+                        IsValid = false,
+                        TitleKey = "suggestSwitchModeTitle",
+                        MessageKey = "suggestSwitchToWord",
+                        PromptType = ValidationPromptType.SuggestSwitch,
+                        RecommendedMode = CompareType.WordDiff,
+                        TargetPath = path
+                    };
+                }
+                if (ExcelExtensions.Contains(ext))
+                {
+                    return new ValidationResult
+                    {
+                        IsValid = false,
+                        TitleKey = "suggestSwitchModeTitle",
+                        MessageKey = "suggestSwitchToExcel",
+                        PromptType = ValidationPromptType.SuggestSwitch,
+                        RecommendedMode = CompareType.ExcelDiff,
+                        TargetPath = path
+                    };
+                }
+                return new ValidationResult
+                {
+                    IsValid = false,
+                    TitleKey = "dialogNoticeTitle",
+                    MessageKey = "errPdfInvalidFormat",
+                    PromptType = ValidationPromptType.NoticeOnly,
+                    TargetPath = path
+                };
+
             case CompareType.ExcelDiff:
                 if (ExcelExtensions.Contains(ext))
                 {
                     return ValidationResult.Valid(path);
+                }
+                if (PdfExtensions.Contains(ext))
+                {
+                    return new ValidationResult
+                    {
+                        IsValid = false,
+                        TitleKey = "suggestSwitchModeTitle",
+                        MessageKey = "suggestSwitchToPdf",
+                        PromptType = ValidationPromptType.SuggestSwitch,
+                        RecommendedMode = CompareType.PdfDiff,
+                        TargetPath = path
+                    };
                 }
                 if (WordExtensions.Contains(ext))
                 {

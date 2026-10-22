@@ -30,6 +30,7 @@ public final class TextDiffViewModel {
     public var diffResult: TextDiffResult = TextDiffResult()
     public var isLoading: Bool = false
     public var statusMessage: String?
+    public var validationResult: ValidationResult?
 
     // AI Summary State
     public var isAISummaryVisible: Bool = false
@@ -223,6 +224,11 @@ public final class TextDiffViewModel {
         panel.allowsMultipleSelection = false
 
         if panel.runModal() == .OK, let url = panel.url {
+            let check = FileFormatValidator.validate(url: url, expectedMode: .textDiff)
+            if !check.isValid {
+                self.validationResult = check
+                return
+            }
             loadSingleFile(from: url, isLeft: true)
         }
     }
@@ -235,6 +241,11 @@ public final class TextDiffViewModel {
         panel.allowsMultipleSelection = false
 
         if panel.runModal() == .OK, let url = panel.url {
+            let check = FileFormatValidator.validate(url: url, expectedMode: .textDiff)
+            if !check.isValid {
+                self.validationResult = check
+                return
+            }
             loadSingleFile(from: url, isLeft: false)
         }
     }

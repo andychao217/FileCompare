@@ -213,14 +213,16 @@ public struct TwoWayDiffView: View {
         }
         .background(Color(nsColor: .textBackgroundColor))
         .overlay {
-            if let result = validationResult {
+            if let result = viewModel.validationResult ?? validationResult {
                 FileValidationDialogView(
                     result: result,
                     onDismiss: {
                         self.validationResult = nil
+                        self.viewModel.validationResult = nil
                     },
                     onSwitchMode: { mode, url in
                         self.validationResult = nil
+                        self.viewModel.validationResult = nil
                         tabManager?.openSingleTarget(url: url, mode: mode)
                     }
                 )

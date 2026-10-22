@@ -46,6 +46,12 @@ public sealed class RecentCompareDisplayItem
                 bg = App.GetThemeBrush("WelcomeWordDiffBgBrush");
                 typeKey = "wordDiffTitle";
                 break;
+            case CompareType.PdfDiff:
+                glyph = "\uEA90";
+                fg = App.GetThemeBrush("WelcomePdfDiffFgBrush");
+                bg = App.GetThemeBrush("WelcomePdfDiffBgBrush");
+                typeKey = "pdfDiffTitle";
+                break;
             case CompareType.ThreeWayMerge:
                 glyph = "\uE8D7";
                 fg = App.GetThemeBrush("WelcomeThreeWayMergeFgBrush");

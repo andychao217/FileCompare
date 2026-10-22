@@ -25,6 +25,7 @@ public extension Notification.Name {
     static let mcNewTextCompare = Notification.Name("MCNewTextCompare")
     static let mcNewExcelCompare = Notification.Name("MCNewExcelCompare")
     static let mcNewWordCompare = Notification.Name("MCNewWordCompare")
+    static let mcNewPdfCompare = Notification.Name("MCNewPdfCompare")
     static let mcNewFolderCompare = Notification.Name("MCNewFolderCompare")
     static let mcNewThreeWayMerge = Notification.Name("MCNewThreeWayMerge")
     static let mcOpenFile = Notification.Name("MCOpenFile")

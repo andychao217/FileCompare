@@ -72,6 +72,8 @@
             <SolidColorBrush x:Key="WelcomeExcelDiffFgBrush" Color="#34D399" />
             <SolidColorBrush x:Key="WelcomeWordDiffBgBrush" Color="#254F46E5" />
             <SolidColorBrush x:Key="WelcomeWordDiffFgBrush" Color="#818CF8" />
+            <SolidColorBrush x:Key="WelcomePdfDiffBgBrush" Color="#25E11D48" />
+            <SolidColorBrush x:Key="WelcomePdfDiffFgBrush" Color="#FB7185" />
             <SolidColorBrush x:Key="WelcomeFolderDiffBgBrush" Color="#25F59E0B" />
             <SolidColorBrush x:Key="WelcomeFolderDiffFgBrush" Color="#FBBF24" />
             <SolidColorBrush x:Key="WelcomeThreeWayMergeBgBrush" Color="#258B5CF6" />
@@ -81,6 +83,7 @@
             <SolidColorBrush x:Key="CodeIconBrush" Color="#60A5FA" />
             <SolidColorBrush x:Key="ExcelIconBrush" Color="#34D399" />
             <SolidColorBrush x:Key="WordIconBrush" Color="#818CF8" />
+            <SolidColorBrush x:Key="PdfIconBrush" Color="#FB7185" />
             <SolidColorBrush x:Key="GenericFileIconBrush" Color="#94A3B8" />
 
             <!-- Help Center Feature Badges (Dark Theme) -->
@@ -213,6 +216,8 @@
             <SolidColorBrush x:Key="WelcomeExcelDiffFgBrush" Color="#059669" />
             <SolidColorBrush x:Key="WelcomeWordDiffBgBrush" Color="#154F46E5" />
             <SolidColorBrush x:Key="WelcomeWordDiffFgBrush" Color="#4F46E5" />
+            <SolidColorBrush x:Key="WelcomePdfDiffBgBrush" Color="#15E11D48" />
+            <SolidColorBrush x:Key="WelcomePdfDiffFgBrush" Color="#E11D48" />
             <SolidColorBrush x:Key="WelcomeFolderDiffBgBrush" Color="#15F59E0B" />
             <SolidColorBrush x:Key="WelcomeFolderDiffFgBrush" Color="#D97706" />
             <SolidColorBrush x:Key="WelcomeThreeWayMergeBgBrush" Color="#158B5CF6" />
@@ -222,6 +227,7 @@
             <SolidColorBrush x:Key="CodeIconBrush" Color="#2563EB" />
             <SolidColorBrush x:Key="ExcelIconBrush" Color="#16A34A" />
             <SolidColorBrush x:Key="WordIconBrush" Color="#4F46E5" />
+            <SolidColorBrush x:Key="PdfIconBrush" Color="#E11D48" />
             <SolidColorBrush x:Key="GenericFileIconBrush" Color="#64748B" />
 
             <!-- Help Center Feature Badges (Light Theme) -->

@@ -32,9 +32,9 @@ public struct WelcomeHomeView: View {
 
             Spacer(minLength: 28)
 
-            // 2x2 Grid of Mode Launch Cards
-            VStack(spacing: 16) {
-                HStack(spacing: 16) {
+            // Grid of Mode Launch Cards
+            VStack(spacing: 14) {
+                HStack(spacing: 14) {
                     modeCard(
                         type: .textDiff,
                         title: languageManager.text(.welcomeTextDiffTitle),
@@ -54,7 +54,7 @@ public struct WelcomeHomeView: View {
                     )
                 }
 
-                HStack(spacing: 16) {
+                HStack(spacing: 14) {
                     modeCard(
                         type: .wordDiff,
                         title: languageManager.text(.welcomeWordDiffTitle),
@@ -64,6 +64,17 @@ public struct WelcomeHomeView: View {
                         shortcut: "⇧⌘D"
                     )
 
+                    modeCard(
+                        type: .pdfDiff,
+                        title: languageManager.text(.welcomePdfDiffTitle),
+                        desc: languageManager.text(.welcomePdfDiffDesc),
+                        icon: "doc.viewfinder.fill",
+                        iconColor: Color(red: 0.88, green: 0.11, blue: 0.28),
+                        shortcut: "⇧⌘P"
+                    )
+                }
+
+                HStack(spacing: 14) {
                     modeCard(
                         type: .folderDiff,
                         title: languageManager.text(.welcomeFolderDiffTitle),

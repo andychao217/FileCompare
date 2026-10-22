@@ -28,11 +28,12 @@ public enum FileFormatValidator {
         "png", "jpg", "jpeg", "gif", "webp", "bmp", "ico", "tiff", "psd", "ai",
         "zip", "tar", "gz", "tgz", "bz2", "7z", "rar", "xz", "dmg", "pkg", "iso",
         "exe", "dll", "dylib", "so", "a", "bin", "o", "obj", "class", "jar",
-        "pdf", "mp3", "mp4", "mov", "wav", "m4a", "flac", "avi", "mkv",
+        "mp3", "mp4", "mov", "wav", "m4a", "flac", "avi", "mkv",
         "ttf", "otf", "woff", "woff2", "eot", "db", "sqlite", "sqlite3"
     ]
 
     private static let wordExtensions: Set<String> = ["docx", "doc", "rtf"]
+    private static let pdfExtensions: Set<String> = ["pdf"]
     private static let excelExtensions: Set<String> = ["xlsx", "xls", "xlsm", "csv", "tsv"]
 
     public static func validate(url: URL, expectedMode: TabContentType) -> ValidationResult {
@@ -81,6 +82,15 @@ public enum FileFormatValidator {
         // 3. Mode Specific Validations
         switch expectedMode {
         case .textDiff, .threeWayMerge:
+            if pdfExtensions.contains(ext) {
+                return ValidationResult(
+                    isValid: false,
+                    titleKey: .suggestSwitchModeTitle,
+                    messageKey: .suggestSwitchToPdf,
+                    promptType: .suggestSwitch(recommendedMode: .pdfDiff),
+                    targetURL: url
+                )
+            }
             if wordExtensions.contains(ext) {
                 return ValidationResult(
                     isValid: false,
@@ -114,6 +124,15 @@ public enum FileFormatValidator {
             if wordExtensions.contains(ext) {
                 return .valid(for: url)
             }
+            if pdfExtensions.contains(ext) {
+                return ValidationResult(
+                    isValid: false,
+                    titleKey: .suggestSwitchModeTitle,
+                    messageKey: .suggestSwitchToPdf,
+                    promptType: .suggestSwitch(recommendedMode: .pdfDiff),
+                    targetURL: url
+                )
+            }
             if excelExtensions.contains(ext) {
                 return ValidationResult(
                     isValid: false,
@@ -131,9 +150,48 @@ public enum FileFormatValidator {
                 targetURL: url
             )
 
+        case .pdfDiff:
+            if pdfExtensions.contains(ext) {
+                return .valid(for: url)
+            }
+            if wordExtensions.contains(ext) {
+                return ValidationResult(
+                    isValid: false,
+                    titleKey: .suggestSwitchModeTitle,
+                    messageKey: .suggestSwitchToWord,
+                    promptType: .suggestSwitch(recommendedMode: .wordDiff),
+                    targetURL: url
+                )
+            }
+            if excelExtensions.contains(ext) {
+                return ValidationResult(
+                    isValid: false,
+                    titleKey: .suggestSwitchModeTitle,
+                    messageKey: .suggestSwitchToExcel,
+                    promptType: .suggestSwitch(recommendedMode: .excelDiff),
+                    targetURL: url
+                )
+            }
+            return ValidationResult(
+                isValid: false,
+                titleKey: .dialogNoticeTitle,
+                messageKey: .errPdfInvalidFormat,
+                promptType: .noticeOnly,
+                targetURL: url
+            )
+
         case .excelDiff:
             if excelExtensions.contains(ext) {
                 return .valid(for: url)
+            }
+            if pdfExtensions.contains(ext) {
+                return ValidationResult(
+                    isValid: false,
+                    titleKey: .suggestSwitchModeTitle,
+                    messageKey: .suggestSwitchToPdf,
+                    promptType: .suggestSwitch(recommendedMode: .pdfDiff),
+                    targetURL: url
+                )
             }
             if wordExtensions.contains(ext) {
                 return ValidationResult(

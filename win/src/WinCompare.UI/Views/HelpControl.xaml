@@ -105,7 +105,24 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- 4. 文件夹对比 -->
+                                                        <!-- 4. PDF 对比 -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
+                                <StackPanel Spacing="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Background="{ThemeResource AIAccentBgSubtleBrush}" CornerRadius="6" Width="28" Height="28">
+                                            <FontIcon Glyph="&#xEA90;" FontSize="14" Foreground="{ThemeResource AIAccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <StackPanel VerticalAlignment="Center" Spacing="1">
+                                            <TextBlock x:Name="PdfDiffTitleText" Text="PDF 对比 (PDF Diff)" FontWeight="SemiBold" FontSize="13" />
+                                            <TextBlock x:Name="PdfDiffDescText" Text="高保真版面双联审阅、文本流差分与视觉遮罩" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <TextBlock x:Name="PdfDiffDetailText" Text="• 双联版面审阅：左右高保真并列渲染 PDF 页面，支持左右并列、半透明重叠与卷帘滑动对比模式。&#x0a;• 语义与视觉混合差分：提取文字流执行 Myers 差异计算，结合栅格图像位图检测像素级版面、图表与印章变动。&#x0a;• 智能同步滚动与导航：双侧视口毫秒级同步滚动，支持快捷键在上/下一处差异与各页面间平滑跳转。"
+                                               FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" LineHeight="17" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 5. 文件夹对比 -->
                             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
                                 <StackPanel Spacing="8">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
@@ -122,7 +139,7 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- 5. 三向合并与 Git 集成 -->
+                            <!-- 6. 三向合并与 Git 集成 -->
                             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
                                 <StackPanel Spacing="10">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
@@ -156,7 +173,7 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- 6. 标签页拖拽与多窗口 -->
+                            <!-- 7. 标签页拖拽与多窗口 -->
                             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
                                 <StackPanel Spacing="8">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
@@ -173,7 +190,7 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- 7. AI 助手 -->
+                            <!-- 8. AI 助手 -->
                             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
                                 <StackPanel Spacing="8">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
@@ -236,6 +253,20 @@
                                     <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
                                         <TextBlock Text="Ctrl + Shift + D" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                                     </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Padding="14,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="ShortcutNewPdfText" Text="新建 PDF 对比" FontSize="12" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="10,3">
+                                        <TextBlock Text="Ctrl + Shift + P" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+
                                 </Grid>
                             </Border>
 

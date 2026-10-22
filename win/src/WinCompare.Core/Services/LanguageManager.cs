@@ -113,11 +113,23 @@ public sealed class LanguageManager
             [AppLanguage.En] = "Excel Diff only supports .xlsx, .xls, .csv, and .tsv formats.\nUnsupported file format detected.",
             [AppLanguage.Ja] = "Excel 比較モードは .xlsx、.xls、.csv、.tsv 形式のみ対応しています。\n対応していないファイル形式です。"
         },
+        ["errPdfInvalidFormat"] = new()
+        {
+            [AppLanguage.ZhHans] = "PDF 对比模式仅支持 .pdf 格式文档。\n检测到不兼容的文件格式。",
+            [AppLanguage.En] = "PDF Diff mode only supports .pdf documents.\nUnsupported file format detected.",
+            [AppLanguage.Ja] = "PDF 比較モードは .pdf 形式のみ対応しています。\n対応していないファイル形式です。"
+        },
         ["errBinaryFileNotSupported"] = new()
         {
             [AppLanguage.ZhHans] = "所选文件为二进制文件（如程序、压缩包或媒体），文本对比模式无法对其进行有效比对。",
             [AppLanguage.En] = "The selected file is a binary file (e.g. executable, archive, or media) and cannot be compared as text.",
             [AppLanguage.Ja] = "選択されたファイルはバイナリファイル（実行可能ファイル、アーカイブ、メディアなど）であり、テキストとして比較できません。"
+        },
+        ["suggestSwitchToPdf"] = new()
+        {
+            [AppLanguage.ZhHans] = "检测到您选择的是 PDF 文档，是否切换至【PDF 对比】模式？",
+            [AppLanguage.En] = "The selected file is a PDF document.\nWould you like to switch to 'PDF Diff' mode?",
+            [AppLanguage.Ja] = "選択されたファイルは PDF ドキュメントです。「PDF 比較」モードに切り替えますか？"
         },
         ["suggestSwitchToWord"] = new()
         {
@@ -250,6 +262,138 @@ public sealed class LanguageManager
             [AppLanguage.ZhHans] = "智能解析 .docx 段落、图文混排、大纲树与嵌套表格对比",
             [AppLanguage.En] = "Structured diff for Word docs, outlines, tables, and media",
             [AppLanguage.Ja] = "Word 文書の段落、アウトライン、表、メディアの構造化比較"
+        },
+        ["pdfDiffTitle"] = new()
+        {
+            [AppLanguage.ZhHans] = "PDF 对比",
+            [AppLanguage.En] = "PDF Diff",
+            [AppLanguage.Ja] = "PDF 比較"
+        },
+        ["pdfDiffDesc"] = new()
+        {
+            [AppLanguage.ZhHans] = "高保真版面双联审阅、文本流差分与视觉遮罩",
+            [AppLanguage.En] = "Side-by-side layout, text flow diff & visual overlay",
+            [AppLanguage.Ja] = "レイアウト同期表示、テキスト差分＆ビジュアル比較"
+        },
+        ["pdfDiffSyncScroll"] = new()
+        {
+            [AppLanguage.ZhHans] = "同步滚动",
+            [AppLanguage.En] = "Sync Scroll",
+            [AppLanguage.Ja] = "スクロール同期"
+        },
+        ["pdfDiffNoDiff"] = new()
+        {
+            [AppLanguage.ZhHans] = "两份文档完全一致",
+            [AppLanguage.En] = "No differences found",
+            [AppLanguage.Ja] = "差分はありません"
+        },
+        ["pdfDiffDropHint"] = new()
+        {
+            [AppLanguage.ZhHans] = "拖拽 PDF 文件到此处，或点击下方按钮选择",
+            [AppLanguage.En] = "Drop PDF file here, or click below to select",
+            [AppLanguage.Ja] = "PDF ファイルをここにドロップするか、下のボタンをクリック"
+        },
+        ["pdfDiffSelectLeftFile"] = new()
+        {
+            [AppLanguage.ZhHans] = "选择左侧原文档",
+            [AppLanguage.En] = "Select Left Original",
+            [AppLanguage.Ja] = "左側の元ファイルを選択"
+        },
+        ["pdfDiffSelectRightFile"] = new()
+        {
+            [AppLanguage.ZhHans] = "选择右侧修改文档",
+            [AppLanguage.En] = "Select Right Modified",
+            [AppLanguage.Ja] = "右側の変更ファイルを選択"
+        },
+        ["pdfDiffSideBySide"] = new()
+        {
+            [AppLanguage.ZhHans] = "左右并排",
+            [AppLanguage.En] = "Side by Side",
+            [AppLanguage.Ja] = "左右並列"
+        },
+        ["pdfDiffOverlay"] = new()
+        {
+            [AppLanguage.ZhHans] = "重叠比对",
+            [AppLanguage.En] = "Overlay",
+            [AppLanguage.Ja] = "オーバーレイ"
+        },
+        ["pdfDiffCurtain"] = new()
+        {
+            [AppLanguage.ZhHans] = "卷帘比对",
+            [AppLanguage.En] = "Curtain",
+            [AppLanguage.Ja] = "カーテン"
+        },
+        ["pdfDiffShowMask"] = new()
+        {
+            [AppLanguage.ZhHans] = "高亮差异遮罩",
+            [AppLanguage.En] = "Highlight Diff Mask",
+            [AppLanguage.Ja] = "差分マスクをハイライト"
+        },
+        ["pdfDiffCountFormat"] = new()
+        {
+            [AppLanguage.ZhHans] = "{0} 处差异",
+            [AppLanguage.En] = "{0} diffs",
+            [AppLanguage.Ja] = "{0} 件の差分"
+        },
+        ["pdfDiffRegionNavFormat"] = new()
+        {
+            [AppLanguage.ZhHans] = "{0} / {1} 处差异区域",
+            [AppLanguage.En] = "{0} / {1} diff areas",
+            [AppLanguage.Ja] = "{0} / {1} 件の差分領域"
+        },
+        ["pdfDiffAreaBadgeFormat"] = new()
+        {
+            [AppLanguage.ZhHans] = "{0} 处差异区域 ({1:F1}%)",
+            [AppLanguage.En] = "{0} diff areas ({1:F1}%)",
+            [AppLanguage.Ja] = "{0} 件の差分領域 ({1:F1}%)"
+        },
+        ["pdfDiffPixelStatsFormat"] = new()
+        {
+            [AppLanguage.ZhHans] = "{0} 处差异区域 ({1:F2}% 像素)",
+            [AppLanguage.En] = "{0} diff areas ({1:F2}% pixels)",
+            [AppLanguage.Ja] = "{0} 件の差分領域 ({1:F2}% 画素)"
+        },
+        ["pdfPagesCountFormat"] = new()
+        {
+            [AppLanguage.ZhHans] = "{0} 页",
+            [AppLanguage.En] = "{0} pages",
+            [AppLanguage.Ja] = "{0} ページ"
+        },
+        ["pdfDiffHelpDetail"] = new()
+        {
+            [AppLanguage.ZhHans] = "双引擎 PDF 对比模式，支持文本流分词 LCS 差分与高保真双联审阅。提供同步滚动、差异高亮标注、一键 AI 意图总结与 HTML 审阅报告导出。",
+            [AppLanguage.En] = "Dual-engine PDF comparison supporting text token LCS diff. Features synchronized review, diff highlighting, and one-click AI summary & HTML report export.",
+            [AppLanguage.Ja] = "テキストトークン LCS 差分を搭載したデュアルエンジン PDF 比較。同期スクロール、差分ハイライト注釈、ワンクリック AI 要約および HTML レポート出力をサポート。"
+        },
+        ["exportReport"] = new()
+        {
+            [AppLanguage.ZhHans] = "导出差异报告",
+            [AppLanguage.En] = "Export Report",
+            [AppLanguage.Ja] = "比較レポートを出力"
+        },
+        ["prevPage"] = new()
+        {
+            [AppLanguage.ZhHans] = "上一页",
+            [AppLanguage.En] = "Previous Page",
+            [AppLanguage.Ja] = "前のページ"
+        },
+        ["nextPage"] = new()
+        {
+            [AppLanguage.ZhHans] = "下一页",
+            [AppLanguage.En] = "Next Page",
+            [AppLanguage.Ja] = "次のページ"
+        },
+        ["zoomIn"] = new()
+        {
+            [AppLanguage.ZhHans] = "放大",
+            [AppLanguage.En] = "Zoom In",
+            [AppLanguage.Ja] = "拡大"
+        },
+        ["zoomOut"] = new()
+        {
+            [AppLanguage.ZhHans] = "缩小",
+            [AppLanguage.En] = "Zoom Out",
+            [AppLanguage.Ja] = "縮小"
         },
         ["folderDiffTitle"] = new()
         {
@@ -766,6 +910,12 @@ public sealed class LanguageManager
             [AppLanguage.ZhHans] = "• 富文本段落流对比：精准解析 .docx 文档的段落文字、文字样式（加粗/倾斜/下划线/颜色）与结构变动。\n• 多维可视化差异：支持文档大纲树比对、嵌入表格单元格网格对比、以及基于图片哈希的配图变动检测。",
             [AppLanguage.En] = "• Rich Text Comparison: Compares text paragraphs, styles (bold/italic/underline/color), and structural changes in .docx files.\n• Visual Diff: Inspect differences across document outline, embedded tables, and media images with hash matching.",
             [AppLanguage.Ja] = "• リッチテキスト段落比較：.docx の段落テキスト、書式スタイル（太字/斜体/下線/色）および構造の変更を抽出。\n• ビジュアル差分：見出しアウトライン、埋め込みテーブル、画像ハッシュによる画像差分に対応。"
+        },
+        ["pdfDiffGuideDetail"] = new()
+        {
+            [AppLanguage.ZhHans] = "• 双联版面审阅：左右高保真并列渲染 PDF 页面，支持左右并列、半透明重叠与卷帘滑动对比模式。\n• 语义与视觉混合差分：提取文字流执行 Myers 差异计算，结合栅格图像位图检测像素级版面、图表与印章变动。\n• 智能同步滚动与导航：双侧视口毫秒级同步滚动，支持快捷键在上/下一处差异与各页面间平滑跳转。",
+            [AppLanguage.En] = "• Dual-Pane Layout: Side-by-side high-fidelity PDF rendering with Split, Overlay, and Curtain compare modes.\n• Hybrid Semantic & Visual Diff: Myers diff on extracted text streams paired with bitmap pixel-level layout difference detection.\n• Synchronized Navigation: Millisecond-level synchronized scrolling with quick keyboard shortcuts for diff-by-diff navigation.",
+            [AppLanguage.Ja] = "• 見開きレイアウト：左右並列、半透明オーバーレイ、カーテン比較モードによる高精度 PDF プレビュー。\n• テキスト＆ビジュアル比較：テキスト抽出による Myers 差分と、ピクセル単位のレイアウト・図版変化の検知を両立。\n• 同期スクロール＆ナビゲーション：左右のスクロールを瞬時に同期し、差分箇所へのショートカットジャンプに対応。"
         },
         ["folderDiffGuideDetail"] = new()
         {

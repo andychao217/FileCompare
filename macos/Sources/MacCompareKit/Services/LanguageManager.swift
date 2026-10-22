@@ -110,6 +110,7 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case universalBinary
     case newTextCompare
     case newWordCompare
+    case newPdfCompare
     case newFolderCompare
     case newThreeWayMerge
     case openFile
@@ -297,6 +298,8 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case welcomeExcelDiffDesc
     case welcomeWordDiffTitle
     case welcomeWordDiffDesc
+    case welcomePdfDiffTitle
+    case welcomePdfDiffDesc
     case welcomeFolderDiffTitle
     case welcomeFolderDiffDesc
     case recentComparisons
@@ -379,10 +382,31 @@ public enum L10nKey: String, Sendable, CaseIterable {
     case errExcelInvalidFormat
     case errBinaryFileNotSupported
     case suggestSwitchToWord
+    case suggestSwitchToPdf
     case suggestSwitchToExcel
     case suggestSwitchToFolder
+    case errPdfInvalidFormat
+    case pdfDiffSyncScroll
+    case pdfDiffVisualMode
+    case pdfDiffTextMode
+    case pdfDiffOverlay
+    case pdfDiffCurtain
+    case pdfDiffSideBySide
+    case pdfDiffNoDiff
+    case pdfDiffSelectLeftFile
+    case pdfDiffSelectRightFile
+    case pdfDiffDropHint
+    case pdfDiffShowMask
+    case pdfDiffOpacity
+    case pdfDiffTolerance
     case btnSwitchMode
     case btnGotIt
+    case pdfDiffCountFormat
+    case pdfDiffAreaBadgeFormat
+    case pdfDiffPixelStatsFormat
+    case pdfDiffRegionNavFormat
+    case pdfPagesCountFormat
+    case pdfDiffHelpDetail
 
     // Edit Mode Specific
     case diffMode
@@ -815,6 +839,7 @@ public final class LanguageManager {
         .updateFailed: "Update Failed",
         .softwareUpdateTitle: "Software Update",
         .newWordCompare: "New Word Compare",
+        .newPdfCompare: "New PDF Compare",
         .wordDiff: "Word Document Diff",
         .structuredContent: "Structured Content",
         .formattingDiff: "Formatting Diff",
@@ -873,6 +898,8 @@ public final class LanguageManager {
         .welcomeExcelDiffDesc: "Multi-sheet sync, cell-level highlighting & alignment",
         .welcomeWordDiffTitle: "Word Document Compare",
         .welcomeWordDiffDesc: "Styles, embedded tables, vector shapes & outline",
+        .welcomePdfDiffTitle: "PDF Document Compare",
+        .welcomePdfDiffDesc: "Side-by-side layout, text flow diff & visual overlay",
         .welcomeFolderDiffTitle: "Folder Diff & Sync",
         .welcomeFolderDiffDesc: "Fast CRC32 scan & bidirectional safe sync",
         .recentComparisons: "Recent Comparisons",
@@ -948,13 +975,34 @@ public final class LanguageManager {
         .errFolderDroppedInFileMode: "The selected item is a folder, but the current mode only supports comparing single files.\nWould you like to switch to 'Folder Diff' mode?",
         .errFileDroppedInFolderMode: "Current mode is 'Folder Diff'. Please choose or drop a folder.\nTo compare individual files, please use Text, Word, or Excel Diff mode.",
         .errWordInvalidFormat: "Word Diff mode only supports .docx, .doc, and .rtf formats.\nUnsupported file format detected.",
+        .errPdfInvalidFormat: "PDF Diff mode only supports .pdf documents.\nUnsupported file format detected.",
         .errExcelInvalidFormat: "Excel Diff mode only supports .xlsx, .xls, .csv, and .tsv formats.\nUnsupported file format detected.",
         .errBinaryFileNotSupported: "The selected file is a binary file (e.g. executable, archive, or media) and cannot be compared as text.",
         .suggestSwitchToWord: "The selected file is a Word document. Text mode cannot parse its layout and formatting.\nWould you like to switch to 'Word Diff' mode?",
+        .suggestSwitchToPdf: "The selected file is a PDF document.\nWould you like to switch to 'PDF Diff' mode?",
         .suggestSwitchToExcel: "The selected file is a spreadsheet. We recommend using the dedicated multi-sheet engine.\nWould you like to switch to 'Excel Diff' mode?",
         .suggestSwitchToFolder: "The selected item is a folder. Would you like to switch to 'Folder Diff' mode?",
+        .pdfDiffSyncScroll: "Sync Scroll",
+        .pdfDiffVisualMode: "Visual Diff",
+        .pdfDiffTextMode: "Text Diff",
+        .pdfDiffOverlay: "Overlay Blend",
+        .pdfDiffCurtain: "Curtain Split",
+        .pdfDiffSideBySide: "Side by Side",
+        .pdfDiffNoDiff: "Both PDF documents are identical",
+        .pdfDiffSelectLeftFile: "Select Left PDF (.pdf)...",
+        .pdfDiffSelectRightFile: "Select Right PDF (.pdf)...",
+        .pdfDiffDropHint: "Drag and drop .pdf files here to compare",
+        .pdfDiffShowMask: "Highlight Difference Mask",
+        .pdfDiffOpacity: "Opacity",
+        .pdfDiffTolerance: "Tolerance",
         .btnSwitchMode: "Switch Mode & Open",
         .btnGotIt: "Got It",
+        .pdfDiffCountFormat: "%d diffs",
+        .pdfDiffAreaBadgeFormat: "%d diff areas (%.1f%%)",
+        .pdfDiffPixelStatsFormat: "%d diff areas (%.2f%% pixels)",
+        .pdfDiffRegionNavFormat: "%d / %d diff areas",
+        .pdfPagesCountFormat: "%d pages",
+        .pdfDiffHelpDetail: "Dual-engine PDF comparison supporting text token LCS diff and high-precision pixel rasterization. Features side-by-side, curtain split, and overlay blend modes, diff mask highlighting, and one-click AI summary & HTML report export.",
         .diffMode: "Diff View",
         .editMode: "Free Edit",
         .doubleClickToEdit: "Double-click to edit line"
@@ -1140,6 +1188,7 @@ public final class LanguageManager {
         .updateFailed: "更新失败",
         .softwareUpdateTitle: "软件更新",
         .newWordCompare: "新建 Word 对比",
+        .newPdfCompare: "新建 PDF 对比",
         .wordDiff: "Word 文档比对",
         .structuredContent: "结构化内容比对",
         .formattingDiff: "样式格式比对",
@@ -1198,6 +1247,8 @@ public final class LanguageManager {
         .welcomeExcelDiffDesc: "多工作表自动识别、智能行对齐与单元格高亮",
         .welcomeWordDiffTitle: "Word 文档对比",
         .welcomeWordDiffDesc: "正文段落流、富文本样式、表格与图形比对",
+        .welcomePdfDiffTitle: "PDF 文档对比",
+        .welcomePdfDiffDesc: "高保真版面双联审阅、文本流差分与视觉遮罩",
         .welcomeFolderDiffTitle: "文件夹极速对比与同步",
         .welcomeFolderDiffDesc: "目录结构毫秒级扫描、CRC32 哈希与双向同步",
         .recentComparisons: "最近对比记录",
@@ -1273,13 +1324,34 @@ public final class LanguageManager {
         .errFolderDroppedInFileMode: "您选择的是文件夹，当前模式仅支持对比单个文件。\n是否切换至【文件夹对比】模式？",
         .errFileDroppedInFolderMode: "当前为【文件夹对比】模式，请拖入或选择文件夹。\n若需比对单个文件，请选择文本、Word 或 Excel 对比模式。",
         .errWordInvalidFormat: "Word 对比模式仅支持 .docx、.doc 及 .rtf 格式。\n检测到不兼容的文件格式。",
+        .errPdfInvalidFormat: "PDF 对比模式仅支持 .pdf 格式文档。\n检测到不兼容的文件格式。",
         .errExcelInvalidFormat: "Excel 对比模式仅支持 .xlsx、.xls、.csv 及 .tsv 格式。\n检测到不兼容的文件格式。",
         .errBinaryFileNotSupported: "所选文件为二进制文件（如程序、压缩包或媒体），文本对比模式无法对其进行有效比对。",
         .suggestSwitchToWord: "检测到您选择的是 Word 文档，文本模式无法解析其排版与格式。\n是否切换至【Word 对比】模式？",
+        .suggestSwitchToPdf: "检测到您选择的是 PDF 文档，是否切换至【PDF 对比】模式？",
         .suggestSwitchToExcel: "检测到您选择的是表格文件，建议使用多工作表对比引擎。\n是否切换至【Excel 对比】模式？",
         .suggestSwitchToFolder: "检测到所选项目为文件夹，是否切换至【文件夹对比】模式？",
+        .pdfDiffSyncScroll: "同步滚动",
+        .pdfDiffVisualMode: "视觉比对",
+        .pdfDiffTextMode: "文本流比对",
+        .pdfDiffOverlay: "重叠混合",
+        .pdfDiffCurtain: "卷帘比对",
+        .pdfDiffSideBySide: "左右并排",
+        .pdfDiffNoDiff: "两份 PDF 文档内容完全一致",
+        .pdfDiffSelectLeftFile: "选择左侧 PDF (.pdf)...",
+        .pdfDiffSelectRightFile: "选择右侧 PDF (.pdf)...",
+        .pdfDiffDropHint: "拖拽 .pdf 文件至此处开始比对",
+        .pdfDiffShowMask: "高亮差异遮罩",
+        .pdfDiffOpacity: "不透明度",
+        .pdfDiffTolerance: "容差",
         .btnSwitchMode: "切换模式并打开",
         .btnGotIt: "我知道了",
+        .pdfDiffCountFormat: "%d 处差异",
+        .pdfDiffAreaBadgeFormat: "%d 个差异区块 (%.1f%%)",
+        .pdfDiffPixelStatsFormat: "%d 处差异区块 (%.2f%% 像素)",
+        .pdfDiffRegionNavFormat: "%d / %d 处差异区域",
+        .pdfPagesCountFormat: "%d 页",
+        .pdfDiffHelpDetail: "双引擎 PDF 对比模式，支持文本流分词 LCS 差分与高精度位图像素级色差比对。提供左右并排、卷帘比对与重叠混合视图，支持差异高亮标注、一键 AI 意图总结与 HTML 审阅报告导出。",
         .diffMode: "对比视图",
         .editMode: "自由编辑",
         .doubleClickToEdit: "双击行可直接编辑"
@@ -1465,6 +1537,7 @@ public final class LanguageManager {
         .updateFailed: "アップデートに失敗しました",
         .softwareUpdateTitle: "ソフトウェアアップデート",
         .newWordCompare: "新規 Word 比較",
+        .newPdfCompare: "新規 PDF 比較",
         .wordDiff: "Word ドキュメント比較",
         .structuredContent: "構造化コンテンツ比較",
         .formattingDiff: "書式・スタイル比較",
@@ -1523,6 +1596,8 @@ public final class LanguageManager {
         .welcomeExcelDiffDesc: "複数シート自動認識、セル単位の差分ハイライト",
         .welcomeWordDiffTitle: "Word ドキュメント比較",
         .welcomeWordDiffDesc: "書式スタイル、埋め込みテーブル、図形の高精度比較",
+        .welcomePdfDiffTitle: "PDF ドキュメント比較",
+        .welcomePdfDiffDesc: "レイアウト同期表示、テキスト差分＆ビジュアル比較",
         .welcomeFolderDiffTitle: "フォルダ比較・同期",
         .welcomeFolderDiffDesc: "高速 CRC32 スキャンと安全な双方向同期",
         .recentComparisons: "最近の比較履歴",
@@ -1598,13 +1673,34 @@ public final class LanguageManager {
         .errFolderDroppedInFileMode: "選択された項目はフォルダーですが、現在のモードは単一ファイルのみ対応しています。\n「フォルダー比較」モードに切り替えますか？",
         .errFileDroppedInFolderMode: "現在は「フォルダー比較」モードです。フォルダーを選択またはドロップしてください。\n個別のファイルを比較するには、テキスト、Word、または Excel 比較モードを使用してください。",
         .errWordInvalidFormat: "Word 比較モードは .docx、.doc、.rtf 形式のみ対応しています。\n対応していないファイル形式です。",
+        .errPdfInvalidFormat: "PDF 比較モードは .pdf 形式のみ対応しています。\n対応していないファイル形式です。",
         .errExcelInvalidFormat: "Excel 比較モードは .xlsx、.xls、.csv、.tsv 形式のみ対応しています。\n対応していないファイル形式です。",
         .errBinaryFileNotSupported: "選択されたファイルはバイナリファイル（実行可能ファイル、アーカイブ、メディアなど）であり、テキストとして比較できません。",
         .suggestSwitchToWord: "選択されたファイルは Word 文書です。テキストモードではレイアウトを解析できません。\n「Word 比較」モードに切り替えますか？",
+        .suggestSwitchToPdf: "選択されたファイルは PDF ドキュメントです。「PDF 比較」モードに切り替えますか？",
         .suggestSwitchToExcel: "選択されたファイルはスプレッドシートです。専用の表比較エンジンの使用を推奨します。\n「Excel 比較」モードに切り替えますか？",
         .suggestSwitchToFolder: "選択された項目はフォルダーです。「フォルダー比較」モードに切り替えますか？",
+        .pdfDiffSyncScroll: "スクロール同期",
+        .pdfDiffVisualMode: "ビジュアル比較",
+        .pdfDiffTextMode: "テキスト比較",
+        .pdfDiffOverlay: "オーバーレイ",
+        .pdfDiffCurtain: "カーテン比較",
+        .pdfDiffSideBySide: "左右並列",
+        .pdfDiffNoDiff: "両方の PDF ドキュメントは完全に一致しています",
+        .pdfDiffSelectLeftFile: "左側の PDF (.pdf) を選択...",
+        .pdfDiffSelectRightFile: "右側の PDF (.pdf) を選択...",
+        .pdfDiffDropHint: ".pdf ファイルをここにドラッグして比較",
+        .pdfDiffShowMask: "差分マスクをハイライト",
+        .pdfDiffOpacity: "不透明度",
+        .pdfDiffTolerance: "許容値",
         .btnSwitchMode: "切り替えて開く",
         .btnGotIt: "了解",
+        .pdfDiffCountFormat: "%d 件の差分",
+        .pdfDiffAreaBadgeFormat: "%d 件の差分領域 (%.1f%%)",
+        .pdfDiffPixelStatsFormat: "%d 件の差分領域 (%.2f%% 画素)",
+        .pdfDiffRegionNavFormat: "%d / %d 件の差分領域",
+        .pdfPagesCountFormat: "%d ページ",
+        .pdfDiffHelpDetail: "テキストトークン LCS 差分と高精度ピクセルラスタライズを搭載したデュアルエンジン PDF 比較。左右並列、カーテン比較、オーバーレイ混合表示、差分ハイライト注釈、ワンクリック AI 要約および HTML レポート出力をサポート。",
         .diffMode: "差分表示",
         .editMode: "自由編集",
         .doubleClickToEdit: "行をダブルクリックして編集"

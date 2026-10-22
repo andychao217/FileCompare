@@ -36,6 +36,8 @@ public sealed partial class WelcomePage : Page
         ExcelDiffDescBlock.Text = LanguageManager.Instance.Text("excelDiffDesc");
         WordDiffTitleBlock.Text = LanguageManager.Instance.Text("wordDiffTitle");
         WordDiffDescBlock.Text = LanguageManager.Instance.Text("wordDiffDesc");
+        PdfDiffTitleBlock.Text = LanguageManager.Instance.Text("pdfDiffTitle");
+        PdfDiffDescBlock.Text = LanguageManager.Instance.Text("pdfDiffDesc");
         FolderDiffTitleBlock.Text = LanguageManager.Instance.Text("folderDiffTitle");
         FolderDiffDescBlock.Text = LanguageManager.Instance.Text("folderDiffDesc");
         RecentTitleBlock.Text = LanguageManager.Instance.Text("recentComparisons");
@@ -159,6 +161,9 @@ public sealed partial class WelcomePage : Page
                 case CompareType.WordDiff:
                     target.OpenWordDiffTab(record.LeftPath, record.RightPath);
                     break;
+                case CompareType.PdfDiff:
+                    target.OpenPdfDiffTab(record.LeftPath, record.RightPath);
+                    break;
                 case CompareType.ThreeWayMerge:
                     target.OpenThreeWayMergeTab(record.LeftPath, null, record.RightPath);
                     break;
@@ -191,6 +196,11 @@ public sealed partial class WelcomePage : Page
     private void OnWordDiffClicked(object sender, RoutedEventArgs e)
     {
         GetTargetWindow()?.OpenWordDiffTab();
+    }
+
+    private void OnPdfDiffClicked(object sender, RoutedEventArgs e)
+    {
+        GetTargetWindow()?.OpenPdfDiffTab();
     }
 
     private void OnFolderDiffClicked(object sender, RoutedEventArgs e)

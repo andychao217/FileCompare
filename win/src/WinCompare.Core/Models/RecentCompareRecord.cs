@@ -8,6 +8,7 @@ public enum CompareType
     TextDiff,
     ExcelDiff,
     WordDiff,
+    PdfDiff,
     FolderDiff,
     ThreeWayMerge
 }
@@ -37,6 +38,11 @@ public sealed class RecentCompareRecord
             // Check file extensions
             string leftExt = Path.GetExtension(LeftPath).ToLowerInvariant();
             string rightExt = Path.GetExtension(RightPath).ToLowerInvariant();
+
+            if (leftExt is ".pdf" || rightExt is ".pdf" || Type == CompareType.PdfDiff)
+            {
+                return CompareType.PdfDiff;
+            }
 
             if (leftExt is ".xlsx" or ".xls" or ".csv" || rightExt is ".xlsx" or ".xls" or ".csv" || Type == CompareType.ExcelDiff)
             {

@@ -205,6 +205,7 @@ public sealed partial class MainWindow : Window
         if (MenuTextDiff != null) MenuTextDiff.Text = LanguageManager.Instance.Text("textDiffTitle");
         if (MenuExcelDiff != null) MenuExcelDiff.Text = LanguageManager.Instance.Text("excelDiffTitle");
         if (MenuWordDiff != null) MenuWordDiff.Text = LanguageManager.Instance.Text("wordDiffTitle");
+        if (MenuPdfDiff != null) MenuPdfDiff.Text = LanguageManager.Instance.Text("pdfDiffTitle");
         if (MenuFolderDiff != null) MenuFolderDiff.Text = LanguageManager.Instance.Text("folderDiffTitle");
         if (MenuThreeWayMerge != null) MenuThreeWayMerge.Text = LanguageManager.Instance.Text("threeWayMerge");
         if (MenuRecentHistory != null) MenuRecentHistory.Text = LanguageManager.Instance.Text("recentComparisons");
@@ -401,6 +402,9 @@ public sealed partial class MainWindow : Window
             case CompareType.WordDiff:
                 OpenWordDiffTab(path, null);
                 break;
+            case CompareType.PdfDiff:
+                OpenPdfDiffTab(path, null);
+                break;
             case CompareType.ExcelDiff:
                 OpenExcelDiffTab(path, null);
                 break;
@@ -458,6 +462,11 @@ public sealed partial class MainWindow : Window
     private void OnNewWordDiffMenuClicked(object sender, RoutedEventArgs e)
     {
         OpenWordDiffTab();
+    }
+
+    private void OnNewPdfDiffMenuClicked(object sender, RoutedEventArgs e)
+    {
+        OpenPdfDiffTab();
     }
 
     private void OnNewFolderDiffMenuClicked(object sender, RoutedEventArgs e)
@@ -902,6 +911,18 @@ public sealed partial class MainWindow : Window
             }
             return;
         }
+        else if (currentPage is PdfDiffPage pdfPage)
+        {
+            if (paths.Count >= 2)
+            {
+                pdfPage.HandleDualDrop(paths[0], paths[1]);
+            }
+            else
+            {
+                pdfPage.HandleDropFromWindow(paths[0], isLeft);
+            }
+            return;
+        }
         else if (currentPage is ThreeWayMergePage threeWayPage)
         {
             if (paths.Count >= 2)
@@ -933,6 +954,12 @@ public sealed partial class MainWindow : Window
             string ext1 = (Path.GetExtension(path1) ?? "").ToLowerInvariant();
             string ext2 = (Path.GetExtension(path2) ?? "").ToLowerInvariant();
 
+            if (ext1 == ".pdf" || ext2 == ".pdf")
+            {
+                OpenPdfDiffTab(path1, path2);
+                return;
+            }
+
             if (ext1 is ".docx" or ".doc" && ext2 is ".docx" or ".doc")
             {
                 OpenWordDiffTab(path1, path2);
@@ -959,6 +986,10 @@ public sealed partial class MainWindow : Window
             else if (ext is ".docx" or ".doc")
             {
                 OpenWordDiffTab(singlePath, null);
+            }
+            else if (ext == ".pdf")
+            {
+                OpenPdfDiffTab(singlePath, null);
             }
             else if (ext is ".xlsx" or ".xls" or ".csv")
             {
@@ -2028,6 +2059,35 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"OpenExcelDiffTab error: {ex.Message}");
+        }
+    }
+
+    public void OpenPdfDiffTab(string? leftPath = null, string? rightPath = null)
+    {
+        try
+        {
+            App.Log($"[MainWindow] OpenPdfDiffTab starting (left={leftPath}, right={rightPath})");
+            var page = new PdfDiffPage();
+            if (!string.IsNullOrEmpty(leftPath) || !string.IsNullOrEmpty(rightPath))
+            {
+                page.LoadFiles(leftPath, rightPath);
+            }
+            int num = MainTabView.TabItems.Count(t => !IsWelcomeTab(t)) + 1;
+            string title = LanguageManager.Instance.Text("pdfDiffTitle");
+            string defaultHeader = $"{title} {num}";
+            string header = !string.IsNullOrEmpty(leftPath) ? System.IO.Path.GetFileName(leftPath) : defaultHeader;
+            var tab = new TabViewItem
+            {
+                Header = header,
+                IconSource = new FontIconSource { Glyph = "" },
+                Tag = page
+            };
+            AddTab(tab);
+            App.Log("[MainWindow] OpenPdfDiffTab completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            App.LogFatalError("OpenPdfDiffTab", ex);
         }
     }
 

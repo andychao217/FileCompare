@@ -53,6 +53,8 @@ public struct MainWindowView: View {
                     TwoWayDiffView(viewModel: tabManager.textDiffViewModel(for: activeTab.id), tabManager: tabManager)
                 case .wordDiff:
                     WordDiffView(viewModel: tabManager.wordDiffViewModel(for: activeTab.id), tabManager: tabManager)
+                case .pdfDiff:
+                    PdfDiffView(viewModel: tabManager.pdfDiffViewModel(for: activeTab.id), tabManager: tabManager)
                 case .excelDiff:
                     ExcelDiffView(viewModel: tabManager.excelDiffViewModel(for: activeTab.id), tabManager: tabManager)
                 case .folderDiff:
@@ -123,6 +125,9 @@ private struct TabCreationCommands: ViewModifier {
             .onReceive(NotificationCenter.default.publisher(for: .mcNewWordCompare)) { _ in
                 tabManager.addTab(type: .wordDiff)
             }
+            .onReceive(NotificationCenter.default.publisher(for: .mcNewPdfCompare)) { _ in
+                tabManager.addTab(type: .pdfDiff)
+            }
             .onReceive(NotificationCenter.default.publisher(for: .mcNewFolderCompare)) { _ in
                 tabManager.addTab(type: .folderDiff)
             }
@@ -174,6 +179,8 @@ private struct DiffActionCommands: ViewModifier {
                     tabManager.textDiffViewModel(for: activeTab.id).ignoreWhitespace.toggle()
                 } else if activeTab.type == .wordDiff {
                     tabManager.wordDiffViewModel(for: activeTab.id).ignoreWhitespace.toggle()
+                } else if activeTab.type == .pdfDiff {
+                    tabManager.pdfDiffViewModel(for: activeTab.id).ignoreWhitespace.toggle()
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .mcToggleIgnoreCase)) { _ in
@@ -188,6 +195,8 @@ private struct DiffActionCommands: ViewModifier {
         case .textDiff:
             tabManager.textDiffViewModel(for: activeTab.id).openLeftFile()
         case .wordDiff:
+            break
+        case .pdfDiff:
             break
         case .excelDiff:
             break
@@ -207,6 +216,8 @@ private struct DiffActionCommands: ViewModifier {
             if vm.isRightDirty { vm.saveRightFile() }
         case .wordDiff:
             break
+        case .pdfDiff:
+            break
         case .excelDiff:
             break
         case .folderDiff:
@@ -223,6 +234,8 @@ private struct DiffActionCommands: ViewModifier {
             tabManager.textDiffViewModel(for: activeTab.id).nextDiff()
         case .wordDiff:
             tabManager.wordDiffViewModel(for: activeTab.id).nextDiff()
+        case .pdfDiff:
+            tabManager.pdfDiffViewModel(for: activeTab.id).nextDiff()
         case .excelDiff:
             tabManager.excelDiffViewModel(for: activeTab.id).nextDiff()
         case .threeWayMerge:
@@ -239,6 +252,8 @@ private struct DiffActionCommands: ViewModifier {
             tabManager.textDiffViewModel(for: activeTab.id).previousDiff()
         case .wordDiff:
             tabManager.wordDiffViewModel(for: activeTab.id).prevDiff()
+        case .pdfDiff:
+            tabManager.pdfDiffViewModel(for: activeTab.id).prevDiff()
         case .excelDiff:
             tabManager.excelDiffViewModel(for: activeTab.id).prevDiff()
         case .threeWayMerge:

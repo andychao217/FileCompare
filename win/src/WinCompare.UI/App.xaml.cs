@@ -16,6 +16,7 @@ public partial class App : Application
     private Window? _window;
     public static List<MainWindow> ActiveWindows { get; } = new();
     public static MainWindow? MainWindowInstance => ActiveWindows.FirstOrDefault();
+    public static MainWindow? CurrentMainWindow => ActiveWindow ?? MainWindowInstance;
     public static MainWindow? ActiveWindow { get; set; }
     public static bool IsElevatedAdministrator { get; private set; }
 

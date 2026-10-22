@@ -4,6 +4,7 @@ import SwiftUI
 public enum TabContentType: String, CaseIterable, Identifiable, Sendable {
     case textDiff = "Text Diff"
     case wordDiff = "Word Diff"
+    case pdfDiff = "PDF Diff"
     case excelDiff = "Excel Diff"
     case folderDiff = "Folder Diff"
     case threeWayMerge = "3-Way Merge"
@@ -13,6 +14,7 @@ public enum TabContentType: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .textDiff: return "doc.text"
         case .wordDiff: return "doc.richtext"
+        case .pdfDiff: return "doc.viewfinder"
         case .excelDiff: return "tablecells"
         case .folderDiff: return "folder"
         case .threeWayMerge: return "arrow.triangle.branch"
@@ -41,6 +43,7 @@ public struct TabItem: Identifiable, Equatable, Sendable {
         switch type {
         case .textDiff: return LanguageManager.shared.text(.newTextCompare)
         case .wordDiff: return LanguageManager.shared.text(.newWordCompare)
+        case .pdfDiff: return LanguageManager.shared.text(.newPdfCompare)
         case .excelDiff: return LanguageManager.shared.text(.newExcelCompare)
         case .folderDiff: return LanguageManager.shared.text(.newFolderCompare)
         case .threeWayMerge: return LanguageManager.shared.text(.newThreeWayMerge)
@@ -57,6 +60,7 @@ public final class TabManager: Identifiable {
 
     public var textDiffViewModels: [UUID: TextDiffViewModel] = [:]
     public var wordDiffViewModels: [UUID: WordDiffViewModel] = [:]
+    public var pdfDiffViewModels: [UUID: PdfDiffViewModel] = [:]
     public var excelDiffViewModels: [UUID: ExcelDiffViewModel] = [:]
     public var folderDiffViewModels: [UUID: FolderDiffViewModel] = [:]
     public var threeWayMergeViewModels: [UUID: ThreeWayMergeViewModel] = [:]
@@ -81,6 +85,8 @@ public final class TabManager: Identifiable {
             textDiffViewModels[initialTab.id] = TextDiffViewModel()
         case .wordDiff:
             wordDiffViewModels[initialTab.id] = WordDiffViewModel()
+        case .pdfDiff:
+            pdfDiffViewModels[initialTab.id] = PdfDiffViewModel()
         case .excelDiff:
             excelDiffViewModels[initialTab.id] = ExcelDiffViewModel()
         case .folderDiff:
@@ -123,6 +129,16 @@ public final class TabManager: Identifiable {
                     return right.lastPathComponent
                 }
             }
+        case .pdfDiff:
+            if let vm = pdfDiffViewModels[tab.id] {
+                if let left = vm.leftFileURL, let right = vm.rightFileURL {
+                    return "\(left.lastPathComponent) ↔ \(right.lastPathComponent)"
+                } else if let left = vm.leftFileURL {
+                    return left.lastPathComponent
+                } else if let right = vm.rightFileURL {
+                    return right.lastPathComponent
+                }
+            }
         case .excelDiff:
             if let vm = excelDiffViewModels[tab.id] {
                 if let left = vm.leftURL, let right = vm.rightURL {
@@ -155,6 +171,7 @@ public final class TabManager: Identifiable {
         switch tab.type {
         case .textDiff: return LanguageManager.shared.text(.newTextCompare)
         case .wordDiff: return LanguageManager.shared.text(.newWordCompare)
+        case .pdfDiff: return LanguageManager.shared.text(.newPdfCompare)
         case .excelDiff: return LanguageManager.shared.text(.newExcelCompare)
         case .folderDiff: return LanguageManager.shared.text(.newFolderCompare)
         case .threeWayMerge: return LanguageManager.shared.text(.newThreeWayMerge)
@@ -182,6 +199,7 @@ public final class TabManager: Identifiable {
         tabs.remove(at: index)
         textDiffViewModels.removeValue(forKey: id)
         wordDiffViewModels.removeValue(forKey: id)
+        pdfDiffViewModels.removeValue(forKey: id)
         excelDiffViewModels.removeValue(forKey: id)
         folderDiffViewModels.removeValue(forKey: id)
         threeWayMergeViewModels.removeValue(forKey: id)
@@ -201,6 +219,8 @@ public final class TabManager: Identifiable {
             textDiffViewModels[newTab.id] = TextDiffViewModel()
         case .wordDiff:
             wordDiffViewModels[newTab.id] = WordDiffViewModel()
+        case .pdfDiff:
+            pdfDiffViewModels[newTab.id] = PdfDiffViewModel()
         case .excelDiff:
             excelDiffViewModels[newTab.id] = ExcelDiffViewModel()
         case .folderDiff:
@@ -225,6 +245,7 @@ public final class TabManager: Identifiable {
         let tab = tabs.remove(at: index)
         let textVM = textDiffViewModels.removeValue(forKey: id)
         let wordVM = wordDiffViewModels.removeValue(forKey: id)
+        let pdfVM = pdfDiffViewModels.removeValue(forKey: id)
         let excelVM = excelDiffViewModels.removeValue(forKey: id)
         let folderVM = folderDiffViewModels.removeValue(forKey: id)
         let mergeVM = threeWayMergeViewModels.removeValue(forKey: id)
@@ -239,6 +260,7 @@ public final class TabManager: Identifiable {
 
         if let textVM { newManager.textDiffViewModels[tab.id] = textVM }
         if let wordVM { newManager.wordDiffViewModels[tab.id] = wordVM }
+        if let pdfVM { newManager.pdfDiffViewModels[tab.id] = pdfVM }
         if let excelVM { newManager.excelDiffViewModels[tab.id] = excelVM }
         if let folderVM { newManager.folderDiffViewModels[tab.id] = folderVM }
         if let mergeVM { newManager.threeWayMergeViewModels[tab.id] = mergeVM }
@@ -259,6 +281,7 @@ public final class TabManager: Identifiable {
         let tab = sourceManager.tabs.remove(at: srcIdx)
         let textVM = sourceManager.textDiffViewModels.removeValue(forKey: tabId)
         let wordVM = sourceManager.wordDiffViewModels.removeValue(forKey: tabId)
+        let pdfVM = sourceManager.pdfDiffViewModels.removeValue(forKey: tabId)
         let excelVM = sourceManager.excelDiffViewModels.removeValue(forKey: tabId)
         let folderVM = sourceManager.folderDiffViewModels.removeValue(forKey: tabId)
         let mergeVM = sourceManager.threeWayMergeViewModels.removeValue(forKey: tabId)
@@ -273,6 +296,7 @@ public final class TabManager: Identifiable {
 
         if let textVM { textDiffViewModels[tab.id] = textVM }
         if let wordVM { wordDiffViewModels[tab.id] = wordVM }
+        if let pdfVM { pdfDiffViewModels[tab.id] = pdfVM }
         if let excelVM { excelDiffViewModels[tab.id] = excelVM }
         if let folderVM { folderDiffViewModels[tab.id] = folderVM }
         if let mergeVM { threeWayMergeViewModels[tab.id] = mergeVM }
@@ -291,7 +315,9 @@ public final class TabManager: Identifiable {
 
         let leftExt = left.pathExtension.lowercased()
         let rightExt = right.pathExtension.lowercased()
-        if ["docx", "doc"].contains(leftExt) || ["docx", "doc"].contains(rightExt) {
+        if leftExt == "pdf" || rightExt == "pdf" {
+            openPdfDiff(left: left, right: right)
+        } else if ["docx", "doc"].contains(leftExt) || ["docx", "doc"].contains(rightExt) {
             openWordDiff(left: left, right: right)
         } else if ["xlsx", "xls", "csv", "tsv"].contains(leftExt) || ["xlsx", "xls", "csv", "tsv"].contains(rightExt) {
             openExcelDiff(left: left, right: right)
@@ -316,6 +342,13 @@ public final class TabManager: Identifiable {
             selectedTabId = newTab.id
             let vm = WordDiffViewModel(leftURL: url, rightURL: nil)
             wordDiffViewModels[newTab.id] = vm
+        case .pdfDiff:
+            let title = url.lastPathComponent
+            let newTab = TabItem(title: title, type: .pdfDiff)
+            tabs.append(newTab)
+            selectedTabId = newTab.id
+            let vm = PdfDiffViewModel(leftURL: url, rightURL: nil)
+            pdfDiffViewModels[newTab.id] = vm
         case .excelDiff:
             let title = url.lastPathComponent
             let newTab = TabItem(title: title, type: .excelDiff)
@@ -356,6 +389,16 @@ public final class TabManager: Identifiable {
 
         let vm = WordDiffViewModel(leftURL: left, rightURL: right)
         wordDiffViewModels[newTab.id] = vm
+    }
+
+    public func openPdfDiff(left: URL, right: URL) {
+        let title = "\(left.lastPathComponent) ↔ \(right.lastPathComponent)"
+        let newTab = TabItem(title: title, type: .pdfDiff)
+        tabs.append(newTab)
+        selectedTabId = newTab.id
+
+        let vm = PdfDiffViewModel(leftURL: left, rightURL: right)
+        pdfDiffViewModels[newTab.id] = vm
     }
 
     public func openExcelDiff(left: URL, right: URL) {
@@ -406,6 +449,15 @@ public final class TabManager: Identifiable {
         }
         let vm = WordDiffViewModel()
         wordDiffViewModels[tabId] = vm
+        return vm
+    }
+
+    public func pdfDiffViewModel(for tabId: UUID) -> PdfDiffViewModel {
+        if let vm = pdfDiffViewModels[tabId] {
+            return vm
+        }
+        let vm = PdfDiffViewModel()
+        pdfDiffViewModels[tabId] = vm
         return vm
     }
 

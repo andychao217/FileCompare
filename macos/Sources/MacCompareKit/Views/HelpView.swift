@@ -110,7 +110,16 @@ public struct HelpView: View {
                 codeSnippet: nil
             )
 
-            // 4. Folder Diff Card
+            // 4. PDF Diff Card
+            guideCard(
+                icon: "doc.viewfinder",
+                title: languageManager.text(.welcomePdfDiffTitle),
+                summary: languageManager.text(.welcomePdfDiffDesc),
+                detail: languageManager.text(.pdfDiffHelpDetail),
+                codeSnippet: nil
+            )
+
+            // 5. Folder Diff Card
             guideCard(
                 icon: "folder.badge.gearshape",
                 title: languageManager.text(.folderDiff),
@@ -219,6 +228,7 @@ public struct HelpView: View {
             shortcutRow(key: "⌘ N", desc: languageManager.text(.newTextCompare))
             shortcutRow(key: "⇧ ⌘ E", desc: languageManager.text(.newExcelCompare))
             shortcutRow(key: "⇧ ⌘ D", desc: languageManager.text(.newWordCompare))
+            shortcutRow(key: "⇧ ⌘ P", desc: languageManager.text(.newPdfCompare))
             shortcutRow(key: "⇧ ⌘ N", desc: languageManager.text(.newFolderCompare))
             shortcutRow(key: "⌥ ⌘ M", desc: languageManager.text(.newThreeWayMerge))
             shortcutRow(key: "⌃ Tab", desc: languageManager.text(.nextTab))

@@ -24,6 +24,11 @@ public struct AppCommands: Commands {
             }
             .keyboardShortcut("d", modifiers: [.command, .shift])
 
+            Button(languageManager.text(.newPdfCompare)) {
+                NotificationCenter.default.post(name: .mcNewPdfCompare, object: nil)
+            }
+            .keyboardShortcut("p", modifiers: [.command, .shift])
+
             Button(languageManager.text(.newFolderCompare)) {
                 NotificationCenter.default.post(name: .mcNewFolderCompare, object: nil)
             }

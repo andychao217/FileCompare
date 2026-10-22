@@ -100,6 +100,50 @@ func runCLI() async {
                     print("[mcdiff] Error comparing Excel files: \(error.localizedDescription)")
                     exit(1)
                 }
+            } else if ext1 == "pdf" || ext2 == "pdf" {
+                do {
+                    let leftDoc = try await PdfDocumentParser.shared.parseDocument(from: URL(fileURLWithPath: path1))
+                    let rightDoc = try await PdfDocumentParser.shared.parseDocument(from: URL(fileURLWithPath: path2))
+                    let diffResult = await PdfDiffEngine.shared.compareDocuments(left: leftDoc, right: rightDoc)
+
+                    print("[mcdiff] Comparing PDF Documents: \(path1) <-> \(path2)")
+                    print("Left: \(leftDoc.fileName) (\(leftDoc.pageCount) pages, \(leftDoc.metadata.fileSizeFormatted))")
+                    print("Right: \(rightDoc.fileName) (\(rightDoc.pageCount) pages, \(rightDoc.metadata.fileSizeFormatted))")
+                    print("Total Differences: \(diffResult.totalDiffCount) page change(s)")
+                    print("----------------------------------------------------------------------")
+
+                    if diffResult.totalDiffCount == 0 {
+                        print("✅ Both PDF documents are identical in text content.")
+                    } else {
+                        for block in diffResult.blocks where block.changeType != .unchanged {
+                            let leftDesc = block.leftPageIndex.map { "Page \($0 + 1)" } ?? "None"
+                            let rightDesc = block.rightPageIndex.map { "Page \($0 + 1)" } ?? "None"
+                            print("\n📄 [\(block.changeType.rawValue.uppercased())] \(leftDesc) <-> \(rightDesc)")
+
+                            let changedTokens = block.tokens.filter { $0.changeType != .unchanged }
+                            if !changedTokens.isEmpty {
+                                for token in changedTokens.prefix(15) {
+                                    switch token.changeType {
+                                    case .deleted:
+                                        print("  - \(token.text)")
+                                    case .inserted:
+                                        print("  + \(token.text)")
+                                    case .unchanged:
+                                        break
+                                    case .modified:
+                                        print("  ~ \(token.text)")
+                                    }
+                                }
+                                if changedTokens.count > 15 {
+                                    print("  ... and \(changedTokens.count - 15) more token diffs")
+                                }
+                            }
+                        }
+                    }
+                } catch {
+                    print("[mcdiff] Error comparing PDF files: \(error.localizedDescription)")
+                    exit(1)
+                }
             } else {
                 do {
                     let leftText = try String(contentsOfFile: path1)
@@ -139,9 +183,14 @@ func printUsage() {
     MacCompare CLI (mcdiff) - Fast native diff & merge tool for macOS
 
     USAGE:
-        mcdiff <file_a> <file_b>                      Compare two files
+        mcdiff <file_a> <file_b>                      Compare two files (Text / Excel / PDF)
         mcdiff <dir_a> <dir_b>                        Compare two directories
         mcdiff --merge <local> <base> <remote> [-o <out>]   3-Way conflict merge
+
+    SUPPORTED FORMATS:
+        - Plain Text & Code: .swift, .rs, .json, .py, .md, .txt, etc.
+        - Spreadsheets: .xlsx, .xls, .csv, .tsv
+        - PDF Documents: .pdf (Page alignment, Text Myers Diff & layout inspection)
 
     OPTIONS:
         -h, --help        Show this help message
