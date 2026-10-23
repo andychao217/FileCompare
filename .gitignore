@@ -84,3 +84,6 @@ Generated\ Files/
 !win/src/WinCompare.UI/maccompare_ffi.dll
 test_files/
 
+# Setup Installer Temporary Payload
+win/src/WinCompare.Setup/Resources/*.zip
+!win/src/WinCompare.Setup/Resources/.gitkeep

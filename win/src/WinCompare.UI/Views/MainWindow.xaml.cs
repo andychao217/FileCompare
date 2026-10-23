@@ -249,7 +249,7 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             App.LogFatalError("MainWindow.OnAboutClicked", ex);
-            ShowNoticeDialog(LanguageManager.Instance.Text("aboutApp"), "WinCompare v0.6.0\n\n" + ex.Message);
+            ShowNoticeDialog(LanguageManager.Instance.Text("aboutApp"), $"WinCompare v{UpdateCheckerService.CurrentVersion}\n\n" + ex.Message);
         }
     }
 
@@ -1317,7 +1317,8 @@ public sealed partial class MainWindow : Window
 
     public void AddTab(TabViewItem tab)
     {
-        App.Log($"[MainWindow] AddTab starting for '{tab?.Header}'");
+        if (tab == null) return;
+        App.Log($"[MainWindow] AddTab starting for '{tab.Header}'");
         tab.MaxWidth = 220;
         AttachTabDragHandlers(tab);
         

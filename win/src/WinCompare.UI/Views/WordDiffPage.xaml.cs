@@ -539,11 +539,14 @@ public sealed partial class WordDiffPage : Page, IDisposable
         }
 
         if (OutlineEmptyState != null) OutlineEmptyState.Visibility = Visibility.Collapsed;
-        if (OutlineList != null) OutlineList.Visibility = Visibility.Visible;
         if (OutlineCountBadge != null) OutlineCountBadge.Text = headings.Count.ToString();
 
         var items = headings.Select(h => new OutlineHeadingItem { Title = h.Text, Index = h.Index }).ToList();
-        OutlineList.ItemsSource = items;
+        if (OutlineList != null)
+        {
+            OutlineList.Visibility = Visibility.Visible;
+            OutlineList.ItemsSource = items;
+        }
     }
 
     private void BuildParagraphDiff()

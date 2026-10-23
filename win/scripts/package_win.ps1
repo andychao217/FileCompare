@@ -1,13 +1,13 @@
 ﻿# ==============================================================================
-# WinCompare Universal Windows Packaging Script (PowerShell)
+# WinCompare Windows Packaging Script (PowerShell)
 # Produces:
 #   1. Standalone Portable Zip (WinUI 3 GUI + CLI + Rust Core)
 #   2. Standalone Portable CLI Zip (wincmp + Rust Core)
-#   3. WiX Native MSI Installer with Desktop & Start Menu Shortcuts
+#   3. Fluent Design Single-File Installer (WinCompare-<Version>-Setup-<Platform>.exe)
 # ==============================================================================
 
 param(
-    [string]$Version = "0.6.0",
+    [string]$Version = "0.7.0",
     [string]$Platform = "x64",
     [switch]$SkipInstaller
 )
@@ -133,62 +133,57 @@ Remove-Item -Recurse -Force $cliTempDir
 Remove-Item -Recurse -Force $cliBundleDir
 
 # ------------------------------------------------------------------------------
-# 5. Build Native MSI Installer via WiX Toolset
+# 5. Build Fluent Design Single-File Installer (Setup.exe)
 # ------------------------------------------------------------------------------
 if (-not $SkipInstaller) {
-    Write-Host "`n[5/5] Building WiX MSI Installer (with Desktop & Start Menu Shortcuts)..." -ForegroundColor Yellow
-    $installerProj = Join-Path $winDir "src\WinCompare.Installer\WinCompare.Installer.wixproj"
-    $msiTarget = Join-Path $distDir "WinCompare-$Version-windows-$Platform-Setup.msi"
-    
-    # Use VM local fast disk directory ($env:TEMP) for intermediate & CAB generation
-    # to completely eliminate Parallels/VMware network share (Z:\) byte-lock delays and oplock freezes
-    $localWixWorkDir = Join-Path $env:TEMP "WinCompareWixBuild"
-    if (Test-Path $localWixWorkDir) { Remove-Item -Recurse -Force $localWixWorkDir -ErrorAction SilentlyContinue }
-    New-Item -ItemType Directory -Path "$localWixWorkDir\staging" -Force | Out-Null
-    New-Item -ItemType Directory -Path "$localWixWorkDir\obj" -Force | Out-Null
-    New-Item -ItemType Directory -Path "$localWixWorkDir\bin" -Force | Out-Null
-
-    try {
-        Write-Host "  -> Syncing published files to local VM disk to prevent network share lock delays..." -ForegroundColor Cyan
-        & robocopy.exe "$stageDir" "$localWixWorkDir\staging" /MIR /NFL /NDL /NJH /NJS /NC /NS /NP /MT:8 | Out-Null
-
-        # Remove PDB debug symbols from installer to shrink size and speed up CAB compression
-        Get-ChildItem -Path "$localWixWorkDir\staging" -Filter "*.pdb" -Recurse | Remove-Item -Force -ErrorAction SilentlyContinue
-
-        Write-Host "  -> Running WiX compiler on local drive..." -ForegroundColor Yellow
-        dotnet build $installerProj -c Release /p:Platform=$Platform /p:Version=$Version `
-            /p:PublishDir="$localWixWorkDir\staging" `
-            /p:IntermediateOutputPath="$localWixWorkDir\obj\" `
-            /p:OutputPath="$localWixWorkDir\bin\" `
-            /p:SuppressValidation=true
-        if ($LASTEXITCODE -ne 0) {
-            Write-Error "WiX dotnet build failed with exit code $LASTEXITCODE"
-            exit $LASTEXITCODE
-        }
-        
-        $builtMsi = Join-Path $localWixWorkDir "bin\WinCompare-$Version-Setup-$Platform.msi"
-        if (-not (Test-Path $builtMsi)) {
-            $foundMsi = Get-ChildItem -Path "$localWixWorkDir\bin" -Filter "*.msi" -Recurse | Select-Object -First 1
-            if ($foundMsi) {
-                $builtMsi = $foundMsi.FullName
-            }
-        }
-
-        if (Test-Path $builtMsi) {
-            Copy-Item -Path $builtMsi -Destination $msiTarget -Force
-            Write-Host "  -> Created MSI Installer: $msiTarget" -ForegroundColor Green
-        } else {
-            Write-Warning "WiX build finished but could not locate output MSI file. Checked: $builtMsi"
-        }
-    } catch {
-        Write-Warning "WiX build failed: $_. Portable ZIP packages remain available."
-    } finally {
-        if (Test-Path $localWixWorkDir) {
-            Remove-Item -Recurse -Force $localWixWorkDir -ErrorAction SilentlyContinue
-        }
+    Write-Host "`n[5/5] Building Fluent Design Single-File Installer (Setup.exe)..." -ForegroundColor Yellow
+    $setupDir = Join-Path $winDir "src\WinCompare.Setup"
+    $setupResDir = Join-Path $setupDir "Resources"
+    if (-not (Test-Path $setupResDir)) {
+        New-Item -ItemType Directory -Path $setupResDir -Force | Out-Null
     }
+    $payloadZip = Join-Path $setupResDir "payload.zip"
+    if (Test-Path $payloadZip) { Remove-Item -Force $payloadZip }
+
+    Write-Host "  -> Packaging payload.zip for installer..." -ForegroundColor Gray
+    Compress-Archive -Path "$stageDir\*" -DestinationPath $payloadZip -Force
+
+    $setupProj = Join-Path $setupDir "WinCompare.Setup.csproj"
+    $setupOutDir = Join-Path $distDir "staging_setup_$Platform"
+    if (Test-Path $setupOutDir) { Remove-Item -Recurse -Force $setupOutDir }
+
+    Write-Host "  -> Publishing single-file WinCompare-Setup.exe..." -ForegroundColor Gray
+    dotnet publish $setupProj -c Release -r "win-$Platform" --self-contained true `
+        /p:PublishSingleFile=true `
+        /p:EnableCompressionInSingleFile=true `
+        /p:IncludeNativeLibrariesForSelfExtract=true `
+        /p:Version=$Version `
+        -o $setupOutDir
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "WinCompare.Setup publish failed!"
+        exit $LASTEXITCODE
+    }
+
+    $rawSetupExe = Join-Path $setupOutDir "WinCompare-Setup.exe"
+    if (-not (Test-Path $rawSetupExe)) {
+        $foundExe = Get-ChildItem -Path $setupOutDir -Filter "*.exe" | Select-Object -First 1
+        if ($foundExe) { $rawSetupExe = $foundExe.FullName }
+    }
+
+    if (Test-Path $rawSetupExe) {
+        $finalSetupExe = Join-Path $distDir "WinCompare-$Version-Setup-$Platform.exe"
+        Copy-Item -Path $rawSetupExe -Destination $finalSetupExe -Force
+        $exeSize = (Get-Item $finalSetupExe).Length / 1MB
+        Write-Host ("  -> Created Fluent Setup: {0} ({1:N2} MB)" -f $finalSetupExe, $exeSize) -ForegroundColor Green
+    } else {
+        Write-Error "Expected Setup executable not found in $setupOutDir"
+        exit 1
+    }
+
+    if (Test-Path $setupOutDir) { Remove-Item -Recurse -Force $setupOutDir }
 } else {
-    Write-Host "`n[5/5] Skipping MSI Installer build (-SkipInstaller specified)." -ForegroundColor Gray
+    Write-Host "`n[5/5] Skipping Installer build (-SkipInstaller specified)." -ForegroundColor Gray
 }
 
 # Cleanup staging directory
@@ -200,7 +195,8 @@ Write-Host "`n========================================================" -Foregro
 Write-Host "✅ Windows Packaging Complete!" -ForegroundColor Green
 Write-Host "📍 GUI Portable:  $zipApp"
 Write-Host "📍 CLI Tool:      $zipCli"
-if (Test-Path (Join-Path $distDir "WinCompare-$Version-windows-$Platform-Setup.msi")) {
-    Write-Host "📍 MSI Installer: $distDir\WinCompare-$Version-windows-$Platform-Setup.msi"
+$fluentSetupTarget = Join-Path $distDir "WinCompare-$Version-Setup-$Platform.exe"
+if (Test-Path $fluentSetupTarget) {
+    Write-Host "📍 Fluent Setup:  $fluentSetupTarget"
 }
 Write-Host "========================================================" -ForegroundColor Cyan

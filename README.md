@@ -161,11 +161,11 @@ FileCompare/
 
 - **macOS Universal DMG**:
   ```bash
-  bash scripts/package_dmg.sh 0.6.0
+  bash scripts/package_dmg.sh 0.7.0
   ```
 - **Windows WiX MSI & ZIP**:
   ```powershell
-  .\win\scripts\package_win.ps1 -Version 0.6.0
+  .\win\scripts\package_win.ps1 -Version 0.7.0
   ```
 
 ---
@@ -274,11 +274,11 @@ FileCompare/
 
 - **macOS (生成 Universal DMG)**：
   ```bash
-  bash scripts/package_dmg.sh 0.6.0
+  bash scripts/package_dmg.sh 0.7.0
   ```
 - **Windows (生成 WiX MSI 与便携 ZIP)**：
   ```powershell
-  .\win\scripts\package_win.ps1 -Version 0.6.0
+  .\win\scripts\package_win.ps1 -Version 0.7.0
   ```
 
 ---
@@ -393,11 +393,11 @@ FileCompare/
 
 - **macOS (Universal DMG 生成)**:
   ```bash
-  bash scripts/package_dmg.sh 0.6.0
+  bash scripts/package_dmg.sh 0.7.0
   ```
 - **Windows (WiX MSI & ZIP 生成)**:
   ```powershell
-  .\win\scripts\package_win.ps1 -Version 0.6.0
+  .\win\scripts\package_win.ps1 -Version 0.7.0
   ```
 
 ---

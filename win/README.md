@@ -127,24 +127,24 @@ wincmp merge local.py base.py remote.py merged.py
 
 ---
 
-## 📦 自动化打包与分发 (WiX MSI & ZIP)
+## 📦 自动化打包与分发 (Fluent Setup & ZIP)
 
-WinCompare 支持一键构建**免安装绿色版 ZIP** 以及 **标准 MSI 安装包（带桌面、开始菜单快捷方式与终端 PATH 注册）**。脚本内置了**本地磁盘高速缓冲机制**，彻底解决在虚拟机网络共享盘（`Z:\`）上压缩 CAB 导致的缓慢或卡顿问题。
+WinCompare 支持一键构建**免安装绿色版 ZIP** 以及 **Fluent Design 单文件安装包（WinCompare-Setup.exe，支持静默部署与原位升级）**。脚本内置了**本地磁盘高速缓冲机制**，彻底解决在虚拟机网络共享盘（`Z:\`）上压缩 CAB 导致的缓慢或卡顿问题。
 
 ### 1. 本地一键打包命令
 在 Windows / 虚拟机 PowerShell 中执行：
 ```powershell
-# 一键打包（默认版本 0.6.0，平台 x64）
-.\win\scripts\package_win.ps1 -Version 0.6.0
+# 一键打包（默认版本 0.7.0，平台 x64）
+.\win\scripts\package_win.ps1 -Version 0.7.0
 
-# 仅打包绿色免安装便携版 (跳过 WiX 安装包)
-.\win\scripts\package_win.ps1 -Version 0.6.0 -SkipInstaller
+# 仅打包绿色免安装便携版 (跳过安装程序制作)
+.\win\scripts\package_win.ps1 -Version 0.7.0 -SkipInstaller
 ```
 
 ### 2. 打包产物输出 (`dist/` 目录)
-- **`dist/WinCompare-0.6.0-windows-x64-Setup.msi`**：微软标准 MSI 安装向导（含许可协议签署、自定义安装目录、桌面图标、开始菜单快捷方式以及向系统注册 `wincmp` 命令行工具）。
-- **`dist/WinCompare-0.6.0-windows-x64.zip`**：自包含免安装绿色包，解压即用。
-- **`dist/wincmp-0.6.0-windows-x64.zip`**：独立 Git 对比命令行工具包。
+- **`dist/WinCompare-0.7.0-Setup-x64.exe`**：现代 Fluent Design 单文件安装包（自动识别旧版原位更新、支持 `--silent` 静默安装/卸载、自适应系统 Accent 强调色与深浅主题）。
+- **`dist/WinCompare-0.7.0-windows-x64.zip`**：自包含免安装绿色包，解压即用。
+- **`dist/wincmp-0.7.0-windows-x64.zip`**：独立 Git 对比命令行工具包。
 
 ### 3. GitHub 持续集成与发布
 每次推送到以 `v*` 开头的 Tag 时，GitHub Actions（`.github/workflows/release.yml`）会自动启动 Windows 构建环境（`windows-2022`），并行完成打包，并将 Windows 与 macOS 的全部资产统一挂载发布到同一个 GitHub Release 下。

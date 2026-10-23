@@ -95,11 +95,6 @@ jobs:
         with:
           workspaces: "core -> target"
 
-      - name: Set up WiX Toolset
-        shell: pwsh
-        run: |
-          dotnet tool install --global wix --version 5.0.2 || true
-
       - name: Extract Tag Version
         id: get_version
         shell: pwsh
@@ -109,7 +104,7 @@ jobs:
           if (-not $ver) { $ver = "0.1.0" }
           Write-Output "version=$ver" >> $env:GITHUB_OUTPUT
 
-      - name: Package Windows Artifacts (Zip & WiX MSI)
+      - name: Package Windows Artifacts (Zip & Fluent Setup)
         shell: pwsh
         run: |
           ./win/scripts/package_win.ps1 -Version "${{ steps.get_version.outputs.version }}" -Platform "x64"
@@ -120,7 +115,7 @@ jobs:
           name: windows-artifacts
           path: |
             dist/*.zip
-            dist/*.msi
+            dist/*.exe
           retention-days: 1
 
   # ============================================================================

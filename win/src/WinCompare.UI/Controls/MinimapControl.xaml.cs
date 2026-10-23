@@ -15,7 +15,6 @@ public sealed partial class MinimapControl : UserControl
     private IReadOnlyList<DiffLineDisplayItem>? _items;
     private bool _isDragging = false;
     private double _viewportRatio = 0.0;
-    private double _visibleRatio = 0.1;
 
     private static Brush AddedBrush => App.GetThemeBrush("DiffAddedBgBrush");
     private static Brush DeletedBrush => App.GetThemeBrush("DiffDeletedBgBrush");

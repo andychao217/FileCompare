@@ -35,7 +35,7 @@ public sealed class UpdateCheckerService
     private static readonly Lazy<UpdateCheckerService> _instance = new(() => new UpdateCheckerService());
     public static UpdateCheckerService Instance => _instance.Value;
 
-    public const string CurrentVersion = "0.6.0";
+    public const string CurrentVersion = "0.7.0";
     public const string Repository = "andychao217/FileCompare";
 
     public UpdateCheckStatus Status { get; private set; } = UpdateCheckStatus.Idle;
@@ -107,7 +107,7 @@ public sealed class UpdateCheckerService
                         }
                     }
 
-                    // 1. Prioritize WinCompare Windows zip (portable package, e.g. WinCompare-0.6.0-windows-x64.zip)
+                    // 1. Prioritize WinCompare Windows zip (portable package, e.g. WinCompare-0.7.0-windows-x64.zip)
                     var matchedAsset = assetList.FirstOrDefault(a => 
                         a.Name.Contains("WinCompare", StringComparison.OrdinalIgnoreCase) && 
                         (a.Name.Contains("win", StringComparison.OrdinalIgnoreCase) || a.Name.Contains("windows", StringComparison.OrdinalIgnoreCase)) && 
