@@ -510,10 +510,16 @@ body {
 
 .showcase-header {
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.showcase-top-row {
+  display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
+  width: 100%;
   gap: 16px;
 }
 
@@ -563,19 +569,29 @@ body {
   padding: 6px;
   border-radius: 14px;
   border: 1px solid var(--border-color);
-  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .showcase-tab {
+  flex: 1;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
   background: transparent;
   border: none;
   color: var(--text-secondary);
-  padding: 8px 18px;
+  padding: 9px 12px;
   border-radius: 10px;
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.showcase-tab:hover {
+  color: var(--text-primary);
 }
 
 .showcase-tab.active {
@@ -1216,15 +1232,33 @@ footer {
   }
 
   .showcase-header {
+    gap: 12px;
+  }
+
+  .showcase-top-row {
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
   }
 
   .platform-tabs,
-  .showcase-tabs,
   .theme-preview-toggle {
     justify-content: center;
+  }
+
+  .showcase-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .showcase-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .showcase-tab {
+    flex: 0 0 auto;
+    padding: 8px 14px;
   }
 
   .window-topbar {

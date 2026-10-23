@@ -154,7 +154,7 @@
           <ul class="matrix-spec-list">
             <li><span class="spec-label" data-i18n="specUi">原生界面：</span><strong class="spec-val">WinUI 3 + Fluent Design 云母质感</strong></li>
             <li><span class="spec-label" data-i18n="specArch">架构形态：</span><span class="spec-val">Windows 11 / 10 (x64 与 ARM64)</span></li>
-            <li><span class="spec-label" data-i18n="specPackage">打包分发：</span><span class="spec-val">WiX v4/v5 MSI 原生安装向导、绿色便携 Zip</span></li>
+            <li><span class="spec-label" data-i18n="specPackage">打包分发：</span><span class="spec-val">Fluent Design 单文件安装器 (Setup.exe)、绿色便携 Zip</span></li>
             <li><span class="spec-label" data-i18n="specCli">命令行工具：</span><code class="spec-code">wincmp</code>（自动注册桌面快捷方式与 PATH）</li>
           </ul>
         </div>
@@ -169,31 +169,34 @@
       </div>
 
       <div class="showcase-header">
-        <!-- Platform Switcher -->
-        <div class="platform-tabs">
-          <button class="platform-tab active" data-platform="macos">
-            <span class="platform-icon">🍏</span> macOS (MacCompare)
-          </button>
-          <button class="platform-tab" data-platform="win">
-            <span class="platform-icon">🪟</span> Windows 11 (WinCompare)
-          </button>
+        <div class="showcase-top-row">
+          <!-- Platform Switcher (靠左) -->
+          <div class="platform-tabs">
+            <button class="platform-tab active" data-platform="macos">
+              <span class="platform-icon">🍏</span> macOS (MacCompare)
+            </button>
+            <button class="platform-tab" data-platform="win">
+              <span class="platform-icon">🪟</span> Windows 11 (WinCompare)
+            </button>
+          </div>
+
+          <!-- Theme Preset Controls (靠右) -->
+          <div class="theme-preview-toggle">
+            <button class="theme-opt-btn" data-preset="100" data-i18n="presetDark">🌙 深色</button>
+            <button class="theme-opt-btn active" data-preset="50" data-i18n="presetSplit">⚖️ 对半对比</button>
+            <button class="theme-opt-btn" data-preset="0" data-i18n="presetLight">☀️ 浅色</button>
+          </div>
         </div>
 
-        <!-- Feature Mode Tabs -->
+        <!-- Feature Mode Tabs (占满一整行) -->
         <div class="showcase-tabs">
           <button class="showcase-tab active" data-mode="welcome" data-i18n="welcomeTab">启动主页</button>
           <button class="showcase-tab" data-mode="text" data-i18n="textDiffTab">文本与 AI 对比</button>
           <button class="showcase-tab" data-mode="excel" data-i18n="excelDiffTab">Excel 表格</button>
           <button class="showcase-tab" data-mode="word" data-i18n="wordDiffTab">Word 文档</button>
+          <button class="showcase-tab" data-mode="pdf" data-i18n="pdfDiffTab">PDF 文档</button>
           <button class="showcase-tab" data-mode="folder" data-i18n="folderDiffTab">文件夹对比</button>
           <button class="showcase-tab" data-mode="merge" data-i18n="threeWayMergeTab">三向合并</button>
-        </div>
-
-        <!-- Theme Preset Controls -->
-        <div class="theme-preview-toggle">
-          <button class="theme-opt-btn" data-preset="100" data-i18n="presetDark">🌙 深色</button>
-          <button class="theme-opt-btn active" data-preset="50" data-i18n="presetSplit">⚖️ 对半对比</button>
-          <button class="theme-opt-btn" data-preset="0" data-i18n="presetLight">☀️ 浅色</button>
         </div>
       </div>
 
@@ -300,6 +303,12 @@
         </div>
 
         <div class="feature-card">
+          <div class="feature-icon">📑</div>
+          <h3 class="feature-title" data-i18n="featPdfTitle">PDF 结构化与像素级视觉比对 (PixelDiff)</h3>
+          <p class="feature-desc" data-i18n="featPdfDesc">零依赖解析 FlateDecode、ToUnicode 字符映射与行基线自适应聚类。提供 Token 文本差分与像素级视觉对比（带遮罩蒙版），支持并排与 Overlay 叠加透视，并可一键导出独立 HTML 审查报告。</p>
+        </div>
+
+        <div class="feature-card">
           <div class="feature-icon">📁</div>
           <h3 class="feature-title" data-i18n="feat3Title">毫秒级多线程文件夹对比与同步</h3>
           <p class="feature-desc" data-i18n="feat3Desc">基于 Rayon 与硬件加速 CRC32fast 并发扫描，时间戳/大小快速对比与深度哈希指纹校验，规则化双向同步并提供演练预览 (Dry-Run) 安全机制。</p>
@@ -338,7 +347,7 @@
         <div class="feature-card">
           <div class="feature-icon">📦</div>
           <h3 class="feature-title" data-i18n="featUpdateTitle">原生标准化打包与一键更新</h3>
-          <p class="feature-desc" data-i18n="featUpdateDesc">macOS DMG 镜像与 Homebrew Tap 分发；Windows WiX v4/v5 原生 MSI 安装向导与便携版 Zip，内置多语言更新日志感知的在线自动更新。</p>
+          <p class="feature-desc" data-i18n="featUpdateDesc">macOS DMG 镜像与 Homebrew Tap 分发；Windows Fluent Design 单文件安装器 (Setup.exe) 与便携版 Zip，内置多语言更新日志感知的在线自动更新。</p>
         </div>
 
         <div class="feature-card">
@@ -429,7 +438,7 @@
           <div class="download-card-actions">
             <a href="https://github.com/andychao217/FileCompare/releases/latest" class="btn-download-primary win-btn-accent">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-              <span>下载 MSI 原生安装向导</span>
+              <span>下载 Fluent 单文件安装器 (Setup.exe)</span>
             </a>
             <a href="https://github.com/andychao217/FileCompare/releases/latest" class="btn-download-secondary">免安装 ZIP 绿色便携版</a>
           </div>

@@ -30,7 +30,7 @@
 | Platform | Native UI Stack | Architecture | Packaging & Distribution | CLI Utility |
 | :--- | :--- | :--- | :--- | :--- |
 | 🍏 **MacCompare** | SwiftUI + AppKit | Universal Binary 2 (`arm64` + `x86_64`) | `.dmg`, `.zip`, Homebrew Tap | `mcdiff` |
-| 🪟 **WinCompare** | WinUI 3 + Fluent Design | Windows 11 / 10 (`x64` + `ARM64`) | WiX `.msi` Installer, Portable `.zip` | `wincmp` |
+| 🪟 **WinCompare** | WinUI 3 + Fluent Design | Windows 11 / 10 (`x64` + `ARM64`) | Fluent Design Setup (`.exe`), Portable `.zip` | `wincmp` |
 | ⚡ **Shared Core** | Rust 2024 Cargo Workspace | Native Static Library / DLL | Embedded FFI (`diff-core`, `excel-diff-core`, `fs-scanner`) | C-ABI / P-Invoke |
 
 ---
@@ -50,8 +50,19 @@
   - Multi-sheet switching with diff-status badges, pixel-perfect synchronized grid scrolling, primary key Hash Join alignment, cell-level & inline character diff highlights, and configurable numeric floating-point tolerance (`|v1 - v2| <= tolerance`).
 - **📄 Structured Word Document Comparison (.docx / .doc)**:
   - High-fidelity paragraph styling diff (font weight, italics, underline, size, color), native embedded table cell diffs, multimedia SHA-256 fingerprinting, and H1~H6 heading outline navigation.
-- **📁 Blazing-Fast Folder Diff & Sync**:
-  - Timestamp/size quick checks, deep CRC32 hash verification, and rule-based bidirectional synchronization with safe Dry-Run previews.
+- **📑 Cross-Platform PDF Structured & Pixel Visual Diff (PixelDiff)**:
+  - Zero-dependency stream parser with FlateDecode, ToUnicode CMap mapping, and baseline clustering.
+  - Dual diff modes: high-precision token text diff and pixel visual difference detection with mask overlays.
+  - Flexible viewing options: side-by-side vs. overlay blend modes with opacity adjustment and synchronized dual scrolling.
+  - Auto-detection format prompting and 1-click standalone offline HTML inspection report generation.
+- **✍️ In-Place Text Editing & Stable Minimap Viewport**:
+  - Direct in-place editing inside diff editors across macOS and Windows (Enter splits lines, Backspace merges lines).
+  - 250ms asynchronous debounced diff recalculation with fine-grained collection synchronization to prevent typing latency.
+  - Rock-solid minimap viewport tracking, eliminating jitter loops on resize and drag operations.
+- **📁 Blazing-Fast Folder Diff & Hierarchical Tree**:
+  - Visual depth indentation, smooth rotating chevron animations, and 1-click Expand/Collapse All toolbar actions.
+  - In-place collection updates and persistent vertical scroll offset across filter reapplications.
+  - Timestamp/size quick checks, CRC32 hash verification, and rule-based bidirectional synchronization with safe Dry-Run previews.
 - **🔀 Git 3-Way Conflict Merge**:
   - Visual 3-way conflict resolution across Local vs. Base vs. Remote, intelligent auto-merging of non-conflicting sections, and 1-click conflict resolution.
 - **🏠 Welcome Launcher Dashboard & Persistent History**:
@@ -60,7 +71,7 @@
   - Built-in `mcdiff` (macOS) and `wincmp` (Windows), out of the box for `git difftool` and `git mergetool`.
 - **📦 Native Packaging & In-App Auto-Update**:
   - **macOS**: Drag-and-drop `.dmg`, portable `.zip`, and official Homebrew Tap (`brew install andychao217/tap/maccompare`).
-  - **Windows**: WiX v4/v5 `.msi` wizard (Desktop & Start Menu shortcuts, system `PATH` registration) and portable `.zip`.
+  - **Windows**: Modern WPF-UI Fluent Design single-file installer (`WinCompare-Setup.exe`) featuring in-place upgrade detection, dynamic accent/theme sync, dual-entry maintenance (`Setup.exe` + `Uninstall.exe`), and full unattended command-line mode (`--silent`, `/S`, `--dir`).
   - **In-App Updater**: Cross-platform auto-update flow with multi-language release notes auto-sensing.
 
 ---
@@ -77,6 +88,10 @@
 | :---: | :---: | :---: |
 | ![Win11 Word Diff](docs/assets/win/word_diff_dark_ui.png) | ![Win11 3-Way Merge](docs/assets/win/three_way_merge_dark_ui.png) | ![Win11 Folder Diff](docs/assets/win/folder_diff_dark_ui.png) |
 
+| PDF Visual Diff (Dark Theme) | PDF Visual Diff (Light Theme) |
+| :---: | :---: |
+| ![Win11 PDF Dark](docs/assets/win/pdf_diff_dark_ui.png) | ![Win11 PDF Light](docs/assets/win/pdf_diff_light_ui.png) |
+
 #### 2. macOS Native Edition (SwiftUI & AppKit)
 
 | Welcome Hub | Text Diff with AI Summary | Excel Structured Diff |
@@ -86,6 +101,10 @@
 | Word Document Diff | Git 3-Way Conflict Merge | Folder Fast Diff & Sync |
 | :---: | :---: | :---: |
 | ![Mac Word Diff](docs/assets/macos/word_diff_dark_ui.png) | ![Mac 3-Way Merge](docs/assets/macos/three_way_merge_ui.jpg) | ![Mac Folder Diff](docs/assets/macos/folder_diff_dark_ui.png) |
+
+| PDF Visual Diff (Dark Theme) | PDF Visual Diff (Light Theme) |
+| :---: | :---: |
+| ![Mac PDF Dark](docs/assets/macos/pdf_diff_dark_ui.png) | ![Mac PDF Light](docs/assets/macos/pdf_diff_light_ui.png) |
 
 ---
 
@@ -112,14 +131,14 @@ FileCompare/
 ├── win/                              # Windows 11 native application (.NET 10 / WinUI 3)
 │   ├── WinCompare.sln                # Visual Studio 2022/2026 Solution
 │   ├── scripts/                      # Windows PowerShell & Batch build scripts
-│   │   ├── package_win.ps1           # 1-Click packaging (Portable ZIP + WiX MSI Installer)
+│   │   ├── package_win.ps1           # 1-Click packaging (Portable ZIP + Fluent Setup Installer)
 │   │   ├── build_rust_core.ps1       # Compile Rust maccompare_ffi.dll
 │   │   └── run_local.ps1             # Local incremental runner (prevents VM shared disk crash)
 │   └── src/
-│       ├── WinCompare.Core/          # C# Core libraries (P/Invoke, DiffService, Excel, Word, AI)
+│       ├── WinCompare.Core/          # C# Core libraries (P/Invoke, DiffService, Excel, Word, PDF, AI)
 │       ├── WinCompare.UI/            # WinUI 3 Native Fluent Design GUI
 │       ├── WinCompare.Cli/           # Terminal CLI comparison tool (wincmp.exe)
-│       └── WinCompare.Installer/     # WiX v4/v5 MSI installer (Shortcuts & PATH environment)
+│       └── WinCompare.Setup/         # Modern WPF-UI Fluent Design single-file installer & uninstaller
 │
 ├── docs/                             # Official website & documentation (GitHub Pages)
 └── scripts/                          # macOS build and packaging automation scripts
@@ -137,7 +156,7 @@ FileCompare/
 - **Direct Download**: Download `MacCompare-<version>.dmg` or `MacCompare-<version>-macos.zip` from [GitHub Releases](https://github.com/andychao217/FileCompare/releases/latest).
 
 #### Windows Installation
-- **MSI Installer (Recommended)**: Download `WinCompare-<version>-windows-x64-Setup.msi` from [GitHub Releases](https://github.com/andychao217/FileCompare/releases/latest) for complete desktop/start menu shortcuts and terminal integration.
+- **Fluent Setup Installer (Recommended)**: Download `WinCompare-<version>-Setup-x64.exe` from [GitHub Releases](https://github.com/andychao217/FileCompare/releases/latest) for an elegant Fluent Design setup wizard with desktop/start menu shortcuts and terminal integration. Supports silent deployment via `Setup.exe --silent` (or `/S`).
 - **Portable ZIP**: Download `WinCompare-<version>-windows-x64.zip` (self-contained, unpack & run).
 
 #### Git Diff & Merge Configuration
@@ -152,9 +171,9 @@ FileCompare/
 - **Windows (`wincmp`)**:
   ```cmd
   git config --global diff.tool wincmp
-  git config --global difftool.wincmp.cmd "wincmp diff \"$LOCAL\" \"$REMOTE\""
+  git config --global difftool.wincmp.cmd "wincmp diff "$LOCAL" "$REMOTE""
   git config --global merge.tool wincmp
-  git config --global mergetool.wincmp.cmd "wincmp merge \"$LOCAL\" \"$BASE\" \"$REMOTE\" \"$MERGED\""
+  git config --global mergetool.wincmp.cmd "wincmp merge "$LOCAL" "$BASE" "$REMOTE" "$MERGED""
   ```
 
 #### Packaging Builds Locally
@@ -163,7 +182,7 @@ FileCompare/
   ```bash
   bash scripts/package_dmg.sh 0.7.0
   ```
-- **Windows WiX MSI & ZIP**:
+- **Windows Fluent Setup & ZIP**:
   ```powershell
   .\win\scripts\package_win.ps1 -Version 0.7.0
   ```
@@ -180,7 +199,7 @@ FileCompare/
 | 平台客户端 | 原生界面框架 | 运行架构支持 | 打包分发形态 | 命令行工具 |
 | :--- | :--- | :--- | :--- | :--- |
 | 🍏 **MacCompare** | SwiftUI + AppKit 原生深度适配 | Universal Binary 2（Apple Silicon + Intel） | DMG 镜像、免安装 Zip、Homebrew Tap | `mcdiff` |
-| 🪟 **WinCompare** | WinUI 3 + Fluent Design 云母设计 | Windows 11 / 10（`x64` + `ARM64`） | WiX 原生 MSI 安装包、绿色免安装 Zip | `wincmp` |
+| 🪟 **WinCompare** | WinUI 3 + Fluent Design 云母设计 | Windows 11 / 10（`x64` + `ARM64`） | Fluent Design 单文件安装器 (Setup.exe)、绿色免安装 Zip | `wincmp` |
 | ⚡ **底座共享核心** | Rust 2024 高吞吐 Cargo Workspace | 原生静态库 / 动态库 DLL | 跨语言 FFI 零拷贝调度 | C-ABI / P-Invoke |
 
 ---
@@ -200,7 +219,20 @@ FileCompare/
   - 多工作表自动提取与切换、像素级双向同步表格网格、主键列 Hash Join 极速对齐与浮点容差过滤 (`|v1 - v2| <= tolerance`)。
 - **📄 Word 文档结构化全要素比对 (.docx / .doc)**：
   - 正文段落富文本样式流（字号、粗体、斜体、下划线、颜色）、内嵌表格网格单元格级追踪、多媒体附件 SHA-256 指纹比对与标题大纲快速导航。
-- **📁 毫秒级文件夹对比与同步**：
+- **📑 跨平台 PDF 结构化与像素级视觉比对 (PixelDiff)**：
+  - 原生零依赖流式解析 FlateDecode 解压、ToUnicode CMap 字符映射与按 Y 坐标行基线聚类；
+  - 双模比对引擎：高精度 Token 文本差分与像素级视觉比对差异遮罩蒙版 (Mask Overlay)；
+  - 并排对比 (Side-by-Side) 与透视叠加 (Overlay) 双模式切换，支持透明度滑块与双向像素同步滚动；
+  - PDF 格式智能感知提示，一键导出双端一致的独立离线自包含 HTML 审查报告。
+- **✍️ 文本原位即时编辑与防抖稳定化**：
+  - 差分编辑区内直接就地编辑（回车智能拆分新行，退格智能合并前行）；
+  - 250ms 防抖差分异步重算与原位集合同步，彻底消除键入卡顿；
+  - Minimap 缩略图视口稳定化算法，根除缩放与拖拽过程中的抖动反馈循环；
+  - 支持完整剪贴板快捷键（Ctrl+C/V/X/A），抑制拼写检查波浪线，提供纯粹的代码编辑器体验。
+- **📁 文件夹树形层级展开/折叠与持久滚动**：
+  - 真实树深度缩进与平滑旋转 Chevron 展开/折叠图标，支持工具栏一键全部展开/折叠；
+  - Windows 原位集合项变更杜绝整表刷新引起的跳动与白屏；
+  - 规则重新过滤时精确保留 `ScrollViewer` 垂直滚动位移，体验丝滑流畅；
   - 时间戳/大小快速检查与深度 CRC32 哈希对比，规则化双向同步并提供演练预览 (Dry-Run) 安全机制。
 - **🔀 Git 三向冲突合并 (3-Way Merge)**：
   - 直观对比 Local vs Base vs Remote 冲突，智能自动解决非冲突部分，一键解决冲突。
@@ -210,7 +242,7 @@ FileCompare/
   - 内置 `mcdiff` (macOS) 与 `wincmp` (Windows)，开箱即用无缝对接 `git difftool` 与 `git mergetool`。
 - **📦 双端标准化打包与在线更新**：
   - **macOS**：DMG 镜像、免安装 Zip 与 Homebrew 专属源 (`brew install andychao217/tap/maccompare`)；
-  - **Windows**：WiX v4/v5 MSI 原生安装向导（自动生成桌面/开始菜单快捷方式并注册系统 `PATH`）与绿色便携版 Zip；
+  - **Windows**：基于 WPF-UI 的全新 Fluent Design 单文件安装器 (`WinCompare-Setup.exe`)，支持原位升级自动探测、强调色与深浅模式跟随、以及企业级静默命令行安装 (`--silent`, `/S`, `--dir`)；
   - **在线更新**：智能多语言 Release Notes 感知与各平台独立发布包的一键精准下载。
 
 ---
@@ -227,6 +259,10 @@ FileCompare/
 | :---: | :---: | :---: |
 | ![Win11 Word 对比](docs/assets/win/word_diff_dark_ui.png) | ![Win11 三向合并](docs/assets/win/three_way_merge_dark_ui.png) | ![Win11 文件夹对比](docs/assets/win/folder_diff_dark_ui.png) |
 
+| PDF 差分视觉对比 (深色外观) | PDF 差分视觉对比 (浅色外观) |
+| :---: | :---: |
+| ![Win11 PDF 深色界面](docs/assets/win/pdf_diff_dark_ui.png) | ![Win11 PDF 浅色界面](docs/assets/win/pdf_diff_light_ui.png) |
+
 #### 2. macOS 原生版 (SwiftUI & AppKit 原生质感)
 
 | 启动主页 | 文本比对与 AI 总结 | Excel 表格结构化对比 |
@@ -236,6 +272,10 @@ FileCompare/
 | Word 文档对比 | Git 三向冲突合并 | 文件夹秒级比对与同步 |
 | :---: | :---: | :---: |
 | ![Mac Word 对比](docs/assets/macos/word_diff_dark_ui.png) | ![Mac 三向合并](docs/assets/macos/three_way_merge_ui.jpg) | ![Mac 文件夹对比](docs/assets/macos/folder_diff_dark_ui.png) |
+
+| PDF 差分视觉对比 (深色外观) | PDF 差分视觉对比 (浅色外观) |
+| :---: | :---: |
+| ![Mac PDF 深色界面](docs/assets/macos/pdf_diff_dark_ui.png) | ![Mac PDF 浅色界面](docs/assets/macos/pdf_diff_light_ui.png) |
 
 ---
 
@@ -249,7 +289,7 @@ FileCompare/
 - **下载 DMG 安装包**：从 [GitHub Releases](https://github.com/andychao217/FileCompare/releases/latest) 下载 `MacCompare-<version>.dmg`。
 
 #### Windows 安装方式
-- **MSI 原生安装包（推荐）**：从 [GitHub Releases](https://github.com/andychao217/FileCompare/releases/latest) 下载 `WinCompare-<version>-windows-x64-Setup.msi`，双击向导安装，桌面与开始菜单自动生成快捷方式，终端可直接使用 `wincmp` 命令。
+- **Fluent 单文件安装器（推荐）**：从 [GitHub Releases](https://github.com/andychao217/FileCompare/releases/latest) 下载 `WinCompare-<version>-Setup-x64.exe`，双击开启 Windows 11 Fluent 现代向导，桌面与开始菜单自动生成快捷方式，终端可直接使用 `wincmp` 命令。支持企业与包管理器静默安装：`Setup.exe --silent`。
 - **绿色免安装包**：下载 `WinCompare-<version>-windows-x64.zip`，解压即用。
 
 #### 配置为 Git 默认比对与合并工具
@@ -265,9 +305,9 @@ FileCompare/
 - **Windows 配置**：
   ```cmd
   git config --global diff.tool wincmp
-  git config --global difftool.wincmp.cmd "wincmp diff \"$LOCAL\" \"$REMOTE\""
+  git config --global difftool.wincmp.cmd "wincmp diff "$LOCAL" "$REMOTE""
   git config --global merge.tool wincmp
-  git config --global mergetool.wincmp.cmd "wincmp merge \"$LOCAL\" \"$BASE\" \"$REMOTE\" \"$MERGED\""
+  git config --global mergetool.wincmp.cmd "wincmp merge "$LOCAL" "$BASE" "$REMOTE" "$MERGED""
   ```
 
 #### 本地一键打包
@@ -276,7 +316,7 @@ FileCompare/
   ```bash
   bash scripts/package_dmg.sh 0.7.0
   ```
-- **Windows (生成 WiX MSI 与便携 ZIP)**：
+- **Windows (生成 Fluent Setup 与便携 ZIP)**：
   ```powershell
   .\win\scripts\package_win.ps1 -Version 0.7.0
   ```
@@ -299,7 +339,7 @@ FileCompare/
 | プラットフォーム | ネイティブ UI | アーキテクチャ | パッケージ＆配布形態 | CLI ツール |
 | :--- | :--- | :--- | :--- | :--- |
 | 🍏 **MacCompare** | SwiftUI + AppKit ネイティブ最適化 | Universal Binary 2（Apple Silicon + Intel） | DMG イメージ、ZIP ポータブル版、Homebrew Tap | `mcdiff` |
-| 🪟 **WinCompare** | WinUI 3 + Fluent Design マイカ外観 | Windows 11 / 10（`x64` + `ARM64`） | WiX ネイティブ MSI インストーラー、ZIP 便携版 | `wincmp` |
+| 🪟 **WinCompare** | WinUI 3 + Fluent Design マイカ外観 | Windows 11 / 10（`x64` + `ARM64`） | Fluent Design 単一インストーラー (Setup.exe)、ZIP 便携版 | `wincmp` |
 | ⚡ **共通コア** | Rust 2024 高スループット Workspace | ネイティブ静的ライブラリ / DLL | ゼロコピー C-ABI FFI 呼び出し | C-ABI / P-Invoke |
 
 ---
@@ -319,7 +359,18 @@ FileCompare/
   - 複数シートのタブ切り替え、ピクセル同期スクロール、主キー列 Hash Join 照合、セル内文字単位差分ハイライト、数値浮動小数点許容誤差フィルタ (`|v1 - v2| <= tolerance`)。
 - **📄 Word 文書構造化全要素比較 (.docx / .doc)**：
   - 段落リッチテキスト書式（文字サイズ、太字、斜体、下線、文字色）、埋め込み表グリッドのセル単位差分追跡、メディア添付ファイルの SHA-256 指紋比較、見出し（H1〜H6）アウトラインナビゲーション。
-- **📁 ミリ秒級フォルダ比較＆同期**：
+- **📑 クロスプラットフォーム PDF 構造化＆ピクセル視覚差分 (PixelDiff)**：
+  - ゼロ依存の FlateDecode、ToUnicode 解析とベースライン行クラスタリングによる高精度テキスト解析。
+  - トークン単位のテキスト差分と、差分マスクレイヤー（Mask Overlay）によるピクセル視覚比較。
+  - 並列表示（Side-by-Side）および重畳透過表示（Overlay、不透明度スライダー・同期スクロール付き）。
+  - PDF フォーマット自動判別アラートと、ワンクリックでの単体 HTML 検査レポート出力。
+- **✍️ テキストインプレース直接編集＆防振ミニマップ**：
+  - 差分エディタ上で直接編集が可能（Enter で改行分割、Backspace で前行統合）。
+  - 250ms 非同期デバウンス差分再計算と細粒度コレクション更新で、タイピング遅延を解消。
+  - リサイズやドラッグ時のジッター（小刻みな振動ループ）を完全解消した防振ミニマップ。
+- **📁 フォルダ階層ツリー展開・折りたたみ＆スクロール位置保持**：
+  - 階層インデントと回転アニメーション付き Chevron アイコン、ツールバーの一括展開／折りたたみ。
+  - Windows で細粒度 `ObservableCollection` 原位更新を採用してちらつきを防止し、フィルタ再適用時も縦スクロール位置を正確に維持。
   - タイムスタンプ/サイズ高速チェックと詳細 CRC32 ハッシュ比較、Dry-Run プレビュー確認による安全な双方向同期。
 - **🔀 Git 3方向競合マージ (3-Way Merge)**：
   - Local vs Base vs Remote の 3 カラム表示、非競合箇所の自動統合、ワンクリック競合解決。
@@ -329,7 +380,7 @@ FileCompare/
   - `mcdiff` (macOS) および `wincmp` (Windows) を内蔵し、`git difftool` / `git mergetool` として即座に利用可能。
 - **📦 純正パッケージング＆自動更新**：
   - **macOS**：DMG イメージ、ZIP、Homebrew Tap (`brew install andychao217/tap/maccompare`)。
-  - **Windows**：WiX v4/v5 MSI インストーラー（デスクトップ・スタートメニューのショートカット作成、システム `PATH` 登録）およびポータブル ZIP。
+  - **Windows**：WPF-UI を採用した最新の Windows 11 Fluent Design 単一インストーラー (`WinCompare-Setup.exe`)。上書き更新自動検出、システムアクセントカラー連動、企業向け無人サイレントインストール (`--silent`, `/S`, `--dir`) を完備。
   - **アプリ内自動更新**：多言語リリースノート自動判別と各プラットフォーム向けの即時ダウンロード更新。
 
 ---
@@ -344,7 +395,11 @@ FileCompare/
 
 | Word 文書比較 | Git 3方向マージ | フォルダ高速比較＆同期 |
 | :---: | :---: | :---: |
-| ![Win11 Word 比较](docs/assets/win/word_diff_dark_ui.png) | ![Win11 3方向マージ](docs/assets/win/three_way_merge_dark_ui.png) | ![Win11 フォルダ比較](docs/assets/win/folder_diff_dark_ui.png) |
+| ![Win11 Word 比較](docs/assets/win/word_diff_dark_ui.png) | ![Win11 3方向マージ](docs/assets/win/three_way_merge_dark_ui.png) | ![Win11 フォルダ比較](docs/assets/win/folder_diff_dark_ui.png) |
+
+| PDF 視覚差分比較 (ダークテーマ) | PDF 視覚差分比較 (ライトテーマ) |
+| :---: | :---: |
+| ![Win11 PDF ダーク](docs/assets/win/pdf_diff_dark_ui.png) | ![Win11 PDF ライト](docs/assets/win/pdf_diff_light_ui.png) |
 
 #### 2. macOS ネイティブ版 (SwiftUI & AppKit)
 
@@ -355,6 +410,10 @@ FileCompare/
 | Word 文書比較 | Git 3方向マージ | フォルダ高速比較＆同期 |
 | :---: | :---: | :---: |
 | ![Mac Word 比較](docs/assets/macos/word_diff_dark_ui.png) | ![Mac 3方向マージ](docs/assets/macos/three_way_merge_ui.jpg) | ![Mac フォルダ比較](docs/assets/macos/folder_diff_dark_ui.png) |
+
+| PDF 視覚差分比較 (ダークテーマ) | PDF 視覚差分比較 (ライトテーマ) |
+| :---: | :---: |
+| ![Mac PDF ダーク](docs/assets/macos/pdf_diff_dark_ui.png) | ![Mac PDF ライト](docs/assets/macos/pdf_diff_light_ui.png) |
 
 ---
 
@@ -368,7 +427,7 @@ FileCompare/
 - **DMG ダウンロード**: [GitHub Releases](https://github.com/andychao217/FileCompare/releases/latest) から `MacCompare-<version>.dmg` をダウンロード。
 
 #### Windows のインストール
-- **MSI インストーラー（推奨）**: [GitHub Releases](https://github.com/andychao217/FileCompare/releases/latest) から `WinCompare-<version>-windows-x64-Setup.msi` をダウンロードしてウィザード実行。デスクトップ・スタートメニューにショートカットが生成され、ターミナルから `wincmp` が使用可能になります。
+- **Fluent 単一インストーラー（推奨）**: [GitHub Releases](https://github.com/andychao217/FileCompare/releases/latest) から `WinCompare-<version>-Setup-x64.exe` をダウンロードしてウィザード実行。デスクトップ・スタートメニューにショートカットが生成され、ターミナルから `wincmp` が使用可能になります。無人サイレントインストールに対応：`Setup.exe --silent`。
 - **ポータブル版 ZIP**: `WinCompare-<version>-windows-x64.zip` を展開してそのまま実行。
 
 #### Git 差分・マージツールの設定
@@ -384,9 +443,9 @@ FileCompare/
 - **Windows 設定**:
   ```cmd
   git config --global diff.tool wincmp
-  git config --global difftool.wincmp.cmd "wincmp diff \"$LOCAL\" \"$REMOTE\""
+  git config --global difftool.wincmp.cmd "wincmp diff "$LOCAL" "$REMOTE""
   git config --global merge.tool wincmp
-  git config --global mergetool.wincmp.cmd "wincmp merge \"$LOCAL\" \"$BASE\" \"$REMOTE\" \"$MERGED\""
+  git config --global mergetool.wincmp.cmd "wincmp merge "$LOCAL" "$BASE" "$REMOTE" "$MERGED""
   ```
 
 #### ローカルでの一括パッケージング
@@ -395,7 +454,7 @@ FileCompare/
   ```bash
   bash scripts/package_dmg.sh 0.7.0
   ```
-- **Windows (WiX MSI & ZIP 生成)**:
+- **Windows (Fluent Setup & ZIP 生成)**:
   ```powershell
   .\win\scripts\package_win.ps1 -Version 0.7.0
   ```
