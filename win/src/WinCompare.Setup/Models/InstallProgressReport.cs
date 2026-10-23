@@ -8,6 +8,7 @@ public sealed class InstallProgressReport
     public double Percentage { get; init; }
     public InstallStage Stage { get; init; }
     public string Detail { get; init; } = string.Empty;
+    public string DetailText => Detail;
     public long ProcessedBytes { get; init; }
     public long TotalBytes { get; init; }
 

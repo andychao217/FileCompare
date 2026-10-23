@@ -123,11 +123,15 @@ public partial class App : Application
                 Console.WriteLine($"[WinCompare Setup] Uninstalling from: {targetDir}");
 
                 var installOptions = new InstallOptions { InstallPath = targetDir };
+                var lastReported = -1;
                 var progress = new Progress<InstallProgressReport>(report =>
                 {
-                    if (!string.IsNullOrEmpty(report.DetailText))
+                    var pct = (int)report.Percentage;
+                    if (pct != lastReported)
                     {
-                        Console.WriteLine($"[WinCompare Setup] {report.Percentage:F0}% - {report.DetailText}");
+                        lastReported = pct;
+                        var detailMsg = !string.IsNullOrEmpty(report.Detail) ? $" - {report.Detail}" : string.Empty;
+                        Console.WriteLine($"[WinCompare Setup] Progress: {pct}% ({report.Stage}){detailMsg}");
                     }
                 });
 
