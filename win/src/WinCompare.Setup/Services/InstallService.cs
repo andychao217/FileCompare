@@ -127,7 +127,7 @@ public sealed class InstallService : IInstallService
 
         // 7. Register Uninstall Info
         progress.Report(new InstallProgressReport(96, InstallStage.RegisteringSystem));
-        var appVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.7.0";
+        var appVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.7.1";
         var totalSizeKb = Math.Max(1024, totalBytes / 1024);
         _registryService.RegisterUninstall(options.InstallPath, mainExe, appVersion, options.IsPerUser, totalSizeKb);
 

@@ -48,13 +48,13 @@ rustup target add x86_64-apple-darwin
 # 1. 赋予执行权限（首次）
 chmod +x scripts/*.sh
 
-# 2. 一键构建并生成指定版本的 DMG 包（默认版本为 0.7.0）
-bash scripts/package_dmg.sh 0.7.0
+# 2. 一键构建并生成指定版本的 DMG 包（默认版本为 0.7.1）
+bash scripts/package_dmg.sh 0.7.1
 ```
 
 #### 打包输出位置：
 * **应用程序包**：`dist/staging/MacCompare.app`
-* **DMG 磁盘镜像**：`dist/MacCompare-0.7.0.dmg`
+* **DMG 磁盘镜像**：`dist/MacCompare-0.7.1.dmg`
 
 ---
 
@@ -96,7 +96,7 @@ lipo -info dist/staging/MacCompare.app/Contents/MacOS/mcdiff
 codesign -dv --verbose=4 dist/staging/MacCompare.app
 
 # 3. 本地挂载测试
-hdiutil attach dist/MacCompare-0.7.0.dmg
+hdiutil attach dist/MacCompare-0.7.1.dmg
 ```
 
 > **提示（首次打开提示“无法打开”）：**  
@@ -128,16 +128,16 @@ Windows 端提供了针对 Windows 10/11 的自动化打包流水线：
 #### 快速打包命令（PowerShell）：
 ```powershell
 # 一键生成 ZIP 与 Fluent Design 安装包（默认输出到 dist/ 目录）
-.\win\scripts\package_win.ps1 -Version 0.7.0
+.\win\scripts\package_win.ps1 -Version 0.7.1
 
 # 仅生成便携版 ZIP
-.\win\scripts\package_win.ps1 -Version 0.7.0 -SkipInstaller
+.\win\scripts\package_win.ps1 -Version 0.7.1 -SkipInstaller
 ```
 
 #### Windows 打包输出位置：
-* **单文件安装包**：`dist/WinCompare-0.7.0-Setup-x64.exe`
-* **主程序绿色包**：`dist/WinCompare-0.7.0-windows-x64.zip`
-* **独立 CLI 工具**：`dist/wincmp-0.7.0-windows-x64.zip`
+* **单文件安装包**：`dist/WinCompare-0.7.1-Setup-x64.exe`
+* **主程序绿色包**：`dist/WinCompare-0.7.1-windows-x64.zip`
+* **独立 CLI 工具**：`dist/wincmp-0.7.1-windows-x64.zip`
 
 ---
 
@@ -183,13 +183,13 @@ Run `scripts/package_dmg.sh` from the repository root:
 # 1. Grant execute permissions (first time only)
 chmod +x scripts/*.sh
 
-# 2. Build & package specified version (defaults to 0.7.0)
-bash scripts/package_dmg.sh 0.7.0
+# 2. Build & package specified version (defaults to 0.7.1)
+bash scripts/package_dmg.sh 0.7.1
 ```
 
 #### Output Locations:
 * **Application Bundle**: `dist/staging/MacCompare.app`
-* **DMG Disk Image**: `dist/MacCompare-0.7.0.dmg`
+* **DMG Disk Image**: `dist/MacCompare-0.7.1.dmg`
 
 ---
 
@@ -231,7 +231,7 @@ lipo -info dist/staging/MacCompare.app/Contents/MacOS/mcdiff
 codesign -dv --verbose=4 dist/staging/MacCompare.app
 
 # 3. Mount DMG image
-hdiutil attach dist/MacCompare-0.7.0.dmg
+hdiutil attach dist/MacCompare-0.7.1.dmg
 ```
 
 > **Note on Gatekeeper:**  

@@ -35,7 +35,7 @@ public sealed class UpdateCheckerService
     private static readonly Lazy<UpdateCheckerService> _instance = new(() => new UpdateCheckerService());
     public static UpdateCheckerService Instance => _instance.Value;
 
-    public const string CurrentVersion = "0.7.0";
+    public const string CurrentVersion = "0.7.1";
     public const string Repository = "andychao217/FileCompare";
 
     public UpdateCheckStatus Status { get; private set; } = UpdateCheckStatus.Idle;

@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # WinCompare Windows Packaging Script (PowerShell)
 # Produces:
 #   1. Standalone Portable Zip (WinUI 3 GUI + CLI + Rust Core)
@@ -7,7 +7,7 @@
 # ==============================================================================
 
 param(
-    [string]$Version = "0.7.0",
+    [string]$Version = "0.7.1",
     [string]$Platform = "x64",
     [switch]$SkipInstaller
 )

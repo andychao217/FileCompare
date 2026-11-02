@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.singleton.1.6.0.schema.json
+PackageIdentifier: WinCompare.WinCompare
+PackageVersion: 0.7.1
+PackageName: WinCompare
+Publisher: WinCompare Team
+PublisherUrl: https://github.com/andychao217/FileCompare
+Author: WinCompare Team
+License: MIT
+LicenseUrl: https://github.com/andychao217/FileCompare/blob/main/LICENSE
+ShortDescription: 基于 Rust 差分内核与 WinUI 3 打造的 Windows 11 原生文件比对与三向合并工具。
+Description: |-
+  WinCompare 深度遵循 Fluent Design System（Mica 云母材质、原生 TabView 多标签、Snap Layouts 贴靠布局），
+  并与 macOS 版共享同一套高吞吐 Rust 差分计算内核。
+  支持文本与代码精准差异追踪、Excel 表格全要素比对、Word 文档结构化比对、文件夹双向同步、Git 三向冲突合并以及命令行工具 wincmp。
+Moniker: wincompare
+Tags:
+  - diff
+  - compare
+  - winui3
+  - rust
+  - excel-diff
+  - git-merge
+  - fluent-design
+Commands:
+  - wincmp
+ReleaseNotesUrl: https://github.com/andychao217/FileCompare/releases
+Installers:
+  - Architecture: x64
+    InstallerType: exe
+    InstallerUrl: https://github.com/andychao217/FileCompare/releases/download/v0.7.1/WinCompare-0.7.1-Setup-x64.exe
+    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
+    InstallerSwitches:
+      Silent: --silent
+      SilentWithProgress: --silent
+      InstallPosition: --dir="<INSTALLPATH>"
+    UpgradeBehavior: install
+    AppsAndFeaturesEntries:
+      - DisplayName: WinCompare
+        DisplayVersion: 0.7.1
+        Publisher: WinCompare Team
+        ProductCode: WinCompare
+ManifestType: singleton
+ManifestVersion: 1.6.0
+

@@ -122,7 +122,7 @@ jobs:
   # 3. Publish Unified Multi-Platform GitHub Release
   # ============================================================================
   publish:
-    name: Publish Release & Update Homebrew
+    name: Publish Release & Update Package Managers (Homebrew & WinGet)
     needs: [build-macos, build-windows]
     runs-on: macos-15
     steps:
@@ -206,3 +206,18 @@ jobs:
           else
             echo "Warning: Casks/maccompare.rb not found in homebrew-tap repository"
           fi
+
+      - name: Update Windows Package Manager (winget)
+        uses: vedantmgoyal9/winget-releaser@v2
+        if: ${{ secrets.WINGET_TOKEN != '' }}
+        with:
+          identifier: WinCompare.WinCompare
+          version: ${{ steps.get_version.outputs.version }}
+          installers-regex: 'WinCompare-.*-Setup-x64\.exe$'
+          token: ${{ secrets.WINGET_TOKEN }}
+          max-versions-to-keep: 3
+
+      - name: Skip WinGet Notification
+        if: ${{ secrets.WINGET_TOKEN == '' }}
+        run: |
+          echo "WINGET_TOKEN secret is not set. Skipping WinGet repository submission."

@@ -6,7 +6,7 @@ const i18n = {
     cliNav: "Git 集成",
     downloadNav: "下载体验",
     navDownloadBtn: "获取软件",
-    badge: "⚡ macOS & Windows 11 双生态深度打造 • Rust 2024 高性能核心 • 端侧离线与云端双模 AI • v0.7.0",
+    badge: "⚡ macOS & Windows 11 双生态深度打造 • Rust 2024 高性能核心 • 端侧离线与云端双模 AI • v0.7.1",
     heroTitle: "跨平台双生态原生 <span class='gradient-text'>文件比对与合并套件</span>",
     heroSubtitle: "MacCompare (macOS SwiftUI / AppKit) 与 WinCompare (Windows 11 WinUI 3) 搭载同一套高吞吐 Rust 差分底座。毫秒级比对速度、双模 AI 代码意图总结、海量表格流式视口分页与纯粹原生桌面质感。",
     downloadMacBtn: "下载 macOS 版 (DMG)",
@@ -64,7 +64,7 @@ const i18n = {
     featCliTitle: "终端开发者生态与 Git 深度整合",
     featCliDesc: "内置 macOS mcdiff 与 Windows wincmp 命令行工具，开箱即用无缝对接 git difftool 与 git mergetool。",
     featUpdateTitle: "原生标准化打包与一键更新",
-    featUpdateDesc: "macOS DMG 镜像与 Homebrew Tap 分发；Windows Fluent Design 单文件安装器 (Setup.exe) 与便携版 Zip，内置多语言更新日志感知的在线自动更新。",
+    featUpdateDesc: "macOS DMG 镜像与 Homebrew Tap 分发；Windows Fluent Design 单文件安装器 (Setup.exe)、绿色便携 Zip 与微软 WinGet，内置多语言更新日志感知的在线自动更新。",
     feat6Title: "系统级原生质感与自适应深浅外观",
     feat6Desc: "macOS SwiftUI / AppKit 与 Windows 11 Fluent 云母设计，内置中、英、日三语支持，完美适配系统主题自适应与快捷切换。",
     cliTitle: "终端命令行与 Git 工具生态深度整合",
@@ -80,7 +80,7 @@ const i18n = {
     cliNav: "Git Integration",
     downloadNav: "Download",
     navDownloadBtn: "Get App",
-    badge: "⚡ Dual Ecosystem: macOS & Windows 11 Native • Rust 2024 Core • Dual-Mode AI • v0.7.0",
+    badge: "⚡ Dual Ecosystem: macOS & Windows 11 Native • Rust 2024 Core • Dual-Mode AI • v0.7.1",
     heroTitle: "Native Cross-Platform <span class='gradient-text'>Diff & Merge Suite</span>",
     heroSubtitle: "MacCompare (macOS SwiftUI / AppKit) & WinCompare (Windows 11 WinUI 3) powered by a unified high-throughput Rust engine. Sub-millisecond performance, dual-mode AI intent summaries, and big-data Viewport Paging.",
     downloadMacBtn: "Download for macOS (DMG)",
@@ -135,7 +135,7 @@ const i18n = {
     featCliTitle: "Terminal Developer Ecosystem & Git Tooling",
     featCliDesc: "Built-in macOS mcdiff and Windows wincmp utilities for instant invocation and effortless git difftool / mergetool configuration.",
     featUpdateTitle: "Native Packaging & Frictionless Updates",
-    featUpdateDesc: "macOS DMG images and Homebrew Tap; Windows Fluent Design single-file installer (Setup.exe) and portable ZIPs, featuring in-app auto-updates with multilingual release notes.",
+    featUpdateDesc: "macOS DMG images and Homebrew Tap; Windows Fluent Design single-file installer (Setup.exe), portable ZIPs, and Microsoft WinGet, featuring in-app auto-updates with multilingual release notes.",
     feat6Title: "Platform-Authentic Design & Adaptive Themes",
     feat6Desc: "macOS SwiftUI / AppKit and Windows 11 Fluent Mica design with built-in English, Chinese, and Japanese support.",
     cliTitle: "Terminal CLI & Git Ecosystem Integration",
@@ -151,7 +151,7 @@ const i18n = {
     cliNav: "Git 連携",
     downloadNav: "ダウンロード",
     navDownloadBtn: "入手する",
-    badge: "⚡ macOS & Windows 11 両エコシステム対応 • Rust 2024 高速コア • 双模 AI • v0.7.0",
+    badge: "⚡ macOS & Windows 11 両エコシステム対応 • Rust 2024 高速コア • 双模 AI • v0.7.1",
     heroTitle: "クロスプラットフォーム両ネイティブ <span class='gradient-text'>差分比較＆マージツール</span>",
     heroSubtitle: "MacCompare (macOS SwiftUI / AppKit) と WinCompare (Windows 11 WinUI 3) は、共通の高スループット Rust エンジンを搭載。ミリ秒級の比較速度、双模 AI 要約、大容量テーブル視口ページング、純正ネイティブ品質を提供します。",
     downloadMacBtn: "macOS 版をダウンロード (DMG)",
@@ -209,7 +209,7 @@ const i18n = {
     featCliTitle: "ターミナル開発者エコシステム＆Git 統合",
     featCliDesc: "macOS mcdiff および Windows wincmp ツールを標準搭載。git difftool / mergetool として即座に設定可能。",
     featUpdateTitle: "標準ネイティブパッケージ＆自動更新",
-    featUpdateDesc: "macOS DMG および Homebrew Tap 配布。Windows Fluent Design 単一インストーラー (Setup.exe) と ZIP 便携版、多言語更新履歴対応の自動更新を完備。",
+    featUpdateDesc: "macOS DMG および Homebrew Tap 配布。Windows Fluent Design 単一インストーラー (Setup.exe)、ZIP 便携版、Microsoft WinGet、多言語更新履歴対応の自動更新を完備。",
     feat6Title: "システム純正の質感＆自動深浅モード連動",
     feat6Desc: "macOS SwiftUI / AppKit と Windows 11 Fluent Mica デザイン。日本語、英語、中国語を標準搭載し、OS 外観モードに完全連動。",
     cliTitle: "ターミナル CLI＆Git エコシステム統合",
@@ -523,7 +523,7 @@ function copyBrewCmd() {
 }
 
 function copyWinCliCmd() {
-  const cmd = "wincmp diff file1.xlsx file2.xlsx";
+  const cmd = "winget install WinCompare";
   navigator.clipboard.writeText(cmd).then(() => {
     const banners = document.querySelectorAll(".brew-copy-btn");
     if (banners.length > 1) {

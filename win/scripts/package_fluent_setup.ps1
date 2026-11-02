@@ -1,11 +1,11 @@
-﻿# ==============================================================================
+# ==============================================================================
 # WinCompare Fluent Design Single-File Installer Packaging Script (PowerShell)
 # Produces:
 #   WinCompare-<Version>-Setup-<Platform>.exe (Modern Fluent Design Single-File Installer)
 # ==============================================================================
 
 param(
-    [string]$Version = "0.7.0",
+    [string]$Version = "0.7.1",
     [string]$Platform = "x64",
     [switch]$SkipRustBuild
 )

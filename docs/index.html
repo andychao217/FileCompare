@@ -52,7 +52,7 @@
     <!-- Hero Section -->
     <section class="hero">
       <div class="pill-badge" data-i18n="badge">
-        ⚡ macOS & Windows 11 双生态深度打造 • Rust 2024 高性能核心 • 端侧离线与云端双模 AI • v0.7.0
+        ⚡ macOS & Windows 11 双生态深度打造 • Rust 2024 高性能核心 • 端侧离线与云端双模 AI • v0.7.1
       </div>
       <h1 class="hero-title" data-i18n="heroTitle">
         跨平台双生态原生 <span class="gradient-text">文件比对与合并套件</span>
@@ -74,7 +74,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/>
           </svg>
-          <span data-i18n="downloadWinBtn">下载 Windows 11 版 (MSI)</span>
+          <span data-i18n="downloadWinBtn">下载 Windows 11 版 (Setup.exe)</span>
         </a>
 
         <a href="https://github.com/andychao217/FileCompare" target="_blank" rel="noopener" class="btn-secondary">
@@ -93,9 +93,9 @@
           <button class="brew-copy-btn" onclick="copyBrewCmd()" title="Copy Homebrew command">📋</button>
         </div>
         <div class="brew-install-banner win-cmd-banner">
-          <span class="brew-tag win-tag">Windows CLI</span>
-          <code id="win-cli-cmd">wincmp diff file1.xlsx file2.xlsx</code>
-          <button class="brew-copy-btn" onclick="copyWinCliCmd()" title="Copy Windows CLI command">📋</button>
+          <span class="brew-tag win-tag">Windows WinGet</span>
+          <code id="win-cli-cmd">winget install WinCompare</code>
+          <button class="brew-copy-btn" onclick="copyWinCliCmd()" title="Copy WinGet command">📋</button>
         </div>
       </div>
     </section>
@@ -154,7 +154,7 @@
           <ul class="matrix-spec-list">
             <li><span class="spec-label" data-i18n="specUi">原生界面：</span><strong class="spec-val">WinUI 3 + Fluent Design 云母质感</strong></li>
             <li><span class="spec-label" data-i18n="specArch">架构形态：</span><span class="spec-val">Windows 11 / 10 (x64 与 ARM64)</span></li>
-            <li><span class="spec-label" data-i18n="specPackage">打包分发：</span><span class="spec-val">Fluent Design 单文件安装器 (Setup.exe)、绿色便携 Zip</span></li>
+            <li><span class="spec-label" data-i18n="specPackage">打包分发：</span><span class="spec-val">Fluent Design 单文件安装器 (Setup.exe)、绿色便携 Zip、WinGet</span></li>
             <li><span class="spec-label" data-i18n="specCli">命令行工具：</span><code class="spec-code">wincmp</code>（自动注册桌面快捷方式与 PATH）</li>
           </ul>
         </div>
@@ -347,7 +347,7 @@
         <div class="feature-card">
           <div class="feature-icon">📦</div>
           <h3 class="feature-title" data-i18n="featUpdateTitle">原生标准化打包与一键更新</h3>
-          <p class="feature-desc" data-i18n="featUpdateDesc">macOS DMG 镜像与 Homebrew Tap 分发；Windows Fluent Design 单文件安装器 (Setup.exe) 与便携版 Zip，内置多语言更新日志感知的在线自动更新。</p>
+          <p class="feature-desc" data-i18n="featUpdateDesc">macOS DMG 镜像与 Homebrew Tap 分发；Windows Fluent Design 单文件安装器 (Setup.exe)、绿色便携 Zip 与微软 WinGet，内置多语言更新日志感知的在线自动更新。</p>
         </div>
 
         <div class="feature-card">
@@ -443,7 +443,7 @@
             <a href="https://github.com/andychao217/FileCompare/releases/latest" class="btn-download-secondary">免安装 ZIP 绿色便携版</a>
           </div>
           <div class="download-card-footer">
-            <code>wincmp.exe --help</code>
+            <code>winget install WinCompare</code>
           </div>
         </div>
       </div>

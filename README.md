@@ -180,11 +180,11 @@ FileCompare/
 
 - **macOS Universal DMG**:
   ```bash
-  bash scripts/package_dmg.sh 0.7.0
+  bash scripts/package_dmg.sh 0.7.1
   ```
 - **Windows Fluent Setup & ZIP**:
   ```powershell
-  .\win\scripts\package_win.ps1 -Version 0.7.0
+  .\win\scripts\package_win.ps1 -Version 0.7.1
   ```
 
 ---
@@ -314,11 +314,11 @@ FileCompare/
 
 - **macOS (生成 Universal DMG)**：
   ```bash
-  bash scripts/package_dmg.sh 0.7.0
+  bash scripts/package_dmg.sh 0.7.1
   ```
 - **Windows (生成 Fluent Setup 与便携 ZIP)**：
   ```powershell
-  .\win\scripts\package_win.ps1 -Version 0.7.0
+  .\win\scripts\package_win.ps1 -Version 0.7.1
   ```
 
 ---
@@ -452,11 +452,11 @@ FileCompare/
 
 - **macOS (Universal DMG 生成)**:
   ```bash
-  bash scripts/package_dmg.sh 0.7.0
+  bash scripts/package_dmg.sh 0.7.1
   ```
 - **Windows (Fluent Setup & ZIP 生成)**:
   ```powershell
-  .\win\scripts\package_win.ps1 -Version 0.7.0
+  .\win\scripts\package_win.ps1 -Version 0.7.1
   ```
 
 ---
