@@ -212,6 +212,7 @@ jobs:
       - name: Update Windows Package Manager (winget)
         uses: vedantmgoyal9/winget-releaser@v2
         if: env.WINGET_TOKEN != ''
+        continue-on-error: true
         with:
           identifier: WinCompare.WinCompare
           version: ${{ steps.get_version.outputs.version }}
