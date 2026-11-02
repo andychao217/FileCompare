@@ -125,6 +125,8 @@ jobs:
     name: Publish Release & Update Package Managers (Homebrew & WinGet)
     needs: [build-macos, build-windows]
     runs-on: macos-15
+    env:
+      WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -209,7 +211,7 @@ jobs:
 
       - name: Update Windows Package Manager (winget)
         uses: vedantmgoyal9/winget-releaser@v2
-        if: ${{ secrets.WINGET_TOKEN != '' }}
+        if: env.WINGET_TOKEN != ''
         with:
           identifier: WinCompare.WinCompare
           version: ${{ steps.get_version.outputs.version }}
@@ -218,6 +220,6 @@ jobs:
           max-versions-to-keep: 3
 
       - name: Skip WinGet Notification
-        if: ${{ secrets.WINGET_TOKEN == '' }}
+        if: env.WINGET_TOKEN == ''
         run: |
           echo "WINGET_TOKEN secret is not set. Skipping WinGet repository submission."
