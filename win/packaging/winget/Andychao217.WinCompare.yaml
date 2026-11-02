@@ -1,8 +1,8 @@
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.singleton.1.6.0.schema.json
-PackageIdentifier: WinCompare.WinCompare
+PackageIdentifier: Andychao217.WinCompare
 PackageVersion: 0.7.1
 PackageName: WinCompare
-Publisher: WinCompare Team
+Publisher: Andychao217
 PublisherUrl: https://github.com/andychao217/FileCompare
 Author: WinCompare Team
 License: MIT

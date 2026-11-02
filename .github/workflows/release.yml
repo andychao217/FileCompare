@@ -214,7 +214,7 @@ jobs:
         if: env.WINGET_TOKEN != ''
         continue-on-error: true
         with:
-          identifier: WinCompare.WinCompare
+          identifier: Andychao217.WinCompare
           version: ${{ steps.get_version.outputs.version }}
           installers-regex: 'WinCompare-.*-Setup-x64\.exe$'
           token: ${{ secrets.WINGET_TOKEN }}

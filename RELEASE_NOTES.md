@@ -1,7 +1,7 @@
 <!-- zh-Hans -->
 ### ✨ 核心新增特性 (v0.7.1)
 - **🪟 Windows 软件包管理器 (WinGet) 全面支持与 CI/CD 自动化**：
-  - 规范化支持 `winget install WinCompare`，开箱即用，生成微软官方标准的 WinGet Package Manifest 模板（`win/packaging/winget/WinCompare.WinCompare.yaml`）。
+  - 规范化支持 `winget install WinCompare`，开箱即用，生成微软官方标准的 WinGet Package Manifest 模板（`win/packaging/winget/Andychao217.WinCompare.yaml`）。
   - GitHub Actions 流水线接入 `vedantmgoyal9/winget-releaser`，实现新版本 Tag 发布后自动计算 Hash 并提交 PR 至微软官方 `microsoft/winget-pkgs` 仓库，与 macOS Homebrew Tap 体验对齐。
   - 官网主页及 Windows 开发文档同步支持 WinGet 一键安装命令与中文/英文/日文三语指南。
 
@@ -40,7 +40,7 @@
 <!-- en -->
 ### ✨ Key Features (v0.7.1)
 - **🪟 Full Windows Package Manager (WinGet) Support & CI/CD Automation**:
-  - Out-of-the-box support for `winget install WinCompare` with official WinGet Package Manifest templates (`win/packaging/winget/WinCompare.WinCompare.yaml`).
+  - Out-of-the-box support for `winget install WinCompare` with official WinGet Package Manifest templates (`win/packaging/winget/Andychao217.WinCompare.yaml`).
   - Integrated `vedantmgoyal9/winget-releaser` into GitHub Actions, automatically calculating SHA256 hashes and submitting PRs to `microsoft/winget-pkgs` upon new releases, matching the macOS Homebrew Tap experience.
   - Showcase landing page and Windows development documentation updated with 1-click WinGet install instructions and full trilingual (EN/ZH/JA) coverage.
 
@@ -79,7 +79,7 @@
 <!-- ja -->
 ### ✨ 主な新機能 (v0.7.1)
 - **🪟 Windows パッケージマネージャー (WinGet) 完全対応＆CI/CD 自動リリース**:
-  - `winget install WinCompare` による公式パッケージ管理に標準対応し、公式仕様のマニフェスト雛形（`win/packaging/winget/WinCompare.WinCompare.yaml`）を配備。
+  - `winget install WinCompare` による公式パッケージ管理に標準対応し、公式仕様のマニフェスト雛形（`win/packaging/winget/Andychao217.WinCompare.yaml`）を配備。
   - GitHub Actions ワークフローに `vedantmgoyal9/winget-releaser` を統合。Release タグ発行時に SHA256 を自動計算し、`microsoft/winget-pkgs` への PR を全自動送信（macOS Homebrew Tap と完全同等の体験を実現）。
   - 公式サイトおよび Windows ドキュメントを全面アップデートし、日・中・英3言語での WinGet 導入手順を整備。
 

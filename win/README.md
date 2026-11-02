@@ -41,7 +41,7 @@ win/
 ├── Directory.Build.props           # 全局 MSBuild UTF-8 编码与 C# 语言版本配置
 ├── packaging/
 │   └── winget/
-│       └── WinCompare.WinCompare.yaml # 微软官方 WinGet 软件包清单模板
+│       └── Andychao217.WinCompare.yaml # 微软官方 WinGet 软件包清单模板
 ├── scripts/
 │   ├── package_win.ps1             # 一键全自动化打包脚本 (ZIP 便携包 + Fluent Setup)
 │   ├── package_fluent_setup.ps1    # Fluent Design 单文件安装器生成脚本
@@ -158,7 +158,7 @@ WinCompare 原生支持通过微软官方 **WinGet (`winget`)** 进行安装、�
 winget install WinCompare
 ```
 > 如需本地或离线安装测试，可直接使用项目提供的清单：
-> `winget install --manifest win/packaging/winget/WinCompare.WinCompare.yaml`
+> `winget install --manifest win/packaging/winget/Andychao217.WinCompare.yaml`
 
 #### 2. CI/CD 自动化发版配置 (类似 macOS Homebrew Tap)
 流水线在 `.github/workflows/release.yml` 中集成了 `vedantmgoyal9/winget-releaser`，可在 GitHub 发布新 Release 时自动计算 Hash 并向 [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) 提交更新 Pull Request。
@@ -198,7 +198,7 @@ win/
 ├── Directory.Build.props           # Global MSBuild UTF-8 and C# LangVersion settings
 ├── packaging/
 │   └── winget/
-│       └── WinCompare.WinCompare.yaml # Microsoft WinGet Package Manifest template
+│       └── Andychao217.WinCompare.yaml # Microsoft WinGet Package Manifest template
 ├── scripts/
 │   ├── package_win.ps1             # Full packaging automation (ZIP + Fluent Setup)
 │   ├── package_fluent_setup.ps1    # Modern Fluent Design Single-File Installer script
@@ -313,7 +313,7 @@ WinCompare natively supports installation, upgrade, and removal via Microsoft **
 winget install WinCompare
 ```
 > For local/offline testing:
-> `winget install --manifest win/packaging/winget/WinCompare.WinCompare.yaml`
+> `winget install --manifest win/packaging/winget/Andychao217.WinCompare.yaml`
 
 #### 2. CI/CD Release Pipeline (Similar to macOS Homebrew Tap)
 The GitHub Actions workflow in `.github/workflows/release.yml` includes `vedantmgoyal9/winget-releaser` to submit pull requests to [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) automatically upon new tag releases.
@@ -353,7 +353,7 @@ win/
 ├── Directory.Build.props           # MSBuild UTF-8 エンコードおよび C# 言語バージョン設定
 ├── packaging/
 │   └── winget/
-│       └── WinCompare.WinCompare.yaml # Microsoft 公式 WinGet パッケージマニフェスト雛形
+│       └── Andychao217.WinCompare.yaml # Microsoft 公式 WinGet パッケージマニフェスト雛形
 ├── scripts/
 │   ├── package_win.ps1             # ワンクリック自動パッケージング (ZIP + Fluent Setup)
 │   ├── package_fluent_setup.ps1    # Fluent Design 単一ファイルインストーラー作成スクリプト
@@ -468,7 +468,7 @@ WinCompare は、マイクロソフト公式の **WinGet (`winget`)** による�
 winget install WinCompare
 ```
 > ローカルまたはオフラインでテストする場合：
-> `winget install --manifest win/packaging/winget/WinCompare.WinCompare.yaml`
+> `winget install --manifest win/packaging/winget/Andychao217.WinCompare.yaml`
 
 #### 2. CI/CD 自動リリース設定 (macOS Homebrew Tap と同様)
 `.github/workflows/release.yml` に `vedantmgoyal9/winget-releaser` が統合されており、GitHub Release が公開されると SHA256 ハッシュが自動計算され、[microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) へ Pull Request が自動送信されます。
